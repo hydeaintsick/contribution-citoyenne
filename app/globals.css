@@ -20,3 +20,19 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+.admin-shell {
+  background: var(--background-alt-grey);
+}
+
+.admin-shell--login {
+  background: var(--background-alt-grey);
+}
+
+.admin-shell--default {
+  background: var(--background-alt-grey);
+}
+
+.admin-shell-container {
+  min-height: 80vh;
+}
