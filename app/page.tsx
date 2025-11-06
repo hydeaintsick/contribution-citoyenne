@@ -1,5 +1,5 @@
 import { Hero } from "@/components/Hero";
-import { Marquee } from "@/components/Marquee";
+import { CitizenStats } from "@/components/CitizenStats";
 import { Feature } from "@/components/Feature";
 import { HowItWorks } from "@/components/HowItWorks";
 import { Kpis } from "@/components/Kpis";
@@ -133,7 +133,7 @@ export default function Home() {
   return (
     <main>
       <Hero />
-      <Marquee />
+      <CitizenStats />
       <section className="fr-container fr-py-8w">
         <div className="fr-grid-row fr-grid-row--center">
           <div className="fr-col-12">
