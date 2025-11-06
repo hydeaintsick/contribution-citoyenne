@@ -1,6 +1,7 @@
 import { Hero } from "@/components/Hero";
 import { CitizenStats } from "@/components/CitizenStats";
 import { Feature } from "@/components/Feature";
+import { Motto } from "@/components/Motto";
 import { HowItWorks } from "@/components/HowItWorks";
 import { Kpis } from "@/components/Kpis";
 import { MapTeaser } from "@/components/MapTeaser";
@@ -155,6 +156,7 @@ export default function Home() {
           ))}
         </div>
       </section>
+      <Motto />
       <HowItWorks />
       <Kpis kpis={kpis} />
       <MapTeaser />
