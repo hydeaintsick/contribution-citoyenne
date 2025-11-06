@@ -5,15 +5,17 @@ import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Input } from "@codegouvfr/react-dsfr/Input";
 import { Checkbox } from "@codegouvfr/react-dsfr/Checkbox";
 import { Alert } from "@codegouvfr/react-dsfr/Alert";
-import { contactSchema, createMailtoLink, type ContactFormData } from "@/lib/contact";
+import { contactSchema, createMailtoLink, type ContactFormData, type ContactType } from "@/lib/contact";
 import { motion } from "framer-motion";
 
 export function ContactCta() {
   const [formData, setFormData] = useState<Partial<ContactFormData>>({
+    contactType: "commune",
     name: "",
     email: "",
     function: "",
     commune: "",
+    organisme: "",
     message: "",
     consent: false,
   });
@@ -52,7 +54,7 @@ export function ContactCta() {
         transition={{ duration: 0.3 }}
       >
         <div className="fr-col-12 fr-col-md-8">
-          <h2 className="fr-h2 fr-text--center">Prêts à lancer Contribcit dans votre commune ?</h2>
+          <h2 className="fr-h2 fr-text--center">Intéressé par Contribcit ?</h2>
           <p className="fr-text--lg fr-text--center fr-mt-2w">
             Écrivez-nous et planifions une démonstration.
           </p>
@@ -68,6 +70,58 @@ export function ContactCta() {
 
           <form onSubmit={handleSubmit} className="fr-mt-6w">
             <div className="fr-grid-row fr-grid-row--gutters">
+              <div className="fr-col-12">
+                <fieldset className="fr-fieldset">
+                  <legend className="fr-fieldset__legend fr-text--regular">
+                    Vous êtes <span className="fr-hint-text">(requis)</span>
+                  </legend>
+                  <div className="fr-fieldset__content">
+                    <div className="fr-radio-group">
+                      <input
+                        type="radio"
+                        id="contact-type-commune"
+                        name="contactType"
+                        value="commune"
+                        checked={formData.contactType === "commune"}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            contactType: e.target.value as ContactType,
+                            organisme: "",
+                          })
+                        }
+                      />
+                      <label className="fr-label" htmlFor="contact-type-commune">
+                        Une commune
+                      </label>
+                    </div>
+                    <div className="fr-radio-group">
+                      <input
+                        type="radio"
+                        id="contact-type-organisme"
+                        name="contactType"
+                        value="organisme_financier"
+                        checked={formData.contactType === "organisme_financier"}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            contactType: e.target.value as ContactType,
+                            commune: "",
+                          })
+                        }
+                      />
+                      <label className="fr-label" htmlFor="contact-type-organisme">
+                        Un organisme financier qui souhaite financer le projet
+                      </label>
+                    </div>
+                  </div>
+                  {errors.contactType && (
+                    <p className="fr-message fr-message--error" id="contact-type-error">
+                      {errors.contactType}
+                    </p>
+                  )}
+                </fieldset>
+              </div>
               <div className="fr-col-12 fr-col-md-6">
                 <Input
                   label="Nom"
@@ -108,17 +162,31 @@ export function ContactCta() {
                 />
               </div>
               <div className="fr-col-12 fr-col-md-6">
-                <Input
-                  label="Commune"
-                  nativeInputProps={{
-                    type: "text",
-                    value: formData.commune || "",
-                    onChange: (e) => setFormData({ ...formData, commune: e.target.value }),
-                    required: true,
-                  }}
-                  state={errors.commune ? "error" : "default"}
-                  stateRelatedMessage={errors.commune}
-                />
+                {formData.contactType === "commune" ? (
+                  <Input
+                    label="Commune"
+                    nativeInputProps={{
+                      type: "text",
+                      value: formData.commune || "",
+                      onChange: (e) => setFormData({ ...formData, commune: e.target.value }),
+                      required: true,
+                    }}
+                    state={errors.commune ? "error" : "default"}
+                    stateRelatedMessage={errors.commune}
+                  />
+                ) : (
+                  <Input
+                    label="Nom de l'organisme"
+                    nativeInputProps={{
+                      type: "text",
+                      value: formData.organisme || "",
+                      onChange: (e) => setFormData({ ...formData, organisme: e.target.value }),
+                      required: true,
+                    }}
+                    state={errors.organisme ? "error" : "default"}
+                    stateRelatedMessage={errors.organisme}
+                  />
+                )}
               </div>
               <div className="fr-col-12">
                 <div className={`fr-input-group ${errors.message ? "fr-input-group--error" : ""}`}>
