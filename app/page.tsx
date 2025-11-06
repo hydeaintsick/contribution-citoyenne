@@ -21,25 +21,25 @@ const features = [
     title: "Tunnel clair : alerter ou suggérer",
     description:
       "Un parcours court, une photo optionnelle et la géolocalisation.",
-    iconId: "fr-icon-route-line",
+    iconId: "fr-icon-road-map-line",
   },
   {
     title: "Tableau de bord pour la mairie",
     description:
       "Suivi des retours, cartographie, statistiques, réponses email.",
-    iconId: "fr-icon-dashboard-line",
+    iconId: "fr-icon-dashboard-3-line",
   },
   {
     title: "Catégories configurables",
     description:
       "Adaptez transports, voirie, espaces publics… à votre contexte.",
-    iconId: "fr-icon-settings-line",
+    iconId: "fr-icon-settings-5-line",
   },
   {
     title: "Sécurité & RGPD",
     description:
       "Consentement explicite, rétention limitée, audit basique.",
-    iconId: "fr-icon-shield-check-line",
+    iconId: "fr-icon-shield-line",
   },
   {
     title: "Déploiement rapide",

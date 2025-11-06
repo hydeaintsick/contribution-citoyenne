@@ -28,6 +28,35 @@ npm start
 
 Le site sera accessible sur [http://localhost:3000](http://localhost:3000).
 
+## 📝 Commits conventionnels
+
+Le projet utilise [Commitizen](https://github.com/commitizen/cz-cli) pour des commits conventionnels (feat, fix, etc.).
+
+### Utilisation
+
+Au lieu d'utiliser `git commit`, utilisez :
+
+```bash
+npm run commit
+```
+
+Cela ouvrira un assistant interactif pour créer un commit conforme aux conventions :
+- **feat** : Nouvelle fonctionnalité
+- **fix** : Correction de bug
+- **docs** : Documentation
+- **style** : Formatage, point-virgule manquant, etc.
+- **refactor** : Refactoring du code
+- **perf** : Amélioration des performances
+- **test** : Ajout ou modification de tests
+- **build** : Changements liés au build
+- **ci** : Changements liés à la CI/CD
+- **chore** : Autres changements (dépendances, etc.)
+- **revert** : Annulation d'un commit précédent
+
+### Validation automatique
+
+Les commits sont automatiquement validés par [commitlint](https://commitlint.js.org/) via un hook Git. Si un commit ne respecte pas les conventions, il sera rejeté.
+
 ## 🎨 Configuration DSFR
 
 Le Design System de l'État est déjà configuré dans `app/layout.tsx` et `app/globals.css`. Les composants DSFR sont disponibles via `@codegouvfr/react-dsfr`.
