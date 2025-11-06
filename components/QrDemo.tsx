@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { createModal } from "@codegouvfr/react-dsfr/Modal";
 import { motion } from "framer-motion";
@@ -32,6 +32,7 @@ const tunnelSteps = [
 
 export function QrDemo() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const {
     buttonProps,
     Component: Modal,
@@ -42,6 +43,10 @@ export function QrDemo() {
     id: "qr-demo-modal",
   });
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Logo Marianne française SVG encodé en base64
   // Symbole Marianne simplifié (bonnet phrygien)
   const marianneLogoSVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -50,13 +55,12 @@ export function QrDemo() {
     <path d="M10 6L12 4L14 6" stroke="#000091" stroke-width="1.5" stroke-linecap="round"/>
   </svg>`;
 
-  // Encodage base64 côté client
-  const marianneLogoBase64 =
-    typeof window !== "undefined"
-      ? `data:image/svg+xml;base64,${btoa(
-          unescape(encodeURIComponent(marianneLogoSVG))
-        )}`
-      : "";
+  // Encodage base64 côté client uniquement après montage
+  const marianneLogoBase64 = mounted
+    ? `data:image/svg+xml;base64,${btoa(
+        unescape(encodeURIComponent(marianneLogoSVG))
+      )}`
+    : "";
 
   return (
     <section
@@ -108,19 +112,30 @@ export function QrDemo() {
                   position: "relative",
                 }}
               >
-                <QRCodeSVG
-                  value="https://contribcit.fr"
-                  size={80}
-                  level="H"
-                  fgColor="#ffffff"
-                  bgColor="transparent"
-                  imageSettings={{
-                    src: marianneLogoBase64,
-                    height: 20,
-                    width: 20,
-                    excavate: true,
-                  }}
-                />
+                {mounted ? (
+                  <QRCodeSVG
+                    value="https://contribcit.fr"
+                    size={80}
+                    level="H"
+                    fgColor="#ffffff"
+                    bgColor="transparent"
+                    imageSettings={{
+                      src: marianneLogoBase64,
+                      height: 20,
+                      width: 20,
+                      excavate: true,
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: 80,
+                      height: 80,
+                      backgroundColor: "transparent",
+                    }}
+                    aria-label="QR Code"
+                  />
+                )}
               </div>
             </div>
           </div>

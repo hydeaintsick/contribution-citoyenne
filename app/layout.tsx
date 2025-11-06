@@ -16,14 +16,25 @@ export default function RootLayout({
   const jsonLd = createJsonLd();
 
   return (
-    <html lang="fr" data-fr-theme="light">
+    <html lang="fr" data-fr-theme="light" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <script
+          type="module"
+          src="/dsfr/dsfr/dsfr.module.js"
+          defer
+        />
+        <script
+          type="text/javascript"
+          noModule
+          src="/dsfr/dsfr/dsfr.nomodule.js"
+          defer
+        />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <DsfrProviderClient>
           <HeaderClient />
           <ConsentBannerClient />
