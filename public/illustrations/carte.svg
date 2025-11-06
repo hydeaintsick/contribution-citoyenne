@@ -1,0 +1,44 @@
+<svg width="1200" height="600" viewBox="0 0 1200 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond carte -->
+  <rect width="1200" height="600" fill="#E8F4F8"/>
+  
+  <!-- Routes -->
+  <path d="M 100 100 L 1100 100" stroke="#C0C0C0" stroke-width="4" fill="none"/>
+  <path d="M 100 200 L 1100 200" stroke="#C0C0C0" stroke-width="4" fill="none"/>
+  <path d="M 100 300 L 1100 300" stroke="#C0C0C0" stroke-width="4" fill="none"/>
+  <path d="M 100 400 L 1100 400" stroke="#C0C0C0" stroke-width="4" fill="none"/>
+  <path d="M 100 500 L 1100 500" stroke="#C0C0C0" stroke-width="4" fill="none"/>
+  
+  <path d="M 200 50 L 200 550" stroke="#C0C0C0" stroke-width="4" fill="none"/>
+  <path d="M 400 50 L 400 550" stroke="#C0C0C0" stroke-width="4" fill="none"/>
+  <path d="M 600 50 L 600 550" stroke="#C0C0C0" stroke-width="4" fill="none"/>
+  <path d="M 800 50 L 800 550" stroke="#C0C0C0" stroke-width="4" fill="none"/>
+  <path d="M 1000 50 L 1000 550" stroke="#C0C0C0" stroke-width="4" fill="none"/>
+  
+  <!-- Points d'alerte (rouge) -->
+  <circle cx="250" cy="150" r="12" fill="#E1000F" stroke="white" stroke-width="2"/>
+  <circle cx="450" cy="250" r="12" fill="#E1000F" stroke="white" stroke-width="2"/>
+  <circle cx="650" cy="180" r="12" fill="#E1000F" stroke="white" stroke-width="2"/>
+  <circle cx="350" cy="350" r="12" fill="#E1000F" stroke="white" stroke-width="2"/>
+  <circle cx="750" cy="320" r="12" fill="#E1000F" stroke="white" stroke-width="2"/>
+  <circle cx="550" cy="420" r="12" fill="#E1000F" stroke="white" stroke-width="2"/>
+  <circle cx="850" cy="280" r="12" fill="#E1000F" stroke="white" stroke-width="2"/>
+  
+  <!-- Points de suggestion (bleu) -->
+  <circle cx="300" cy="220" r="12" fill="#0063CB" stroke="white" stroke-width="2"/>
+  <circle cx="500" cy="180" r="12" fill="#0063CB" stroke="white" stroke-width="2"/>
+  <circle cx="700" cy="250" r="12" fill="#0063CB" stroke="white" stroke-width="2"/>
+  <circle cx="400" cy="400" r="12" fill="#0063CB" stroke="white" stroke-width="2"/>
+  <circle cx="600" cy="380" r="12" fill="#0063CB" stroke="white" stroke-width="2"/>
+  <circle cx="800" cy="450" r="12" fill="#0063CB" stroke="white" stroke-width="2"/>
+  <circle cx="950" cy="200" r="12" fill="#0063CB" stroke="white" stroke-width="2"/>
+  <circle cx="1050" cy="350" r="12" fill="#0063CB" stroke="white" stroke-width="2"/>
+  
+  <!-- Légende -->
+  <rect x="50" y="50" width="200" height="80" fill="white" rx="4" stroke="#C0C0C0" stroke-width="1"/>
+  <text x="70" y="75" font-family="Arial, sans-serif" font-size="14" fill="#000" font-weight="bold">Légende</text>
+  <circle cx="70" cy="95" r="8" fill="#E1000F"/>
+  <text x="90" y="100" font-family="Arial, sans-serif" font-size="12" fill="#000">Alertes</text>
+  <circle cx="70" cy="115" r="8" fill="#0063CB"/>
+  <text x="90" y="120" font-family="Arial, sans-serif" font-size="12" fill="#000">Suggestions</text>
+</svg>

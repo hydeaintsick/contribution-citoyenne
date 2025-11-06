@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Contribcit - Landing Page
 
-## Getting Started
+Landing page marketing haut de gamme pour Contribcit, plateforme de contribution citoyenne pour les mairies et collectivités.
 
-First, run the development server:
+## 🚀 Technologies
+
+- **Next.js 16** (App Router) avec **TypeScript**
+- **Design System de l'État (DSFR)** via `@codegouvfr/react-dsfr`
+- **Framer Motion** pour les animations discrètes
+- **Zod** pour la validation des formulaires
+- **Tailwind CSS** pour les styles personnalisés
+
+## 📦 Installation
 
 ```bash
+# Installer les dépendances
+npm install
+
+# Lancer le serveur de développement
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build de production
+npm run build
+
+# Démarrer le serveur de production
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Le site sera accessible sur [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🎨 Configuration DSFR
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Le Design System de l'État est déjà configuré dans `app/layout.tsx` et `app/globals.css`. Les composants DSFR sont disponibles via `@codegouvfr/react-dsfr`.
 
-## Learn More
+## 📝 Variables d'environnement
 
-To learn more about Next.js, take a look at the following resources:
+Créez un fichier `.env.local` à partir de `.env.example` :
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+BASE_URL=https://contribcit.fr
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🧩 Structure du projet
 
-## Deploy on Vercel
+```
+app/
+  layout.tsx          # Layout principal avec DSFR
+  page.tsx            # Landing page
+  globals.css         # Styles globaux DSFR
+  confidentialite/    # Page politique de confidentialité
+components/
+  Hero.tsx            # Section hero
+  Marquee.tsx         # Bandeau de confiance
+  Feature.tsx         # Carte de fonctionnalité
+  HowItWorks.tsx      # Section "Comment ça marche"
+  Kpis.tsx            # Indicateurs clés
+  MapTeaser.tsx       # Aperçu de la cartographie
+  QrDemo.tsx          # Démonstration QR code
+  Testimonials.tsx    # Témoignages
+  Faq.tsx             # FAQ
+  ContactCta.tsx      # Formulaire de contact
+lib/
+  seo.ts              # Métadonnées SEO
+  contact.ts          # Validation formulaire contact
+public/
+  illustrations/      # SVG illustrations
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## ✏️ Modifier le contenu
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Hero
+
+Le contenu du Hero se trouve dans `components/Hero.tsx`. Les taglines alternatives sont disponibles en commentaires.
+
+### Fonctionnalités
+
+Les fonctionnalités sont définies dans `app/page.tsx` dans le tableau `features`. Modifiez les titres, descriptions et icônes DSFR selon vos besoins.
+
+### KPIs
+
+Les KPIs sont définis dans `app/page.tsx` dans le tableau `kpis`. Vous pouvez modifier les valeurs, labels et descriptions.
+
+### FAQ
+
+Les questions/réponses sont définies dans `app/page.tsx` dans le tableau `faqItems`. Ajoutez, modifiez ou supprimez des entrées selon vos besoins.
+
+### Témoignages
+
+Les témoignages sont définis dans `app/page.tsx` dans le tableau `testimonials`. Modifiez les noms, fonctions, communes et textes.
+
+## 🍪 Cookies et Analytics
+
+Le site utilise la bannière de cookies DSFR. Pour configurer Matomo ou un autre service d'analyse :
+
+1. Modifiez `app/layout.tsx` dans le composant `ConsentBanner`
+2. Ajoutez le script d'analyse après le consentement dans un composant client
+
+## 🔍 SEO
+
+Les métadonnées SEO sont configurées dans `lib/seo.ts` et utilisées dans `app/layout.tsx`. Le JSON-LD est injecté automatiquement.
+
+## ♿ Accessibilité
+
+Le site respecte les standards d'accessibilité DSFR (AA minimum) :
+- Navigation clavier
+- ARIA roles et labels
+- Contrastes conformes
+- Focus visible
+
+## 📄 Licence
+
+Ce projet est privé.

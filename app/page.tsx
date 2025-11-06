@@ -1,65 +1,167 @@
-import Image from "next/image";
+import { Hero } from "@/components/Hero";
+import { Marquee } from "@/components/Marquee";
+import { Feature } from "@/components/Feature";
+import { HowItWorks } from "@/components/HowItWorks";
+import { Kpis } from "@/components/Kpis";
+import { MapTeaser } from "@/components/MapTeaser";
+import { QrDemo } from "@/components/QrDemo";
+import { Testimonials } from "@/components/Testimonials";
+import { Faq } from "@/components/Faq";
+import { ContactCta } from "@/components/ContactCta";
+
+const features = [
+  {
+    title: "QR codes partout, retours immédiats",
+    description:
+      "Déployez des QR codes sur l'espace public : abribus, médiathèques, mairies annexes…",
+    iconId: "fr-icon-qr-code-line",
+  },
+  {
+    title: "Tunnel clair : alerter ou suggérer",
+    description:
+      "Un parcours court, une photo optionnelle et la géolocalisation.",
+    iconId: "fr-icon-route-line",
+  },
+  {
+    title: "Tableau de bord pour la mairie",
+    description:
+      "Suivi des retours, cartographie, statistiques, réponses email.",
+    iconId: "fr-icon-dashboard-line",
+  },
+  {
+    title: "Catégories configurables",
+    description:
+      "Adaptez transports, voirie, espaces publics… à votre contexte.",
+    iconId: "fr-icon-settings-line",
+  },
+  {
+    title: "Sécurité & RGPD",
+    description:
+      "Consentement explicite, rétention limitée, audit basique.",
+    iconId: "fr-icon-shield-check-line",
+  },
+  {
+    title: "Déploiement rapide",
+    description: "Pack de QR codes (A4/A6) prêt à imprimer.",
+    iconId: "fr-icon-printer-line",
+  },
+];
+
+const kpis = [
+  {
+    value: "80%",
+    label: "des retours géolocalisés",
+    description: "Précision maximale pour le traitement",
+  },
+  {
+    value: "< 2 min",
+    label: "pour soumettre un retour",
+    description: "Tunnel optimisé pour l'utilisateur",
+  },
+  {
+    value: "30%",
+    label: "de temps gagné",
+    description: "sur l'orientation des équipes",
+  },
+];
+
+const testimonials = [
+  {
+    name: "Marie Dupont",
+    function: "Maire",
+    commune: "Ville de 15 000 habitants",
+    text: "Contribcit nous a permis de mieux comprendre les besoins de nos habitants. Les retours sont clairs, géolocalisés et faciles à traiter.",
+  },
+  {
+    name: "Jean Martin",
+    function: "Directeur Général des Services",
+    commune: "Communauté de communes",
+    text: "L'outil est simple à déployer et les équipes l'ont adopté rapidement. La cartographie nous aide à prioriser les interventions.",
+  },
+  {
+    name: "Sophie Bernard",
+    function: "Responsable tranquillité publique",
+    commune: "Métropole",
+    text: "Les alertes remontent en temps réel et nous permettent d'agir rapidement. Un vrai plus pour la sécurité de nos concitoyens.",
+  },
+];
+
+const faqItems = [
+  {
+    question: "Comment déployez-vous les QR codes ?",
+    answer:
+      "Nous fournissons un pack de QR codes prêts à imprimer (formats A4 et A6) que vous pouvez déployer sur l'espace public : abribus, médiathèques, mairies annexes, panneaux d'affichage, etc. Chaque QR code est unique et lié à votre commune.",
+  },
+  {
+    question: "Le citoyen doit-il s'identifier ?",
+    answer:
+      "Non, le citoyen n'a pas besoin de créer de compte. Il scanne simplement le QR code, choisit d'alerter ou de suggérer, remplit un formulaire court et peut ajouter une photo et sa géolocalisation. Le processus est anonyme par défaut.",
+  },
+  {
+    question: "Comment se fait la cartographie ?",
+    answer:
+      "La géolocalisation est automatique si le citoyen l'autorise. Les retours apparaissent sur une carte interactive dans votre tableau de bord, avec des points rouges pour les alertes et bleus pour les suggestions.",
+  },
+  {
+    question: "Et la conformité RGPD ?",
+    answer:
+      "Contribcit est conforme RGPD. Nous demandons un consentement explicite pour le traitement des données, limitons la rétention des données et effectuons des audits réguliers. Les données sont hébergées en France.",
+  },
+  {
+    question: "Quel est le coût ?",
+    answer:
+      "Contactez-nous pour obtenir un devis personnalisé selon la taille de votre commune et vos besoins. Nous proposons des tarifs adaptés aux collectivités.",
+  },
+  {
+    question: "Peut-on personnaliser les catégories ?",
+    answer:
+      "Oui, vous pouvez configurer les catégories selon votre contexte : transports, voirie, espaces publics, sécurité, environnement, etc. Nous vous accompagnons dans la configuration initiale.",
+  },
+  {
+    question: "Combien de temps pour le déploiement ?",
+    answer:
+      "Le déploiement est rapide : configuration de votre compte en quelques jours, impression des QR codes, et déploiement sur le terrain. Vous pouvez être opérationnel en moins de 2 semaines.",
+  },
+  {
+    question: "Y a-t-il une formation pour les équipes ?",
+    answer:
+      "Oui, nous proposons une formation pour vos équipes sur l'utilisation du tableau de bord, la gestion des retours et la cartographie. Un support est également disponible.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main>
+      <Hero />
+      <Marquee />
+      <section className="fr-container fr-py-8w">
+        <div className="fr-grid-row fr-grid-row--center">
+          <div className="fr-col-12">
+            <h2 className="fr-h2 fr-text--center">Fonctionnalités</h2>
+            <p className="fr-text--lg fr-text--center fr-mt-2w">
+              Tout ce dont vous avez besoin pour faciliter la contribution citoyenne
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="fr-grid-row fr-grid-row--gutters fr-mt-6w">
+          {features.map((feature, index) => (
+            <div key={index} className="fr-col-12 fr-col-md-6 fr-col-lg-4">
+              <Feature
+                title={feature.title}
+                description={feature.description}
+                iconId={feature.iconId}
+              />
+            </div>
+          ))}
         </div>
-      </main>
-    </div>
+      </section>
+      <HowItWorks />
+      <Kpis kpis={kpis} />
+      <MapTeaser />
+      <QrDemo />
+      <Testimonials testimonials={testimonials} />
+      <Faq items={faqItems} />
+      <ContactCta />
+    </main>
   );
 }

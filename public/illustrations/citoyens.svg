@@ -1,0 +1,44 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond -->
+  <rect width="400" height="300" fill="#F5F5FE"/>
+  
+  <!-- Personne 1 (gauche) -->
+  <circle cx="100" cy="100" r="30" fill="#6E6E6E"/>
+  <rect x="70" y="130" width="60" height="80" fill="#0063CB" rx="5"/>
+  <rect x="80" y="130" width="20" height="40" fill="#0063CB"/>
+  <rect x="100" y="130" width="20" height="40" fill="#0063CB"/>
+  <rect x="85" y="180" width="15" height="30" fill="#6E6E6E"/>
+  <rect x="100" y="180" width="15" height="30" fill="#6E6E6E"/>
+  
+  <!-- Smartphone -->
+  <rect x="115" y="110" width="25" height="40" fill="#000" rx="3"/>
+  <rect x="118" y="113" width="19" height="30" fill="#E8F4F8"/>
+  <circle cx="127" cy="148" r="2" fill="#0063CB"/>
+  
+  <!-- Personne 2 (centre) -->
+  <circle cx="200" cy="120" r="35" fill="#6E6E6E"/>
+  <rect x="165" y="155" width="70" height="90" fill="#0063CB" rx="5"/>
+  <rect x="180" y="155" width="25" height="45" fill="#0063CB"/>
+  <rect x="205" y="155" width="25" height="45" fill="#0063CB"/>
+  <rect x="185" y="210" width="20" height="35" fill="#6E6E6E"/>
+  <rect x="205" y="210" width="20" height="35" fill="#6E6E6E"/>
+  
+  <!-- Personne 3 (droite) -->
+  <circle cx="300" cy="100" r="30" fill="#6E6E6E"/>
+  <rect x="270" y="130" width="60" height="80" fill="#0063CB" rx="5"/>
+  <rect x="280" y="130" width="20" height="40" fill="#0063CB"/>
+  <rect x="300" y="130" width="20" height="40" fill="#0063CB"/>
+  <rect x="285" y="180" width="15" height="30" fill="#6E6E6E"/>
+  <rect x="300" y="180" width="15" height="30" fill="#6E6E6E"/>
+  
+  <!-- QR Code flottant -->
+  <rect x="150" y="50" width="100" height="100" fill="white" rx="8" stroke="#0063CB" stroke-width="2"/>
+  <rect x="165" y="65" width="20" height="20" fill="#000"/>
+  <rect x="190" y="65" width="20" height="20" fill="#000"/>
+  <rect x="215" y="65" width="20" height="20" fill="#000"/>
+  <rect x="165" y="90" width="20" height="20" fill="#000"/>
+  <rect x="215" y="90" width="20" height="20" fill="#000"/>
+  <rect x="165" y="115" width="20" height="20" fill="#000"/>
+  <rect x="190" y="115" width="20" height="20" fill="#000"/>
+  <rect x="215" y="115" width="20" height="20" fill="#000"/>
+</svg>
