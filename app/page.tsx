@@ -15,19 +15,19 @@ const features = [
     title: "QR codes partout, retours immédiats",
     description:
       "Déployez des QR codes sur l'espace public : abribus, médiathèques, mairies annexes…",
-    iconId: "fr-icon-qr-code-line",
+    iconId: "fr-icon-code-s-slash-line",
   },
   {
     title: "Tunnel clair : alerter ou suggérer",
     description:
       "Un parcours court, une photo optionnelle et la géolocalisation.",
-    iconId: "fr-icon-road-map-line",
+    iconId: "fr-icon-feedback-line",
   },
   {
     title: "Tableau de bord pour la mairie",
     description:
       "Suivi des retours, cartographie, statistiques, réponses email.",
-    iconId: "fr-icon-dashboard-3-line",
+    iconId: "fr-icon-line-chart-line",
   },
   {
     title: "Catégories configurables",

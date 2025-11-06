@@ -13,10 +13,9 @@ export function Feature({ title, description, iconId }: FeatureProps) {
     <div className="fr-card fr-card--no-border fr-card--shadow fr-p-4w">
       {iconId && (
         <div className="fr-text--center fr-mb-3w">
-          <i
-            className={`fr-icon ${iconId}`}
+          <span
+            className={`${iconId} fr-icon--lg`}
             style={{
-              fontSize: "3rem",
               color: "var(--blue-france-sun-113-625)",
             }}
             aria-hidden="true"
