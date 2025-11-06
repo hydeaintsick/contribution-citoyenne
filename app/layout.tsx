@@ -67,6 +67,14 @@ export default function RootLayout({
                   href: "/#contact",
                 },
               },
+              {
+                text: "Code source",
+                linkProps: {
+                  href: "https://github.com/hydeaintsick/contribution-citoyenne",
+                  target: "_blank",
+                  rel: "noopener noreferrer",
+                },
+              },
             ]}
           />
         </DsfrProviderClient>
