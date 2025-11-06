@@ -13,13 +13,15 @@ const steps = [
   {
     number: 2,
     title: "Il choisit",
-    description: "Alerter ou Suggérer, précise la catégorie et ajoute une description (photo/localisation possibles)",
+    description:
+      "Alerter ou Suggérer, précise la catégorie et ajoute une description (photo/localisation possibles)",
     icon: "/illustrations/citoyens.svg",
   },
   {
     number: 3,
     title: "La mairie reçoit",
-    description: "Et traite : suivi, cartographie, réponse par email, clôture avec motif",
+    description:
+      "Et traite : suivi, cartographie, réponse par email, clôture avec motif",
     icon: "/illustrations/ville.svg",
   },
 ];
@@ -48,7 +50,7 @@ export function HowItWorks() {
             <div className="fr-card fr-card--no-border fr-card--shadow fr-p-4w">
               <div className="fr-text--center">
                 <div
-                  className="fr-badge fr-badge--info"
+                  className="fr-badge fr-badge--info fr-badge--sm"
                   style={{
                     width: "60px",
                     height: "60px",
@@ -81,4 +83,3 @@ export function HowItWorks() {
     </section>
   );
 }
-

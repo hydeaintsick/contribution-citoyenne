@@ -161,7 +161,8 @@ export default function Home() {
       <Kpis kpis={kpis} />
       <MapTeaser />
       <QrDemo />
-      <Testimonials testimonials={testimonials} />
+      {/* Section commentée - Ils nous font confiance */}
+      {/* <Testimonials testimonials={testimonials} /> */}
       <Faq items={faqItems} />
       <ContactCta />
     </main>
