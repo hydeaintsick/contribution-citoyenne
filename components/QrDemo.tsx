@@ -49,11 +49,14 @@ export function QrDemo() {
     <path d="M8 16c0-2 1.79-4 4-4s4 2 4 4" stroke="#000091" stroke-width="1.5" fill="none"/>
     <path d="M10 6L12 4L14 6" stroke="#000091" stroke-width="1.5" stroke-linecap="round"/>
   </svg>`;
-  
+
   // Encodage base64 côté client
-  const marianneLogoBase64 = typeof window !== 'undefined' 
-    ? `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(marianneLogoSVG)))}`
-    : '';
+  const marianneLogoBase64 =
+    typeof window !== "undefined"
+      ? `data:image/svg+xml;base64,${btoa(
+          unescape(encodeURIComponent(marianneLogoSVG))
+        )}`
+      : "";
 
   return (
     <section
@@ -78,7 +81,10 @@ export function QrDemo() {
       </div>
       <div className="fr-container fr-py-3w">
         <div className="fr-grid-row fr-grid-row--middle fr-grid-row--gutters">
-          <div className="fr-col-12 fr-col-md-8" style={{ paddingRight: "3rem" }}>
+          <div
+            className="fr-col-12 fr-col-md-8"
+            style={{ paddingRight: "3rem" }}
+          >
             <h2 className="fr-h3" style={{ color: "white", margin: 0 }}>
               Découvrez le tunnel en action
             </h2>

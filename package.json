@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "postinstall": "node scripts/copy-dsfr.js",
+    "build": "node scripts/copy-dsfr.js && next build",
     "start": "next start",
     "lint": "eslint",
     "commit": "cz",
