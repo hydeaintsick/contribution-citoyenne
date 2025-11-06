@@ -4,9 +4,12 @@ export type ContactType = "commune" | "organisme_financier";
 
 export const contactSchema = z
   .object({
-    contactType: z.enum(["commune", "organisme_financier"], {
-      errorMap: () => ({ message: "Veuillez sélectionner un type de contact" }),
-    }),
+    contactType: z.enum(["commune", "organisme_financier"]).refine(
+      (val) => val === "commune" || val === "organisme_financier",
+      {
+        message: "Veuillez sélectionner un type de contact",
+      }
+    ),
     name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
     email: z.string().email("Email invalide"),
     function: z.string().min(2, "La fonction doit contenir au moins 2 caractères"),
