@@ -26,6 +26,12 @@ export function HeaderClient() {
           },
         },
         {
+          text: "Qui sommes nous ?",
+          linkProps: {
+            href: "/qui-sommes-nous",
+          },
+        },
+        {
           text: "Comment ça marche",
           linkProps: {
             href: "/#how-it-works",
