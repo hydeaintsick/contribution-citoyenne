@@ -26,12 +26,6 @@ export function HeaderClient() {
           },
         },
         {
-          text: "Qui sommes nous ?",
-          linkProps: {
-            href: "/qui-sommes-nous",
-          },
-        },
-        {
           text: "Comment ça marche",
           linkProps: {
             href: "/#how-it-works",
@@ -43,6 +37,12 @@ export function HeaderClient() {
             href: "/#contact",
           },
         },
+        {
+          text: "Notre mission",
+          linkProps: {
+            href: "/qui-sommes-nous",
+          },
+        },
       ]}
       quickAccessItems={[
         {
@@ -50,7 +50,9 @@ export function HeaderClient() {
           text: "Nous contacter",
           buttonProps: {
             onClick: () => {
-              document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+              document
+                .getElementById("contact")
+                ?.scrollIntoView({ behavior: "smooth" });
             },
           },
         },
@@ -58,4 +60,3 @@ export function HeaderClient() {
     />
   );
 }
-
