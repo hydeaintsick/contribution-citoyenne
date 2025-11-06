@@ -7,7 +7,7 @@ import Image from "next/image";
 
 export function Hero() {
   return (
-    <section className="fr-container fr-py-8w">
+    <section id="hero" className="fr-container fr-py-8w">
       <div className="fr-grid-row fr-grid-row--gutters fr-grid-row--middle">
         <div className="fr-col-12 fr-col-md-6">
           <motion.div
@@ -54,15 +54,36 @@ export function Hero() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.1 }}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              position: "relative",
+            }}
           >
-            <Image
-              src="/illustrations/ville.svg"
-              alt="Illustration d'une ville moderne avec QR codes"
-              width={600}
-              height={400}
-              priority
-              className="fr-responsive-img"
-            />
+            <div
+              style={{
+                position: "relative",
+                borderRadius: "16px",
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="/bike_illustration.svg"
+                alt="Illustration d'une femme à vélo dans une ville moderne"
+                width={390}
+                height={260}
+                priority
+                className="fr-responsive-img"
+                style={{
+                  objectFit: "contain",
+                  maxWidth: "390px",
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                }}
+              />
+            </div>
           </motion.div>
         </div>
       </div>

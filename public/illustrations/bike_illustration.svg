@@ -1,0 +1,102 @@
+<svg width="390" height="260" viewBox="0 0 390 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond -->
+  <rect width="390" height="260" fill="#F5F5FE"/>
+  
+  <!-- Sol -->
+  <rect y="220" width="390" height="40" fill="#E8E8E8"/>
+  
+  <!-- Bâtiments en arrière-plan -->
+  <rect x="50" y="100" width="60" height="120" fill="#D4D4D4" rx="4"/>
+  <rect x="60" y="110" width="12" height="12" fill="#FFE100"/>
+  <rect x="80" y="110" width="12" height="12" fill="#FFE100"/>
+  <rect x="60" y="130" width="12" height="12" fill="#FFE100"/>
+  <rect x="80" y="130" width="12" height="12" fill="#FFE100"/>
+  
+  <rect x="130" y="80" width="70" height="140" fill="#D4D4D4" rx="4"/>
+  <rect x="145" y="90" width="15" height="15" fill="#FFE100"/>
+  <rect x="170" y="90" width="15" height="15" fill="#FFE100"/>
+  <rect x="145" y="115" width="15" height="15" fill="#FFE100"/>
+  <rect x="170" y="115" width="15" height="15" fill="#FFE100"/>
+  
+  <rect x="220" y="120" width="50" height="100" fill="#D4D4D4" rx="4"/>
+  <rect x="230" y="130" width="12" height="12" fill="#FFE100"/>
+  <rect x="250" y="130" width="12" height="12" fill="#FFE100"/>
+  
+  <!-- Arbres -->
+  <circle cx="280" cy="200" r="25" fill="#4A9B4A"/>
+  <rect x="277" y="200" width="6" height="20" fill="#8B4513"/>
+  
+  <circle cx="320" cy="190" r="20" fill="#4A9B4A"/>
+  <rect x="318" y="190" width="4" height="15" fill="#8B4513"/>
+  
+  <!-- Voiture de police -->
+  <rect x="100" y="180" width="80" height="40" fill="#0063CB" rx="4"/>
+  <rect x="110" y="185" width="60" height="15" fill="#FFFFFF"/>
+  <text x="140" y="197" font-family="Arial, sans-serif" font-size="10" fill="#0063CB" font-weight="bold" text-anchor="middle">POLICE</text>
+  <rect x="105" y="195" width="8" height="8" fill="#E1000F"/>
+  <rect x="167" y="195" width="8" height="8" fill="#0063CB"/>
+  <rect x="105" y="210" width="6" height="6" fill="#000"/>
+  <rect x="174" y="210" width="6" height="6" fill="#000"/>
+  
+  <!-- Femme à vélo -->
+  <!-- Tête -->
+  <circle cx="200" cy="150" r="18" fill="#D4A574"/>
+  <!-- Cheveux -->
+  <path d="M 185 145 Q 185 135 195 135 Q 205 135 215 145 Q 215 150 210 150 Q 200 150 200 145 Q 190 145 185 150 Z" fill="#2C2C2C"/>
+  <!-- Yeux -->
+  <circle cx="195" cy="148" r="2" fill="#000"/>
+  <circle cx="205" cy="148" r="2" fill="#000"/>
+  <!-- Bouche -->
+  <path d="M 195 155 Q 200 158 205 155" stroke="#000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  
+  <!-- Corps -->
+  <rect x="190" y="168" width="20" height="35" fill="#FFC107" rx="3"/>
+  
+  <!-- Bras -->
+  <rect x="180" y="170" width="12" height="30" fill="#D4A574" rx="2"/>
+  <rect x="218" y="170" width="12" height="30" fill="#D4A574" rx="2"/>
+  
+  <!-- Jambes -->
+  <rect x="192" y="203" width="8" height="25" fill="#0063CB" rx="2"/>
+  <rect x="210" y="203" width="8" height="25" fill="#0063CB" rx="2"/>
+  
+  <!-- Chaussures -->
+  <ellipse cx="196" cy="230" rx="6" ry="3" fill="#FFFFFF"/>
+  <ellipse cx="214" cy="230" rx="6" ry="3" fill="#FFFFFF"/>
+  
+  <!-- Sac -->
+  <rect x="215" y="175" width="15" height="20" fill="#FF6B00" rx="2"/>
+  <rect x="217" y="175" width="11" height="4" fill="#FF8C00" rx="1"/>
+  
+  <!-- Vélo -->
+  <!-- Cadre -->
+  <path d="M 160 200 L 200 200 L 220 180 L 240 200 L 250 200" stroke="#0063CB" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M 200 200 L 200 180" stroke="#0063CB" stroke-width="4" fill="none"/>
+  
+  <!-- Roues -->
+  <circle cx="170" cy="200" r="20" fill="none" stroke="#0063CB" stroke-width="3"/>
+  <circle cx="170" cy="200" r="12" fill="#FFFFFF"/>
+  <circle cx="170" cy="200" r="4" fill="#0063CB"/>
+  
+  <circle cx="240" cy="200" r="20" fill="none" stroke="#0063CB" stroke-width="3"/>
+  <circle cx="240" cy="200" r="12" fill="#FFFFFF"/>
+  <circle cx="240" cy="200" r="4" fill="#0063CB"/>
+  
+  <!-- Guidon -->
+  <path d="M 220 180 L 230 175 M 220 180 L 210 175" stroke="#0063CB" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Selle -->
+  <ellipse cx="200" cy="180" rx="8" ry="4" fill="#0063CB"/>
+  
+  <!-- Cœurs -->
+  <path d="M 250 120 Q 250 110 255 110 Q 260 110 260 120 Q 260 130 255 135 Q 250 130 250 120 Z" fill="#E1000F"/>
+  <path d="M 270 110 Q 270 100 275 100 Q 280 100 280 110 Q 280 120 275 125 Q 270 120 270 110 Z" fill="#E1000F"/>
+  <path d="M 290 125 Q 290 115 295 115 Q 300 115 300 125 Q 300 135 295 140 Q 290 135 290 125 Z" fill="#E1000F"/>
+  
+  <!-- Nuages -->
+  <ellipse cx="60" cy="60" rx="25" ry="15" fill="#FFFFFF" opacity="0.8"/>
+  <ellipse cx="80" cy="55" rx="20" ry="12" fill="#FFFFFF" opacity="0.8"/>
+  
+  <ellipse cx="150" cy="50" rx="30" ry="18" fill="#FFFFFF" opacity="0.8"/>
+  <ellipse cx="170" cy="45" rx="25" ry="15" fill="#FFFFFF" opacity="0.8"/>
+</svg>
