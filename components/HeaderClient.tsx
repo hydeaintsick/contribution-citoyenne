@@ -19,17 +19,58 @@ type SessionUser = {
   lastLoginAt?: string | null;
 };
 
+type HeaderClientProps = {
+  initialSessionUser: SessionUser | null;
+};
+
+function areSessionUsersEqual(a: SessionUser | null, b: SessionUser | null) {
+  if (a === b) {
+    return true;
+  }
+  if (!a || !b) {
+    return false;
+  }
+  return (
+    a.id === b.id &&
+    a.email === b.email &&
+    a.role === b.role &&
+    a.firstName === b.firstName &&
+    a.lastName === b.lastName &&
+    a.lastLoginAt === b.lastLoginAt
+  );
+}
+
 const communePortalUrl =
   process.env.NEXT_PUBLIC_COMMUNE_PORTAL_URL ?? "/admin/login";
 
-export function HeaderClient() {
+export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [hasSession, setHasSession] = useState(false);
-  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const [hasSession, setHasSession] = useState(
+    () => initialSessionUser !== null
+  );
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(
+    () => initialSessionUser
+  );
   const { theme, toggleTheme } = useTheme();
   const isDarkTheme = theme === "dark";
+
+  const updateSessionState = useCallback((nextUser: SessionUser | null) => {
+    setSessionUser((currentUser) => {
+      if (areSessionUsersEqual(currentUser, nextUser)) {
+        return currentUser;
+      }
+      return nextUser;
+    });
+    setHasSession((currentHasSession) => {
+      const nextHasSession = Boolean(nextUser);
+      if (currentHasSession === nextHasSession) {
+        return currentHasSession;
+      }
+      return nextHasSession;
+    });
+  }, []);
 
   const openAdminSpace = useCallback(() => {
     window.open("/admin", "_blank", "noopener,noreferrer");
@@ -59,8 +100,7 @@ export function HeaderClient() {
         }
 
         if (!response.ok) {
-          setHasSession(false);
-          setSessionUser(null);
+          updateSessionState(null);
           return;
         }
 
@@ -70,8 +110,7 @@ export function HeaderClient() {
           return;
         }
 
-        setHasSession(Boolean(data.user));
-        setSessionUser(data.user ?? null);
+        updateSessionState(data.user ?? null);
       } catch (error) {
         if (
           !isMounted ||
@@ -79,8 +118,7 @@ export function HeaderClient() {
         ) {
           return;
         }
-        setHasSession(false);
-        setSessionUser(null);
+        updateSessionState(null);
       }
     }
 
@@ -90,7 +128,7 @@ export function HeaderClient() {
       isMounted = false;
       controller.abort();
     };
-  }, []);
+  }, [updateSessionState]);
 
   const handleLogout = useCallback(async () => {
     if (isLoggingOut) {
@@ -102,15 +140,14 @@ export function HeaderClient() {
         method: "POST",
       });
       if (response.ok) {
-        setHasSession(false);
-        setSessionUser(null);
+        updateSessionState(null);
       }
       router.push("/admin/login");
       router.refresh();
     } finally {
       setIsLoggingOut(false);
     }
-  }, [isLoggingOut, router]);
+  }, [isLoggingOut, router, updateSessionState]);
 
   const isAdmin = sessionUser?.role === "ADMIN";
 

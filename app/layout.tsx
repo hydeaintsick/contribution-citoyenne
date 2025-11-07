@@ -1,19 +1,27 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Footer } from "@codegouvfr/react-dsfr/Footer";
 import { HeaderClient } from "@/components/HeaderClient";
 import { ConsentBannerClient } from "@/components/ConsentBannerClient";
 import { DsfrProviderClient } from "@/components/DsfrProviderClient";
 import { ThemeProviderClient } from "@/components/ThemeProviderClient";
 import { createMetadata, createJsonLd } from "@/lib/seo";
+import { getSessionCookieName, parseSessionCookie } from "@/lib/session";
 import "./globals.css";
 
 export const metadata: Metadata = createMetadata();
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const sessionCookieValue =
+    cookieStore.get(getSessionCookieName())?.value ?? undefined;
+  const session = await parseSessionCookie(sessionCookieValue);
+  const initialSessionUser = session?.user ?? null;
+
   const jsonLd = createJsonLd();
 
   return (
@@ -38,7 +46,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <DsfrProviderClient>
           <ThemeProviderClient>
-            <HeaderClient />
+            <HeaderClient initialSessionUser={initialSessionUser} />
             <ConsentBannerClient />
             {children}
             <Footer

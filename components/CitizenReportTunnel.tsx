@@ -440,7 +440,7 @@ export function CitizenReportTunnel({ communeId, communeName }: CitizenReportTun
   );
 
   return (
-    <div className="fr-container fr-container--fluid">
+    <div className="fr-container fr-container--fluid fr-px-2w fr-px-md-4w">
       <Stepper
         currentStep={currentStep}
         stepCount={REPORT_STEPS.length}
@@ -470,21 +470,21 @@ export function CitizenReportTunnel({ communeId, communeName }: CitizenReportTun
               </p>
             </div>
 
-            <div className="fr-grid-row fr-grid-row--gutters fr-mt-4w">
-              <div className="fr-col-12 fr-col-md-6">
+            <div className="fr-grid-row fr-grid-row--gutters fr-grid-row--center fr-mt-4w">
+              <div className="fr-col-12 fr-col-sm-8 fr-col-md-5 fr-col-lg-4">
                 <Button
-                  priority="secondary"
+                  priority="primary"
                   size="large"
-                  className="fr-width-full"
+                  className="fr-width-full contribcit-alert-button"
                   onClick={() => handleSelectType("alert")}
                   iconId="fr-icon-flashlight-line"
                 >
                   Alerter
                 </Button>
               </div>
-              <div className="fr-col-12 fr-col-md-6">
+              <div className="fr-col-12 fr-col-sm-8 fr-col-md-5 fr-col-lg-4">
                 <Button
-                  priority="primary"
+                  priority="secondary"
                   size="large"
                   className="fr-width-full"
                   onClick={() => handleSelectType("suggestion")}

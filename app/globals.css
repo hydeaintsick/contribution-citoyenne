@@ -21,3 +21,18 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+.contribcit-alert-button.fr-btn {
+  background-color: var(--background-action-high-error);
+  color: var(--text-inverted-error);
+  --hover: var(--background-action-high-error-hover);
+  --active: var(--background-action-high-error-active);
+}
+
+.contribcit-alert-button.fr-btn:hover {
+  background-color: var(--hover);
+}
+
+.contribcit-alert-button.fr-btn:active {
+  background-color: var(--active);
+}
