@@ -90,7 +90,7 @@ export function HeaderClient() {
       isMounted = false;
       controller.abort();
     };
-  }, [pathname]);
+  }, []);
 
   const handleLogout = useCallback(async () => {
     if (isLoggingOut) {

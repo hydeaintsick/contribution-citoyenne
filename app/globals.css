@@ -12,11 +12,6 @@
   --foreground: #171717;
 }
 
-[data-fr-theme="dark"] {
-  --background: #111827;
-  --foreground: #f9fafb;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -25,20 +20,4 @@
 body {
   background: var(--background);
   color: var(--foreground);
-}
-
-.admin-shell {
-  background: var(--background-alt-grey);
-}
-
-.admin-shell--login {
-  background: var(--background-alt-grey);
-}
-
-.admin-shell--default {
-  background: var(--background-alt-grey);
-}
-
-.admin-shell-container {
-  min-height: 80vh;
 }
