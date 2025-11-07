@@ -19,8 +19,26 @@ model User {
   password  String
   firstName String?
   lastName  String?
+  phone     String?
   role      Role     @default(ADMIN)
+  commune   Commune? @relation(fields: [communeId], references: [id])
+  communeId String?  @db.ObjectId
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+model Commune {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  postalCode String   @unique
+  osmId      String   @unique
+  osmType    String
+  bbox       Float[]
+  latitude   Float
+  longitude  Float
+  country    String   @default("FR")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  users User[]
+}

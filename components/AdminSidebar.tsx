@@ -31,7 +31,7 @@ export function AdminSidebar() {
         setIsLoggingOut(false);
       }
     },
-    [isLoggingOut, router],
+    [isLoggingOut, router]
   );
 
   const items: SideMenuProps["items"] = [
@@ -53,20 +53,10 @@ export function AdminSidebar() {
       },
     },
     {
-      text: (
-        <span className="fr-display-inline-flex fr-align-items-center fr-gap-1w fr-text-mention--grey">
-          Communes
-          <Badge small severity="info">
-            Bientôt disponible
-          </Badge>
-        </span>
-      ),
-      isActive: false,
+      text: "Communes",
+      isActive: pathname === "/admin/communes",
       linkProps: {
-        href: "#communes",
-        onClick: handleComingSoonClick,
-        "aria-disabled": true,
-        tabIndex: -1,
+        href: "/admin/communes",
       },
     },
     {
@@ -98,4 +88,3 @@ export function AdminSidebar() {
     />
   );
 }
-

@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type MouseEvent,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Header, type HeaderProps } from "@codegouvfr/react-dsfr/Header";
 
@@ -87,13 +81,6 @@ export function HeaderClient() {
     }
   }, [isLoggingOut, router]);
 
-  const handleComingSoonClick = useCallback(
-    (event: MouseEvent<HTMLAnchorElement>) => {
-      event.preventDefault();
-    },
-    []
-  );
-
   const navigation = useMemo(() => {
     if (!isAdminArea) {
       return [
@@ -132,11 +119,9 @@ export function HeaderClient() {
         },
       },
       {
-        text: "Communes (bientôt)",
+        text: "Communes",
         linkProps: {
-          href: "#communes",
-          onClick: handleComingSoonClick,
-          "aria-disabled": true,
+          href: "/admin/communes",
         },
       },
       {
@@ -146,7 +131,7 @@ export function HeaderClient() {
         },
       },
     ];
-  }, [handleComingSoonClick, isAdminArea]);
+  }, [isAdminArea]);
 
   const quickAccessItems = useMemo<QuickAccessItems>(() => {
     const logoutIconId: QuickAccessIconId = isLoggingOut
