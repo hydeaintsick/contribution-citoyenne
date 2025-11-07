@@ -13,6 +13,9 @@ import { Header, type HeaderProps } from "@codegouvfr/react-dsfr/Header";
 type QuickAccessItems = NonNullable<HeaderProps["quickAccessItems"]>;
 type QuickAccessIconId = HeaderProps.QuickAccessItem["iconId"];
 
+const communePortalUrl =
+  process.env.NEXT_PUBLIC_COMMUNE_PORTAL_URL ?? "/admin/login";
+
 export function HeaderClient() {
   const pathname = usePathname();
   const router = useRouter();
@@ -21,6 +24,10 @@ export function HeaderClient() {
 
   const openAdminSpace = useCallback(() => {
     window.open("/admin", "_blank", "noopener,noreferrer");
+  }, []);
+
+  const openCommuneSpace = useCallback(() => {
+    window.open(communePortalUrl, "_blank", "noopener,noreferrer");
   }, []);
 
   const isAdminArea =
@@ -161,6 +168,17 @@ export function HeaderClient() {
         },
       ];
 
+      if (!hasSession) {
+        items.push({
+          iconId: "fr-icon-lock-line",
+          text: "Espace commune",
+          buttonProps: {
+            onClick: openCommuneSpace,
+            className: "fr-btn--primary",
+          },
+        });
+      }
+
       if (hasSession) {
         items.push({
           iconId: "fr-icon-external-link-line",
@@ -195,7 +213,14 @@ export function HeaderClient() {
         },
       },
     ] satisfies QuickAccessItems;
-  }, [handleLogout, hasSession, isAdminArea, isLoggingOut, openAdminSpace]);
+  }, [
+    handleLogout,
+    hasSession,
+    isAdminArea,
+    isLoggingOut,
+    openAdminSpace,
+    openCommuneSpace,
+  ]);
 
   return (
     <div suppressHydrationWarning>
