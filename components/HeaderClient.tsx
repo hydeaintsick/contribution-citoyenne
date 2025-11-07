@@ -8,6 +8,17 @@ import { useTheme } from "@/components/ThemeProviderClient";
 type QuickAccessItems = NonNullable<HeaderProps["quickAccessItems"]>;
 type QuickAccessIconId = HeaderProps.QuickAccessItem["iconId"];
 
+type UserRole = "ADMIN" | "ACCOUNT_MANAGER" | "TOWN_MANAGER" | "TOWN_EMPLOYEE";
+
+type SessionUser = {
+  id: string;
+  email: string;
+  role: UserRole;
+  firstName?: string | null;
+  lastName?: string | null;
+  lastLoginAt?: string | null;
+};
+
 const communePortalUrl =
   process.env.NEXT_PUBLIC_COMMUNE_PORTAL_URL ?? "/admin/login";
 
@@ -16,6 +27,7 @@ export function HeaderClient() {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [hasSession, setHasSession] = useState(false);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const { theme, toggleTheme } = useTheme();
   const isDarkTheme = theme === "dark";
 
@@ -45,7 +57,20 @@ export function HeaderClient() {
           return;
         }
 
-        setHasSession(response.ok);
+        if (!response.ok) {
+          setHasSession(false);
+          setSessionUser(null);
+          return;
+        }
+
+        const data = (await response.json()) as { user: SessionUser | null };
+
+        if (!isMounted) {
+          return;
+        }
+
+        setHasSession(Boolean(data.user));
+        setSessionUser(data.user ?? null);
       } catch (error) {
         if (
           !isMounted ||
@@ -54,6 +79,7 @@ export function HeaderClient() {
           return;
         }
         setHasSession(false);
+        setSessionUser(null);
       }
     }
 
@@ -76,6 +102,7 @@ export function HeaderClient() {
       });
       if (response.ok) {
         setHasSession(false);
+        setSessionUser(null);
       }
       router.push("/admin/login");
       router.refresh();
@@ -83,6 +110,8 @@ export function HeaderClient() {
       setIsLoggingOut(false);
     }
   }, [isLoggingOut, router]);
+
+  const isAdmin = sessionUser?.role === "ADMIN";
 
   const navigation = useMemo(() => {
     if (!isAdminArea) {
@@ -127,12 +156,16 @@ export function HeaderClient() {
           href: "/admin/communes",
         },
       },
-      {
-        text: "Chargés de compte",
-        linkProps: {
-          href: "/admin/account-managers",
-        },
-      },
+      ...(isAdmin
+        ? [
+            {
+              text: "Chargés de compte",
+              linkProps: {
+                href: "/admin/account-managers",
+              },
+            },
+          ]
+        : []),
       {
         text: "Mon profil",
         linkProps: {
@@ -140,7 +173,7 @@ export function HeaderClient() {
         },
       },
     ];
-  }, [isAdminArea]);
+  }, [isAdmin, isAdminArea]);
 
   const quickAccessItems = useMemo<QuickAccessItems>(() => {
     const themeToggleItem: QuickAccessItems[number] = {
