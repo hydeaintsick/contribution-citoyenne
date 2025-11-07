@@ -11,7 +11,16 @@ export function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-export async function authenticateUser(email: string, password: string) {
+type AuthenticateContext = {
+  ipAddress?: string | null;
+  userAgent?: string | null;
+};
+
+export async function authenticateUser(
+  email: string,
+  password: string,
+  context: AuthenticateContext = {},
+) {
   const user = await prisma.user.findUnique({
     where: { email },
   });
@@ -25,12 +34,28 @@ export async function authenticateUser(email: string, password: string) {
     return null;
   }
 
+  const now = new Date();
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      lastLoginAt: now,
+      loginLogs: {
+        create: {
+          ipAddress: context.ipAddress ?? null,
+          userAgent: context.userAgent ?? null,
+        },
+      },
+    },
+  });
+
   const sessionUser: SessionUser = {
     id: user.id,
     email: user.email,
     role: user.role,
     firstName: user.firstName,
     lastName: user.lastName,
+    lastLoginAt: now.toISOString(),
   };
 
   return sessionUser;

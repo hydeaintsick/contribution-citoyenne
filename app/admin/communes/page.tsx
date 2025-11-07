@@ -14,6 +14,42 @@ export default async function AdminCommunesPage() {
           phone: true,
         },
       },
+      createdBy: {
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
+      updatedBy: {
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
+      auditLogs: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 1,
+        select: {
+          id: true,
+          action: true,
+          createdAt: true,
+          details: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",

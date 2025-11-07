@@ -1,14 +1,60 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { SideMenu, type SideMenuProps } from "@codegouvfr/react-dsfr/SideMenu";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
+
+type AdminRole = "ADMIN" | "ACCOUNT_MANAGER" | null;
 
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [userRole, setUserRole] = useState<AdminRole>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSession() {
+      try {
+        const response = await fetch("/api/auth/session", {
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        });
+        if (!isMounted) {
+          return;
+        }
+        if (!response.ok) {
+          setUserRole(null);
+          return;
+        }
+        const data = (await response.json().catch(() => null)) as {
+          user?: { role?: string | null };
+        } | null;
+        const role = data?.user?.role;
+        if (role === "ADMIN" || role === "ACCOUNT_MANAGER") {
+          setUserRole(role);
+        } else {
+          setUserRole(null);
+        }
+      } catch (error) {
+        console.error("Failed to load session", error);
+        if (isMounted) {
+          setUserRole(null);
+        }
+      }
+    }
+
+    loadSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const isAdmin = userRole === "ADMIN";
 
   const handleComingSoonClick = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
@@ -59,6 +105,17 @@ export function AdminSidebar() {
         href: "/admin/communes",
       },
     },
+    ...(isAdmin
+      ? [
+          {
+            text: "Chargés de compte",
+            isActive: pathname === "/admin/account-managers",
+            linkProps: {
+              href: "/admin/account-managers",
+            },
+          },
+        ]
+      : []),
     {
       text: "Mon profil",
       isActive: pathname === "/admin/profile",

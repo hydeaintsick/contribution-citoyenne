@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { CityAuditAction } from "@prisma/client";
 import { getSessionFromRequest, hashPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -43,7 +44,10 @@ const createCommuneSchema = z.object({
 export async function POST(request: NextRequest) {
   const session = await getSessionFromRequest(request);
 
-  if (!session || session.user.role !== "ADMIN") {
+  if (
+    !session ||
+    (session.user.role !== "ADMIN" && session.user.role !== "ACCOUNT_MANAGER")
+  ) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
 
@@ -130,6 +134,8 @@ export async function POST(request: NextRequest) {
           bbox,
           latitude,
           longitude,
+          createdById: session.user.id,
+          updatedById: session.user.id,
         },
       });
 
@@ -142,6 +148,18 @@ export async function POST(request: NextRequest) {
           phone: manager.phone,
           role: "TOWN_MANAGER",
           communeId: commune.id,
+        },
+      });
+
+      await tx.cityAuditLog.create({
+        data: {
+          communeId: commune.id,
+          userId: session.user.id,
+          action: CityAuditAction.CREATED,
+          details: {
+            managerEmail: manager.email,
+            postalCode,
+          },
         },
       });
 

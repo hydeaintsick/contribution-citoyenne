@@ -16,7 +16,10 @@ const updateProfileSchema = z.object({
 
 export async function GET(request: NextRequest) {
   const session = await getSessionFromRequest(request);
-  if (!session || session.user.role !== "ADMIN") {
+  if (
+    !session ||
+    (session.user.role !== "ADMIN" && session.user.role !== "ACCOUNT_MANAGER")
+  ) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
 
@@ -36,7 +39,10 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const session = await getSessionFromRequest(request);
-  if (!session || session.user.role !== "ADMIN") {
+  if (
+    !session ||
+    (session.user.role !== "ADMIN" && session.user.role !== "ACCOUNT_MANAGER")
+  ) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
 

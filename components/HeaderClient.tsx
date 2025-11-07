@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Header, type HeaderProps } from "@codegouvfr/react-dsfr/Header";
+import { useTheme } from "@/components/ThemeProviderClient";
 
 type QuickAccessItems = NonNullable<HeaderProps["quickAccessItems"]>;
 type QuickAccessIconId = HeaderProps.QuickAccessItem["iconId"];
@@ -15,6 +16,8 @@ export function HeaderClient() {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [hasSession, setHasSession] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const isDarkTheme = theme === "dark";
 
   const openAdminSpace = useCallback(() => {
     window.open("/admin", "_blank", "noopener,noreferrer");
@@ -125,6 +128,12 @@ export function HeaderClient() {
         },
       },
       {
+        text: "Chargés de compte",
+        linkProps: {
+          href: "/admin/account-managers",
+        },
+      },
+      {
         text: "Mon profil",
         linkProps: {
           href: "/admin/profile",
@@ -134,6 +143,23 @@ export function HeaderClient() {
   }, [isAdminArea]);
 
   const quickAccessItems = useMemo<QuickAccessItems>(() => {
+    const themeToggleItem: QuickAccessItems[number] = {
+      iconId: isDarkTheme ? "fr-icon-sun-line" : "fr-icon-moon-line",
+      text: "",
+      buttonProps: {
+        onClick: toggleTheme,
+        "aria-pressed": isDarkTheme,
+        "aria-label": isDarkTheme
+          ? "Basculer vers le mode clair"
+          : "Basculer vers le mode nuit",
+        title: isDarkTheme
+          ? "Basculer vers le mode clair"
+          : "Basculer vers le mode nuit",
+        className: "fr-btn--icon fr-btn--sm",
+        style: { minWidth: "auto" },
+      },
+    };
+
     const logoutIconId: QuickAccessIconId = isLoggingOut
       ? "fr-icon-refresh-line"
       : "fr-icon-logout-box-r-line";
@@ -184,10 +210,11 @@ export function HeaderClient() {
         });
       }
 
-      return items;
+      return [themeToggleItem, ...items];
     }
 
     return [
+      themeToggleItem,
       {
         iconId: logoutIconId,
         text: isLoggingOut ? "Déconnexion..." : "Déconnexion",
@@ -202,9 +229,11 @@ export function HeaderClient() {
     handleLogout,
     hasSession,
     isAdminArea,
+    isDarkTheme,
     isLoggingOut,
     openAdminSpace,
     openCommuneSpace,
+    toggleTheme,
   ]);
 
   return (

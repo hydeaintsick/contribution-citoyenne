@@ -18,7 +18,7 @@ export default async function AdminProfilePage() {
 
   const session = await parseSessionCookie(sessionCookie);
 
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ACCOUNT_MANAGER")) {
     redirect("/admin/login?redirectTo=/admin/profile");
   }
 

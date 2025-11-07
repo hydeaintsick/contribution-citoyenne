@@ -20,7 +20,17 @@ export async function POST(request: NextRequest) {
 
   const { email, password } = parseResult.data;
 
-  const sessionUser = await authenticateUser(email, password);
+  const ipAddressHeader = request.headers.get("x-forwarded-for");
+  const ipAddress =
+    ipAddressHeader?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    null;
+  const userAgent = request.headers.get("user-agent") ?? null;
+
+  const sessionUser = await authenticateUser(email, password, {
+    ipAddress,
+    userAgent,
+  });
   if (!sessionUser) {
     return NextResponse.json(
       { error: "Identifiants invalides." },

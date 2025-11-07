@@ -11,7 +11,22 @@ export async function middleware(request: NextRequest) {
 
   const session = await getSessionFromRequest(request);
 
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session) {
+    const loginUrl = new URL("/admin/login", request.url);
+    if (pathname !== "/admin/login") {
+      loginUrl.searchParams.set("redirectTo", pathname);
+    }
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const isAccountManagerRestrictedRoute = pathname.startsWith("/admin/account-managers");
+  const isAdmin = session.user.role === "ADMIN";
+  const isAccountManager = session.user.role === "ACCOUNT_MANAGER";
+
+  if (
+    (!isAdmin && !isAccountManager) ||
+    (isAccountManager && isAccountManagerRestrictedRoute)
+  ) {
     const loginUrl = new URL("/admin/login", request.url);
     if (pathname !== "/admin/login") {
       loginUrl.searchParams.set("redirectTo", pathname);

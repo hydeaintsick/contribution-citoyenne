@@ -9,36 +9,72 @@ datasource db {
 
 enum Role {
   ADMIN
+  ACCOUNT_MANAGER
   TOWN_MANAGER
   TOWN_EMPLOYEE
 }
 
+enum CityAuditAction {
+  CREATED
+  UPDATED
+}
+
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  email     String   @unique
-  password  String
-  firstName String?
-  lastName  String?
-  phone     String?
-  role      Role     @default(ADMIN)
-  commune   Commune? @relation(fields: [communeId], references: [id])
-  communeId String?  @db.ObjectId
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  email           String         @unique
+  password        String
+  firstName       String?
+  lastName        String?
+  phone           String?
+  role            Role           @default(ADMIN)
+  commune         Commune?       @relation(fields: [communeId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  communeId       String?        @db.ObjectId
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  lastLoginAt     DateTime?
+  loginLogs       UserLoginLog[]
+  cityAuditLogs   CityAuditLog[]
+  createdCommunes Commune[]      @relation("CommuneCreatedBy")
+  updatedCommunes Commune[]      @relation("CommuneUpdatedBy")
 }
 
 model Commune {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  name       String
-  postalCode String   @unique
-  osmId      String   @unique
-  osmType    String
-  bbox       Float[]
-  latitude   Float
-  longitude  Float
-  country    String   @default("FR")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  postalCode  String   @unique
+  osmId       String   @unique
+  osmType     String
+  bbox        Float[]
+  latitude    Float
+  longitude   Float
+  country     String   @default("FR")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?  @db.ObjectId
+  createdBy   User?    @relation("CommuneCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedById String?  @db.ObjectId
+  updatedBy   User?    @relation("CommuneUpdatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  users User[]
+  users     User[]
+  auditLogs CityAuditLog[]
+}
+
+model CityAuditLog {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  communeId String          @db.ObjectId
+  commune   Commune         @relation(fields: [communeId], references: [id], onDelete: Cascade)
+  userId    String?         @db.ObjectId
+  user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    CityAuditAction
+  details   Json?
+  createdAt DateTime        @default(now())
+}
+
+model UserLoginLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
 }

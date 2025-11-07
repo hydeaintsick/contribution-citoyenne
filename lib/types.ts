@@ -6,6 +6,7 @@ export type SessionUser = {
   role: Role;
   firstName?: string | null;
   lastName?: string | null;
+  lastLoginAt?: string | null;
 };
 
 export type SessionData = {
