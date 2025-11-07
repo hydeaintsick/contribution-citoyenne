@@ -41,6 +41,7 @@ export function HeaderClient() {
 
   const isAdminArea =
     pathname.startsWith("/admin") && pathname !== "/admin/login";
+  const isAdminRoute = pathname.startsWith("/admin");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -212,7 +213,7 @@ export function HeaderClient() {
         },
       ];
 
-      if (!hasSession) {
+      if (!hasSession && !isAdminRoute) {
         items.push({
           iconId: "fr-icon-lock-line",
           text: "Espace commune",
@@ -262,6 +263,7 @@ export function HeaderClient() {
     handleLogout,
     hasSession,
     isAdminArea,
+    isAdminRoute,
     isDarkTheme,
     isLoggingOut,
     openAdminSpace,
