@@ -6,6 +6,7 @@ import { Alert } from "@codegouvfr/react-dsfr/Alert";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Input } from "@codegouvfr/react-dsfr/Input";
+import { createModal } from "@codegouvfr/react-dsfr/Modal";
 
 type ContributionDetail = {
   id: string;
@@ -53,6 +54,14 @@ export function TownContributionDetail({ contribution }: { contribution: Contrib
   const [currentContribution, setCurrentContribution] = useState(contribution);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const {
+    buttonProps: attachmentButtonProps,
+    Component: AttachmentModal,
+    open: openAttachmentModal,
+  } = createModal({
+    id: `contribution-photo-modal-${contribution.id}`,
+    isOpenedByDefault: false,
+  });
 
   const typeTag = useMemo(
     () => (
@@ -161,11 +170,40 @@ export function TownContributionDetail({ contribution }: { contribution: Contrib
       {currentContribution.photoUrl ? (
         <section className="fr-flow">
           <h2 className="fr-h5 fr-mb-0">Photo transmise</h2>
-          <img
-            src={currentContribution.photoUrl}
-            alt="Illustration transmise par le citoyen"
-            className="fr-responsive-img fr-radius--md"
-          />
+          <Button
+            priority="secondary"
+            iconId="fr-icon-eye-line"
+            nativeButtonProps={{
+              ...attachmentButtonProps,
+              type: "button",
+              onClick: (event) => {
+                event.preventDefault();
+                openAttachmentModal();
+              },
+            }}
+          >
+            Voir la pièce jointe
+          </Button>
+          <AttachmentModal
+            title="Photo transmise"
+            concealingBackdrop={true}
+            buttons={[
+              {
+                children: "Fermer",
+                priority: "secondary",
+                doClosesModal: true,
+              },
+            ]}
+          >
+            <figure className="fr-my-0">
+              <img
+                src={currentContribution.photoUrl}
+                alt="Illustration transmise par le citoyen"
+                className="fr-responsive-img fr-radius--md"
+                style={{ maxHeight: "32rem", objectFit: "contain", width: "100%" }}
+              />
+            </figure>
+          </AttachmentModal>
         </section>
       ) : null}
 

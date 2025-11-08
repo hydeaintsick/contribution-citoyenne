@@ -38,6 +38,10 @@ const REPORT_STEPS = [
   },
   {
     title: "Détails",
+    next: "Confirmation",
+  },
+  {
+    title: "Confirmation",
     next: undefined,
   },
 ] as const;
@@ -115,7 +119,7 @@ export function CitizenReportTunnel({
   communeName,
   communeWebsite,
 }: CitizenReportTunnelProps) {
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [reportType, setReportType] = useState<ReportType | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
@@ -437,6 +441,9 @@ export function CitizenReportTunnel({
         }
 
         setSubmissionState("success");
+        resetAutoAdvance();
+        setAutoAdvanceMessage(null);
+        setCurrentStep(4);
       } catch (error) {
         console.error("Report submission failed", error);
         setSubmissionState("error");
@@ -455,6 +462,7 @@ export function CitizenReportTunnel({
       selectedCategory,
       selectedCategoryLabel,
       selectedSubcategory,
+      resetAutoAdvance,
     ],
   );
 
@@ -877,6 +885,61 @@ export function CitizenReportTunnel({
                 </div>
               </div>
             </form>
+          </motion.section>
+        )}
+
+        {currentStep === 4 && (
+          <motion.section
+            key="step-4"
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -24 }}
+            transition={STEP_TRANSITION}
+            className="fr-flow fr-pb-4w"
+            aria-labelledby="citizen-report-step-4"
+          >
+            <div className="fr-callout">
+              <h2 id="citizen-report-step-4" className="fr-callout__title fr-h4">
+                Merci pour votre remontée
+              </h2>
+              <p className="fr-text--sm">
+                Votre contribution a bien été transmise à la mairie de {communeName}. Elle sera
+                analysée dans les meilleurs délais.
+              </p>
+              <p className="fr-text--sm fr-mb-0">
+                Pour toute question complémentaire, n’hésitez pas à consulter le site de votre
+                commune ou à vous rapprocher des services municipaux.
+              </p>
+            </div>
+
+            <div className="fr-grid-row fr-grid-row--gutters fr-grid-row--right fr-mt-4w">
+              {trimmedCommuneWebsite && (
+                <div className="fr-col-12 fr-col-sm-auto">
+                  <Button
+                    priority="secondary"
+                    size="medium"
+                    iconId="fr-icon-external-link-line"
+                    linkProps={{
+                      href: trimmedCommuneWebsite,
+                      target: "_blank",
+                      rel: "noreferrer",
+                    }}
+                  >
+                    Consulter le site de la commune
+                  </Button>
+                </div>
+              )}
+              <div className="fr-col-12 fr-col-sm-auto">
+                <Button
+                  priority="primary"
+                  size="medium"
+                  iconId="fr-icon-add-line"
+                  onClick={resetWizard}
+                >
+                  Faire une nouvelle remontée
+                </Button>
+              </div>
+            </div>
           </motion.section>
         )}
       </AnimatePresence>
