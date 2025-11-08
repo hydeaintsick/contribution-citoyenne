@@ -74,7 +74,7 @@ export default async function TownReturnDetailPage({ params }: RouteParams) {
   }
 
   return (
-    <div className="fr-flow">
+    <div className="fr-container fr-container--fluid fr-px-3w fr-py-6w">
       <TownContributionDetail
         contribution={{
           id: contribution.id,

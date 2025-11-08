@@ -38,3 +38,47 @@ body {
 .contribcit-alert-button.fr-btn:active {
   background-color: var(--active);
 }
+
+.contribution-detail {
+  display: grid;
+  gap: 3rem;
+  max-width: 68rem;
+  margin: 0 auto;
+}
+
+.contribution-detail__header {
+  padding: 2.5rem 3rem;
+  border-radius: 1rem;
+  background-color: #f6f6ff;
+  box-shadow: 0 10px 30px rgba(21, 32, 70, 0.08);
+}
+
+.contribution-detail__header-content {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.contribution-detail__return-button {
+  margin-bottom: 0.5rem;
+}
+
+.contribution-detail__section {
+  padding: 2.25rem 2.75rem;
+  border-radius: 1rem;
+  background-color: #ffffff;
+  border: 1px solid rgba(43, 54, 92, 0.08);
+  box-shadow: 0 8px 24px rgba(21, 32, 70, 0.06);
+  display: grid;
+  gap: 1.5rem;
+}
+
+.contribution-detail__section > *:last-child {
+  margin-bottom: 0;
+}
+
+.contribution-detail__map {
+  height: 18rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(43, 54, 92, 0.12);
+}
