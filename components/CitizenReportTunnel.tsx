@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion, cubicBezier, type Transition } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  cubicBezier,
+  type Transition,
+} from "framer-motion";
 import { Stepper } from "@codegouvfr/react-dsfr/Stepper";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Alert } from "@codegouvfr/react-dsfr/Alert";
@@ -118,7 +123,7 @@ const categories: Category[] = [
 ].sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
 const MIN_DETAILS_LENGTH = 12;
-const MIN_ADDRESS_QUERY_LENGTH = 3;
+const MIN_ADDRESS_QUERY_LENGTH = 4;
 
 export type CitizenReportTunnelProps = {
   communeId: string;
@@ -137,18 +142,27 @@ export function CitizenReportTunnel({
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
   const [details, setDetails] = useState<string>("");
   const [location, setLocation] = useState<string>("");
-  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [addressSuggestions, setAddressSuggestions] = useState<
+    AddressSuggestion[]
+  >([]);
   const [isFetchingAddress, setIsFetchingAddress] = useState(false);
   const [addressError, setAddressError] = useState<string | null>(null);
   const [isLocationLocked, setIsLocationLocked] = useState(false);
-  const [selectedSuggestion, setSelectedSuggestion] = useState<AddressSuggestion | null>(null);
+  const [selectedSuggestion, setSelectedSuggestion] =
+    useState<AddressSuggestion | null>(null);
   const [photoUploadState, setPhotoUploadState] = useState<
     "idle" | "uploading" | "success" | "error"
   >("idle");
-  const [photoUploadInfo, setPhotoUploadInfo] = useState<PhotoUploadInfo | null>(null);
+  const [photoUploadInfo, setPhotoUploadInfo] =
+    useState<PhotoUploadInfo | null>(null);
   const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
-  const [autoAdvanceMessage, setAutoAdvanceMessage] = useState<string | null>(null);
+  const [autoAdvanceMessage, setAutoAdvanceMessage] = useState<string | null>(
+    null
+  );
   const [geolocationStatus, setGeolocationStatus] = useState<
     "idle" | "loading" | "error" | "success"
   >("idle");
@@ -158,7 +172,9 @@ export function CitizenReportTunnel({
   >("idle");
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
-  const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
   const addressDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const addressAbortControllerRef = useRef<AbortController | null>(null);
 
@@ -209,19 +225,22 @@ export function CitizenReportTunnel({
         setCurrentStep(2);
       }, 800);
     },
-    [resetAutoAdvance],
+    [resetAutoAdvance]
   );
 
   const handleAlertContinue = useCallback(() => {
     setCurrentStep(2);
   }, []);
 
-  const handleCategoryChange = useCallback((value: string) => {
-    setSelectedCategory(value);
-    setSelectedSubcategory("");
-    resetAutoAdvance();
-    setAutoAdvanceMessage(null);
-  }, [resetAutoAdvance]);
+  const handleCategoryChange = useCallback(
+    (value: string) => {
+      setSelectedCategory(value);
+      setSelectedSubcategory("");
+      resetAutoAdvance();
+      setAutoAdvanceMessage(null);
+    },
+    [resetAutoAdvance]
+  );
 
   const handleSubcategoryChange = useCallback(
     (value: string) => {
@@ -240,7 +259,7 @@ export function CitizenReportTunnel({
         setCurrentStep(3);
       }, 800);
     },
-    [resetAutoAdvance],
+    [resetAutoAdvance]
   );
 
   const handleBackToType = useCallback(() => {
@@ -256,8 +275,10 @@ export function CitizenReportTunnel({
   }, [resetAutoAdvance]);
 
   const selectedCategoryLabel = useMemo(
-    () => categories.find((category) => category.value === selectedCategory)?.label ?? "",
-    [selectedCategory],
+    () =>
+      categories.find((category) => category.value === selectedCategory)
+        ?.label ?? "",
+    [selectedCategory]
   );
 
   const selectedSubcategoryOptions = useMemo(() => {
@@ -275,9 +296,11 @@ export function CitizenReportTunnel({
     !selectedSubcategory ||
     trimmedDetails.length < MIN_DETAILS_LENGTH ||
     !isLocationValid;
-  const isFormLocked = submissionState === "loading" || submissionState === "success";
+  const isFormLocked =
+    submissionState === "loading" || submissionState === "success";
 
-  const showAddressSuccess = Boolean(trimmedLocation) && isLocationValid && coordinates;
+  const showAddressSuccess =
+    Boolean(trimmedLocation) && isLocationValid && coordinates;
 
   useEffect(() => {
     if (isLocationLocked || isFormLocked) {
@@ -294,7 +317,11 @@ export function CitizenReportTunnel({
 
     if (query.length < MIN_ADDRESS_QUERY_LENGTH) {
       setAddressSuggestions([]);
-      setAddressError(null);
+      setAddressError(
+        query.length > 0
+          ? "Ajoutez quelques caractères pour affiner la recherche (ex. “rue de …”)."
+          : null
+      );
       setIsFetchingAddress(false);
       if (addressAbortControllerRef.current) {
         addressAbortControllerRef.current.abort();
@@ -324,18 +351,26 @@ export function CitizenReportTunnel({
     addressDebounceRef.current = setTimeout(async () => {
       try {
         const response = await fetch(
-          `/api/contrib/addresses/search?communeId=${encodeURIComponent(communeId)}&q=${encodeURIComponent(query)}`,
+          `/api/contrib/addresses/search?communeId=${encodeURIComponent(
+            communeId
+          )}&q=${encodeURIComponent(query)}`,
           {
             signal: controller.signal,
-          },
+          }
         );
 
         if (!response.ok) {
-          const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(payload?.error ?? "Recherche impossible pour le moment.");
+          const payload = (await response.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          throw new Error(
+            payload?.error ?? "Recherche impossible pour le moment."
+          );
         }
 
-        const payload = (await response.json()) as { suggestions?: AddressSuggestion[] };
+        const payload = (await response.json()) as {
+          suggestions?: AddressSuggestion[];
+        };
         setAddressSuggestions(payload.suggestions ?? []);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
@@ -343,7 +378,9 @@ export function CitizenReportTunnel({
         }
         setAddressSuggestions([]);
         setAddressError(
-          error instanceof Error ? error.message : "Une erreur est survenue durant la recherche d’adresse.",
+          error instanceof Error
+            ? error.message
+            : "Une erreur est survenue durant la recherche d’adresse."
         );
       } finally {
         setIsFetchingAddress(false);
@@ -361,15 +398,27 @@ export function CitizenReportTunnel({
       }
       setIsFetchingAddress(false);
     };
-  }, [communeId, isFormLocked, isLocationLocked, trimmedLocation, selectedSuggestion]);
+  }, [
+    communeId,
+    isFormLocked,
+    isLocationLocked,
+    trimmedLocation,
+    selectedSuggestion,
+  ]);
 
-  const handleSelectSuggestion = useCallback((suggestion: AddressSuggestion) => {
-    setSelectedSuggestion(suggestion);
-    setLocation(suggestion.label);
-    setCoordinates({ latitude: suggestion.latitude, longitude: suggestion.longitude });
-    setAddressSuggestions([]);
-    setAddressError(null);
-  }, []);
+  const handleSelectSuggestion = useCallback(
+    (suggestion: AddressSuggestion) => {
+      setSelectedSuggestion(suggestion);
+      setLocation(suggestion.label);
+      setCoordinates({
+        latitude: suggestion.latitude,
+        longitude: suggestion.longitude,
+      });
+      setAddressSuggestions([]);
+      setAddressError(null);
+    },
+    []
+  );
 
   const handlePhotoChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -410,9 +459,9 @@ export function CitizenReportTunnel({
         });
 
         if (!response.ok) {
-          const payload = (await response.json().catch(() => null)) as
-            | { error?: string }
-            | null;
+          const payload = (await response.json().catch(() => null)) as {
+            error?: string;
+          } | null;
           throw new Error(payload?.error ?? "Le téléversement a échoué.");
         }
 
@@ -424,13 +473,13 @@ export function CitizenReportTunnel({
         setPhotoUploadError(
           error instanceof Error
             ? error.message
-            : "Une erreur est survenue pendant le téléversement.",
+            : "Une erreur est survenue pendant le téléversement."
         );
         setPhotoUploadState("error");
         setPhotoUploadInfo(null);
       }
     },
-    [],
+    []
   );
 
   const handleRemovePhoto = useCallback(async () => {
@@ -471,7 +520,9 @@ export function CitizenReportTunnel({
 
     if (typeof window === "undefined" || !("geolocation" in navigator)) {
       setGeolocationStatus("error");
-      setGeolocationError("La géolocalisation n’est pas disponible sur cet appareil.");
+      setGeolocationError(
+        "La géolocalisation n’est pas disponible sur cet appareil."
+      );
       return;
     }
 
@@ -494,11 +545,18 @@ export function CitizenReportTunnel({
           });
 
           if (!response.ok) {
-            const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-            throw new Error(payload?.error ?? "Impossible de récupérer l’adresse exacte pour votre position.");
+            const payload = (await response.json().catch(() => null)) as {
+              error?: string;
+            } | null;
+            throw new Error(
+              payload?.error ??
+                "Impossible de récupérer l’adresse exacte pour votre position."
+            );
           }
 
-          const payload = (await response.json()) as { address: AddressSuggestion };
+          const payload = (await response.json()) as {
+            address: AddressSuggestion;
+          };
 
           setLocation(payload.address.label);
           setCoordinates({
@@ -516,7 +574,7 @@ export function CitizenReportTunnel({
           setGeolocationError(
             error instanceof Error
               ? error.message
-              : "Impossible de récupérer votre adresse. Renseignez le lieu manuellement.",
+              : "Impossible de récupérer votre adresse. Renseignez le lieu manuellement."
           );
           setIsLocationLocked(false);
         }
@@ -524,13 +582,15 @@ export function CitizenReportTunnel({
       (error) => {
         console.error("Geolocation error", error);
         setGeolocationStatus("error");
-        setGeolocationError("Impossible de récupérer votre position. Renseignez le lieu manuellement.");
+        setGeolocationError(
+          "Impossible de récupérer votre position. Renseignez le lieu manuellement."
+        );
       },
       {
         enableHighAccuracy: true,
         maximumAge: 20_000,
         timeout: 10_000,
-      },
+      }
     );
   }, [communeId, submissionState]);
 
@@ -544,7 +604,7 @@ export function CitizenReportTunnel({
       if (!reportType || !selectedCategory || !selectedSubcategory) {
         setSubmissionState("error");
         setSubmissionError(
-          "Merci de sélectionner un type de remontée ainsi qu’une catégorie et une sous-catégorie.",
+          "Merci de sélectionner un type de remontée ainsi qu’une catégorie et une sous-catégorie."
         );
         return;
       }
@@ -554,7 +614,7 @@ export function CitizenReportTunnel({
       if (cleanedDetails.length < MIN_DETAILS_LENGTH) {
         setSubmissionState("error");
         setSubmissionError(
-          `Le descriptif doit comporter au moins ${MIN_DETAILS_LENGTH} caractères.`,
+          `Le descriptif doit comporter au moins ${MIN_DETAILS_LENGTH} caractères.`
         );
         return;
       }
@@ -594,10 +654,12 @@ export function CitizenReportTunnel({
         });
 
         if (!response.ok) {
-          const payload = (await response.json().catch(() => null)) as
-            | { error?: string }
-            | null;
-          throw new Error(payload?.error ?? "L’envoi a échoué. Merci de réessayer.");
+          const payload = (await response.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          throw new Error(
+            payload?.error ?? "L’envoi a échoué. Merci de réessayer."
+          );
         }
 
         setSubmissionState("success");
@@ -608,7 +670,9 @@ export function CitizenReportTunnel({
         console.error("Report submission failed", error);
         setSubmissionState("error");
         setSubmissionError(
-          error instanceof Error ? error.message : "Une erreur inattendue est survenue.",
+          error instanceof Error
+            ? error.message
+            : "Une erreur inattendue est survenue."
         );
       }
     },
@@ -623,7 +687,7 @@ export function CitizenReportTunnel({
       selectedCategoryLabel,
       selectedSubcategory,
       resetAutoAdvance,
-    ],
+    ]
   );
 
   return (
@@ -648,7 +712,10 @@ export function CitizenReportTunnel({
             aria-labelledby="citizen-report-step-1"
           >
             <div className="fr-callout">
-              <h1 id="citizen-report-step-1" className="fr-callout__title fr-h4">
+              <h1
+                id="citizen-report-step-1"
+                className="fr-callout__title fr-h4"
+              >
                 Bienvenue sur le portail citoyen de la ville de{" "}
                 {trimmedCommuneWebsite ? (
                   <a
@@ -664,8 +731,9 @@ export function CitizenReportTunnel({
                 )}
               </h1>
               <p className="fr-text--sm fr-mb-0">
-                Signalez un problème ou partagez une idée pour améliorer la vie locale. Vous
-                pouvez à tout moment revenir en arrière avant l’envoi.
+                Signalez un problème ou partagez une idée pour améliorer la vie
+                locale. Vous pouvez à tout moment revenir en arrière avant
+                l’envoi.
               </p>
             </div>
 
@@ -709,10 +777,11 @@ export function CitizenReportTunnel({
                     title="Alerte urgente"
                     description={
                       <>
-                        Attention, vous êtes témoin d’une situation d’urgence. Composez le{" "}
-                        <strong>17</strong> pour la Police, le <strong>18</strong> pour les Pompiers,
-                        ou le <strong>15</strong> pour le SAMU. Si la situation n’est pas immédiate,
-                        poursuivez pour alerter votre mairie.
+                        Attention, vous êtes témoin d’une situation d’urgence.
+                        Composez le <strong>17</strong> pour la Police, le{" "}
+                        <strong>18</strong> pour les Pompiers, ou le{" "}
+                        <strong>15</strong> pour le SAMU. Si la situation n’est
+                        pas immédiate, poursuivez pour alerter votre mairie.
                       </>
                     }
                   />
@@ -738,7 +807,12 @@ export function CitizenReportTunnel({
                   transition={STEP_TRANSITION}
                   className="fr-mt-4w"
                 >
-                  <Alert severity="success" small title="C’est noté" description={autoAdvanceMessage} />
+                  <Alert
+                    severity="success"
+                    small
+                    title="C’est noté"
+                    description={autoAdvanceMessage}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -766,7 +840,10 @@ export function CitizenReportTunnel({
                 </Button>
               </div>
               <div className="fr-col">
-                <h2 id="citizen-report-step-2" className="fr-h4 fr-mt-0 fr-mb-0">
+                <h2
+                  id="citizen-report-step-2"
+                  className="fr-h4 fr-mt-0 fr-mb-0"
+                >
                   Précisez la catégorie concernée
                 </h2>
               </div>
@@ -801,7 +878,8 @@ export function CitizenReportTunnel({
                     label="Sous-catégorie"
                     nativeSelectProps={{
                       value: selectedSubcategory,
-                      onChange: (event) => handleSubcategoryChange(event.target.value),
+                      onChange: (event) =>
+                        handleSubcategoryChange(event.target.value),
                       required: true,
                     }}
                   >
@@ -825,7 +903,12 @@ export function CitizenReportTunnel({
                   exit={{ opacity: 0, y: 6 }}
                   transition={STEP_TRANSITION}
                 >
-                  <Alert severity="success" small title="Merci" description={autoAdvanceMessage} />
+                  <Alert
+                    severity="success"
+                    small
+                    title="Merci"
+                    description={autoAdvanceMessage}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -854,7 +937,10 @@ export function CitizenReportTunnel({
                 </Button>
               </div>
               <div className="fr-col">
-                <h2 id="citizen-report-step-3" className="fr-h4 fr-mt-0 fr-mb-0">
+                <h2
+                  id="citizen-report-step-3"
+                  className="fr-h4 fr-mt-0 fr-mb-0"
+                >
                   Vous y êtes presque
                 </h2>
               </div>
@@ -883,10 +969,16 @@ export function CitizenReportTunnel({
                 </p>
                 <div className="fr-tags-group">
                   {reportType && (
-                    <Tag small>{reportType === "alert" ? "Alerte" : "Suggestion"}</Tag>
+                    <Tag small>
+                      {reportType === "alert" ? "Alerte" : "Suggestion"}
+                    </Tag>
                   )}
-                  {selectedCategoryLabel && <Tag small>{selectedCategoryLabel}</Tag>}
-                  {selectedSubcategory && <Tag small>{selectedSubcategory}</Tag>}
+                  {selectedCategoryLabel && (
+                    <Tag small>{selectedCategoryLabel}</Tag>
+                  )}
+                  {selectedSubcategory && (
+                    <Tag small>{selectedSubcategory}</Tag>
+                  )}
                 </div>
               </div>
 
@@ -900,7 +992,8 @@ export function CitizenReportTunnel({
                   onChange: (event) => setDetails(event.target.value),
                   rows: 6,
                   required: true,
-                  placeholder: "Expliquez ce qui se passe ou l’amélioration proposée…",
+                  placeholder:
+                    "Expliquez ce qui se passe ou l’amélioration proposée…",
                   minLength: MIN_DETAILS_LENGTH,
                   disabled: isFormLocked,
                 }}
@@ -912,13 +1005,19 @@ export function CitizenReportTunnel({
                   hintText="Adresse, nom de rue ou repère à proximité."
                   addon="Optionnel"
                   disabled={isFormLocked}
-                  state={!isLocationValid ? "error" : showAddressSuccess ? "success" : "default"}
+                  state={
+                    !isLocationValid
+                      ? "error"
+                      : showAddressSuccess
+                      ? "success"
+                      : "default"
+                  }
                   stateRelatedMessage={
                     !isLocationValid
                       ? `Choisissez une adresse située dans ${communeName}.`
                       : showAddressSuccess
-                        ? "Adresse validée"
-                        : undefined
+                      ? "Adresse validée"
+                      : undefined
                   }
                   nativeInputProps={{
                     value: location,
@@ -938,7 +1037,8 @@ export function CitizenReportTunnel({
                         setAddressError(null);
                       }
                     },
-                    placeholder: "Ex. 12 rue de la République, entrée nord du parc…",
+                    placeholder:
+                      "Ex. 12 rue de la République, entrée nord du parc…",
                     disabled: isFormLocked || isLocationLocked,
                   }}
                   action={
@@ -949,8 +1049,8 @@ export function CitizenReportTunnel({
                         geolocationStatus === "loading"
                           ? "fr-icon-refresh-line"
                           : isLocationLocked
-                            ? "fr-icon-edit-line"
-                            : "ri-navigation-line"
+                          ? "fr-icon-edit-line"
+                          : "ri-navigation-line"
                       }
                       onClick={handleLocate}
                       disabled={geolocationStatus === "loading" || isFormLocked}
@@ -958,27 +1058,39 @@ export function CitizenReportTunnel({
                       {geolocationStatus === "loading"
                         ? "Localisation…"
                         : isLocationLocked
-                          ? "Modifier"
-                          : "Me localiser"}
+                        ? "Modifier"
+                        : "Me localiser"}
                     </Button>
                   }
                 />
 
-                {!isLocationLocked && (isFetchingAddress || addressSuggestions.length > 0 || addressError) ? (
+                {!isLocationLocked &&
+                (isFetchingAddress ||
+                  addressSuggestions.length > 0 ||
+                  addressError) ? (
                   <div className="fr-card fr-card--no-border fr-card--shadow fr-mt-1w">
                     <div className="fr-card__body">
                       {isFetchingAddress ? (
-                        <p className="fr-text--sm fr-mb-0">Recherche d’adresses…</p>
+                        <p className="fr-text--sm fr-mb-0">
+                          Recherche d’adresses…
+                        </p>
                       ) : addressError ? (
-                        <p className="fr-text--sm fr-mb-0 fr-text-mention--grey">{addressError}</p>
+                        <p className="fr-text--sm fr-mb-0 fr-text-mention--grey">
+                          {addressError}
+                        </p>
                       ) : addressSuggestions.length > 0 ? (
-                        <ul className="fr-text--sm fr-pl-0 fr-ml-0" style={{ listStyle: "none" }}>
+                        <ul
+                          className="fr-text--sm fr-pl-0 fr-ml-0"
+                          style={{ listStyle: "none" }}
+                        >
                           {addressSuggestions.map((suggestion) => (
                             <li key={suggestion.id} className="fr-py-1w">
                               <button
                                 type="button"
                                 className="fr-btn fr-btn--tertiary fr-btn--sm fr-width-full"
-                                onClick={() => handleSelectSuggestion(suggestion)}
+                                onClick={() =>
+                                  handleSelectSuggestion(suggestion)
+                                }
                               >
                                 {suggestion.label}
                               </button>
@@ -987,7 +1099,8 @@ export function CitizenReportTunnel({
                         </ul>
                       ) : (
                         <p className="fr-text--sm fr-mb-0 fr-text-mention--grey">
-                          Aucune adresse correspondante. Affinez votre recherche.
+                          Aucune adresse correspondante. Affinez votre
+                          recherche.
                         </p>
                       )}
                     </div>
@@ -1030,15 +1143,15 @@ export function CitizenReportTunnel({
                     photoUploadState === "error"
                       ? "error"
                       : photoUploadState === "success"
-                        ? "success"
-                        : "default"
+                      ? "success"
+                      : "default"
                   }
                   stateRelatedMessage={
                     photoUploadState === "error"
                       ? photoUploadError ?? "Le téléversement a échoué."
                       : photoUploadState === "success"
-                        ? "Photo importée avec succès."
-                        : undefined
+                      ? "Photo importée avec succès."
+                      : undefined
                   }
                 />
 
@@ -1055,7 +1168,8 @@ export function CitizenReportTunnel({
                     <div className="fr-card__body">
                       <h3 className="fr-card__title fr-h6">Photo téléversée</h3>
                       <p className="fr-card__desc fr-text--sm fr-mb-2w">
-                        {photoUploadInfo.format.toUpperCase()} — {(photoUploadInfo.bytes / 1024).toFixed(0)} ko
+                        {photoUploadInfo.format.toUpperCase()} —{" "}
+                        {(photoUploadInfo.bytes / 1024).toFixed(0)} ko
                       </p>
                       <div className="fr-tags-group fr-mb-2w">
                         <Tag small>{photoUploadInfo.width} px</Tag>
@@ -1099,7 +1213,9 @@ export function CitizenReportTunnel({
                       className="fr-width-full"
                       disabled={isSubmitDisabled}
                     >
-                      {submissionState === "loading" ? "Envoi en cours…" : "Envoyer"}
+                      {submissionState === "loading"
+                        ? "Envoi en cours…"
+                        : "Envoyer"}
                     </Button>
                   )}
                 </div>
@@ -1119,16 +1235,20 @@ export function CitizenReportTunnel({
             aria-labelledby="citizen-report-step-4"
           >
             <div className="fr-callout">
-              <h2 id="citizen-report-step-4" className="fr-callout__title fr-h4">
+              <h2
+                id="citizen-report-step-4"
+                className="fr-callout__title fr-h4"
+              >
                 Merci pour votre remontée
               </h2>
               <p className="fr-text--sm">
-                Votre contribution a bien été transmise à la mairie de {communeName}. Elle sera
-                analysée dans les meilleurs délais.
+                Votre contribution a bien été transmise à la mairie de{" "}
+                {communeName}. Elle sera analysée dans les meilleurs délais.
               </p>
               <p className="fr-text--sm fr-mb-0">
-                Pour toute question complémentaire, n’hésitez pas à consulter le site de votre
-                commune ou à vous rapprocher des services municipaux.
+                Pour toute question complémentaire, n’hésitez pas à consulter le
+                site de votre commune ou à vous rapprocher des services
+                municipaux.
               </p>
             </div>
 
@@ -1166,5 +1286,3 @@ export function CitizenReportTunnel({
     </div>
   );
 }
-
-

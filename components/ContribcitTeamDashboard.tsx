@@ -286,7 +286,7 @@ export function ContribcitTeamDashboard({
       <section
         className="fr-my-6w"
         style={{
-          backgroundColor: "#ffe9f3",
+          backgroundColor: "var(--pink-tuile-975-75)",
           borderRadius: "0.5rem",
         }}
       >

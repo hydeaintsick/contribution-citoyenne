@@ -105,7 +105,7 @@ const faqItems = [
         <p>
           Ces codes peuvent être imprimés sur divers supports physiques (panneaux, affiches, autocollants) pour être apposés dans l'espace public, ou intégrés numériquement sur vos sites web, applications mobiles ou communications électroniques. Notre système vous permet de gérer et de suivre l'efficacité de chaque QR code en temps réel, assurant une mise en place rapide et une gestion sans effort.
         </p>
-        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e5e5" }}>
+        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-default-grey)" }}>
           <p style={{ marginBottom: "1rem" }}>
             <strong>Vous souhaitez en savoir plus sur la mise en œuvre concrète dans votre collectivité ?</strong> Nos experts sont à votre disposition pour vous guider pas à pas et vous accompagner dans le déploiement optimal de notre solution.
           </p>
@@ -126,7 +126,7 @@ const faqItems = [
         <p>
           Cette liberté garantit que chacun se sente à l'aise de s'exprimer librement. Si un citoyen souhaite être recontacté pour un suivi ou pour apporter des précisions, il a la possibilité, mais non l'obligation, de laisser ses coordonnées. Dans ce cas, toutes les données sont traitées avec la plus grande confidentialité et en stricte conformité avec les réglementations en vigueur.
         </p>
-        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e5e5" }}>
+        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-default-grey)" }}>
           <p style={{ marginBottom: "1rem" }}>
             <strong>La confiance de vos citoyens est notre priorité.</strong> Découvrez comment nous protégeons leurs données et encourageons leur engagement dans un cadre sécurisé et respectueux de leur vie privée.
           </p>
@@ -147,7 +147,7 @@ const faqItems = [
         <p>
           Ces données sont ensuite agrégées et présentées sur une carte interactive de votre territoire, où vous pouvez identifier en un coup d'œil les zones à forte concentration de suggestions ou d'alertes. Cette visualisation claire vous permet de repérer les tendances émergentes, de prioriser les interventions et d'allouer vos ressources de manière plus stratégique et efficace.
         </p>
-        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e5e5" }}>
+        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-default-grey)" }}>
           <p style={{ marginBottom: "1rem" }}>
             <strong>Visualisez l'impact de chaque retour citoyen sur votre territoire.</strong> Laissez-nous vous montrer comment notre cartographie peut transformer votre prise de décision et améliorer la réactivité de vos services.
           </p>
@@ -168,7 +168,7 @@ const faqItems = [
         <p>
           Lorsque des données sont collectées (par exemple, si un citoyen choisit de laisser ses coordonnées), elles sont chiffrées, stockées sur des serveurs sécurisés en France, et traitées avec le consentement explicite de l'utilisateur. Nous mettons en œuvre des mesures techniques et organisationnelles robustes pour garantir la confidentialité, l'intégrité et la disponibilité des données, et nous vous fournissons tous les outils nécessaires pour assurer votre propre conformité.
         </p>
-        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e5e5" }}>
+        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-default-grey)" }}>
           <p style={{ marginBottom: "1rem" }}>
             <strong>La sécurité et la confidentialité des données sont non négociables.</strong> Contactez-nous pour une présentation détaillée de nos engagements RGPD et de nos certifications de sécurité.
           </p>
@@ -189,7 +189,7 @@ const faqItems = [
         <p>
           Nous croyons en une solution juste et accessible, offrant un excellent rapport qualité-prix pour un investissement qui génère un retour significatif en termes d'amélioration de la qualité de vie et de l'engagement citoyen. Nos tarifs sont adaptés aux budgets des collectivités, quelle que soit leur taille.
         </p>
-        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e5e5" }}>
+        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-default-grey)" }}>
           <p style={{ marginBottom: "1rem" }}>
             <strong>Chaque collectivité est unique.</strong> Obtenez une estimation personnalisée et découvrez la valeur ajoutée de notre solution pour votre budget. Nous vous proposerons un devis sur mesure adapté à vos besoins réels.
           </p>
@@ -210,7 +210,7 @@ const faqItems = [
         <p>
           Cette flexibilité garantit que les retours citoyens sont classifiés de manière pertinente pour vos services, facilitant ainsi l'analyse, le traitement et la remontée d'informations aux équipes concernées. Vous pouvez modifier ces catégories à tout moment selon l'évolution de vos besoins et des priorités de votre collectivité.
         </p>
-        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e5e5" }}>
+        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-default-grey)" }}>
           <p style={{ marginBottom: "1rem" }}>
             <strong>Adaptez notre solution à votre réalité locale.</strong> Discutons de vos besoins spécifiques en matière de catégorisation des retours et découvrez comment personnaliser l'outil pour qu'il réponde parfaitement à vos enjeux.
           </p>
@@ -231,7 +231,7 @@ const faqItems = [
         <p>
           Nous vous accompagnons à chaque étape, de la configuration technique à la stratégie de lancement, pour assurer une mise en œuvre fluide et efficace, minimisant les délais et maximisant l'impact. La plupart de nos clients sont opérationnels en moins de deux semaines après la signature du contrat.
         </p>
-        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e5e5" }}>
+        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-default-grey)" }}>
           <p style={{ marginBottom: "1rem" }}>
             <strong>Prêt à lancer votre projet rapidement ?</strong> Contactez-nous pour planifier un déploiement sur mesure et sans délai. Nous vous proposerons un calendrier adapté à vos contraintes.
           </p>
@@ -252,7 +252,7 @@ const faqItems = [
         <p>
           L'objectif est de rendre vos équipes autonomes et efficaces, leur permettant de tirer pleinement parti de toutes les fonctionnalités de la solution pour améliorer la gestion de votre collectivité. Nous proposons également un support continu et des sessions de formation complémentaires si nécessaire, pour s'assurer que vos équipes restent à jour avec les évolutions de la plateforme.
         </p>
-        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e5e5" }}>
+        <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-default-grey)" }}>
           <p style={{ marginBottom: "1rem" }}>
             <strong>Donnez à vos équipes les moyens de réussir.</strong> Découvrez nos programmes de formation adaptés à leurs besoins et à leur niveau, pour une adoption rapide et efficace de notre solution.
           </p>

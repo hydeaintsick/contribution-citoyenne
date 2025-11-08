@@ -32,6 +32,43 @@ const BAN_BASE_URL = "https://api-adresse.data.gouv.fr/search/";
 const DEFAULT_USER_AGENT = "Contribcit/1.0 (+https://contribcit.fr)";
 const COORDINATE_TOLERANCE = 0.01; // ~1km, laisse un peu de marge pour BAN
 
+function normalizeString(value: string | null | undefined) {
+  return value
+    ? value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim()
+    : "";
+}
+
+function doesFeatureMatchCommune(
+  properties: BanFeature["properties"],
+  normalizedCommuneName: string,
+  communePostalCodes: string[]
+) {
+  const normalizedCity = normalizeString(properties?.city);
+  if (normalizedCity && normalizedCity === normalizedCommuneName) {
+    return true;
+  }
+
+  const normalizedContext = normalizeString(properties?.context);
+  if (
+    normalizedContext &&
+    (normalizedContext === normalizedCommuneName ||
+      normalizedContext.includes(normalizedCommuneName))
+  ) {
+    return true;
+  }
+
+  const postcode = properties?.postcode?.trim();
+  if (postcode && communePostalCodes.length > 0) {
+    return communePostalCodes.some((code) => postcode.startsWith(code));
+  }
+
+  return false;
+}
+
 function isWithinBbox(latitude: number, longitude: number, bbox: number[], tolerance = COORDINATE_TOLERANCE) {
   if (bbox.length !== 4) {
     return true;
@@ -90,17 +127,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const enrichedQuery = [q, commune.name]
+      .filter((part) => part && part.length > 0)
+      .join(" ");
+
+    const normalizedCommuneName = normalizeString(commune.name);
+    const communePostalCodes = commune.postalCode
+      ? commune.postalCode
+          .split(/[,; ]+/)
+          .map((part) => part.trim())
+          .filter((part) => part.length > 0)
+      : [];
+
     const banUrl = new URL(BAN_BASE_URL);
-    banUrl.searchParams.set("q", q);
+    banUrl.searchParams.set("q", enrichedQuery);
     banUrl.searchParams.set("limit", String(Math.min(limit ?? 7, 10)));
     banUrl.searchParams.set("autocomplete", "1");
-    banUrl.searchParams.set("postcode", commune.postalCode);
-    banUrl.searchParams.set("city", commune.name);
-    banUrl.searchParams.set("lat", commune.latitude.toString());
-    banUrl.searchParams.set("lon", commune.longitude.toString());
     banUrl.searchParams.append("type", "housenumber");
     banUrl.searchParams.append("type", "street");
     banUrl.searchParams.append("type", "locality");
+    banUrl.searchParams.set("lat", commune.latitude.toString());
+    banUrl.searchParams.set("lon", commune.longitude.toString());
 
     const response = await fetch(banUrl, {
       headers: {
@@ -137,9 +184,14 @@ export async function GET(request: NextRequest) {
         if (
           typeof lat !== "number" ||
           typeof lon !== "number" ||
-          !label ||
-          !isWithinBbox(lat, lon, commune.bbox)
+          !label
         ) {
+          return null;
+        }
+        const matchesCommune =
+          isWithinBbox(lat, lon, commune.bbox) ||
+          doesFeatureMatchCommune(feature.properties, normalizedCommuneName, communePostalCodes);
+        if (!matchesCommune) {
           return null;
         }
         return {

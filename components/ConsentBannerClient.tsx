@@ -36,10 +36,10 @@ export function ConsentBannerClient() {
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: "#f6f6f6",
+        backgroundColor: "var(--background-raised-grey)",
         padding: "1rem",
         zIndex: 1000,
-        boxShadow: "0 -2px 8px rgba(0,0,0,0.1)",
+        boxShadow: "var(--raised-shadow)",
       }}
     >
       <div className="fr-container">

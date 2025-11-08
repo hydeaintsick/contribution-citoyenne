@@ -359,7 +359,7 @@ export default function QuiSommesNousPage() {
                     iconId="fr-icon-mail-line"
                     onClick={scrollToContact}
                     style={{
-                      backgroundColor: "white",
+                      backgroundColor: "var(--background-default-grey)",
                       color: "#000091",
                     }}
                   >
@@ -708,7 +708,7 @@ export default function QuiSommesNousPage() {
                     iconId="fr-icon-share-line"
                     onClick={handleShare}
                     style={{
-                      backgroundColor: "white",
+                      backgroundColor: "var(--background-default-grey)",
                       color: "#ce614a",
                     }}
                   >

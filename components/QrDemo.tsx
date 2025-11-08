@@ -193,7 +193,7 @@ export function QrDemo() {
                 width: "12px",
                 height: "12px",
                 borderRadius: "50%",
-                backgroundColor: index === currentStep ? "#0063cb" : "#e5e5e5",
+                backgroundColor: index === currentStep ? "var(--blue-france-sun-113-625)" : "var(--border-default-grey)",
                 cursor: "pointer",
                 border: "none",
                 padding: 0,

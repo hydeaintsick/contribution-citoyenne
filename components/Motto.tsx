@@ -56,7 +56,7 @@ export function Motto() {
                 padding: "1.5rem 2rem",
                 border: "2px solid var(--blue-france-sun-113-625)",
                 borderRadius: "8px",
-                backgroundColor: "white",
+                backgroundColor: "var(--background-raised-grey)",
               }}
             >
               <div

@@ -10,8 +10,13 @@
 @import "leaflet/dist/leaflet.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --background: var(--background-default-grey);
+  --foreground: var(--text-default-grey);
+}
+
+:root[data-fr-theme="dark"] {
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -49,8 +54,8 @@ body {
 .contribution-detail__header {
   padding: 2.5rem 3rem;
   border-radius: 1rem;
-  background-color: #f6f6ff;
-  box-shadow: 0 10px 30px rgba(21, 32, 70, 0.08);
+  background-color: var(--background-alt-blue-france);
+  box-shadow: var(--lifted-shadow);
 }
 
 .contribution-detail__header-content {
@@ -65,9 +70,9 @@ body {
 .contribution-detail__section {
   padding: 2.25rem 2.75rem;
   border-radius: 1rem;
-  background-color: #ffffff;
-  border: 1px solid rgba(43, 54, 92, 0.08);
-  box-shadow: 0 8px 24px rgba(21, 32, 70, 0.06);
+  background-color: var(--background-raised-grey);
+  border: 1px solid var(--border-default-grey);
+  box-shadow: var(--raised-shadow);
   display: grid;
   gap: 1.5rem;
 }
@@ -80,5 +85,5 @@ body {
   height: 18rem;
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(43, 54, 92, 0.12);
+  box-shadow: inset 0 0 0 1px var(--border-default-grey);
 }
