@@ -16,7 +16,7 @@ export function Hero() {
             transition={{ duration: 0.3 }}
           >
             <h1 className="fr-h1">Contribcit</h1>
-            <h2 className="fr-h2 fr-mt-2w">Pour une ville sûre qui nous unit</h2>
+            <h2 className="fr-h2 fr-mt-2w">La parole aux citoyens des territoires</h2>
             <p className="fr-text--lg fr-mt-4w">
               Offrez à vos habitants un canal simple pour <strong>alerter</strong> et{" "}
               <strong>suggérer</strong>. Avec Contribcit, un QR code suffit pour remonter les

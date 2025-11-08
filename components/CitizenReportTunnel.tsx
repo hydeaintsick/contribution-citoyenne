@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, cubicBezier, type Transition } from "framer-motion";
 import { Stepper } from "@codegouvfr/react-dsfr/Stepper";
 import { Button } from "@codegouvfr/react-dsfr/Button";
@@ -25,6 +25,17 @@ type PhotoUploadInfo = {
   format: string;
   width: number;
   height: number;
+};
+
+type AddressSuggestion = {
+  id: string;
+  label: string;
+  name: string;
+  context: string | null;
+  latitude: number;
+  longitude: number;
+  postcode: string | null;
+  city: string | null;
 };
 
 const REPORT_STEPS = [
@@ -107,6 +118,7 @@ const categories: Category[] = [
 ].sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
 const MIN_DETAILS_LENGTH = 12;
+const MIN_ADDRESS_QUERY_LENGTH = 3;
 
 export type CitizenReportTunnelProps = {
   communeId: string;
@@ -126,6 +138,11 @@ export function CitizenReportTunnel({
   const [details, setDetails] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+  const [isFetchingAddress, setIsFetchingAddress] = useState(false);
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const [isLocationLocked, setIsLocationLocked] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<AddressSuggestion | null>(null);
   const [photoUploadState, setPhotoUploadState] = useState<
     "idle" | "uploading" | "success" | "error"
   >("idle");
@@ -142,6 +159,8 @@ export function CitizenReportTunnel({
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const addressDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const addressAbortControllerRef = useRef<AbortController | null>(null);
 
   const resetAutoAdvance = useCallback(() => {
     if (autoAdvanceTimeoutRef.current) {
@@ -159,6 +178,10 @@ export function CitizenReportTunnel({
     setDetails("");
     setLocation("");
     setCoordinates(null);
+    setAddressSuggestions([]);
+    setAddressError(null);
+    setIsLocationLocked(false);
+    setSelectedSuggestion(null);
     setPhotoUploadInfo(null);
     setPhotoUploadState("idle");
     setPhotoUploadError(null);
@@ -243,13 +266,110 @@ export function CitizenReportTunnel({
   }, [selectedCategory]);
 
   const trimmedDetails = details.trim();
+  const trimmedLocation = location.trim();
+  const isLocationValid = trimmedLocation.length === 0 || !!coordinates;
   const isSubmitDisabled =
     submissionState === "loading" ||
     !reportType ||
     !selectedCategory ||
     !selectedSubcategory ||
-    trimmedDetails.length < MIN_DETAILS_LENGTH;
+    trimmedDetails.length < MIN_DETAILS_LENGTH ||
+    !isLocationValid;
   const isFormLocked = submissionState === "loading" || submissionState === "success";
+
+  const showAddressSuccess = Boolean(trimmedLocation) && isLocationValid && coordinates;
+
+  useEffect(() => {
+    if (isLocationLocked || isFormLocked) {
+      return;
+    }
+
+    const query = trimmedLocation;
+
+    if (selectedSuggestion && query === selectedSuggestion.label) {
+      setAddressSuggestions([]);
+      setIsFetchingAddress(false);
+      return;
+    }
+
+    if (query.length < MIN_ADDRESS_QUERY_LENGTH) {
+      setAddressSuggestions([]);
+      setAddressError(null);
+      setIsFetchingAddress(false);
+      if (addressAbortControllerRef.current) {
+        addressAbortControllerRef.current.abort();
+        addressAbortControllerRef.current = null;
+      }
+      if (addressDebounceRef.current) {
+        clearTimeout(addressDebounceRef.current);
+        addressDebounceRef.current = null;
+      }
+      if (query.length === 0) {
+        setSelectedSuggestion(null);
+        setCoordinates(null);
+      }
+      return;
+    }
+
+    setIsFetchingAddress(true);
+    setAddressError(null);
+
+    if (addressDebounceRef.current) {
+      clearTimeout(addressDebounceRef.current);
+    }
+
+    const controller = new AbortController();
+    addressAbortControllerRef.current = controller;
+
+    addressDebounceRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/contrib/addresses/search?communeId=${encodeURIComponent(communeId)}&q=${encodeURIComponent(query)}`,
+          {
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+          throw new Error(payload?.error ?? "Recherche impossible pour le moment.");
+        }
+
+        const payload = (await response.json()) as { suggestions?: AddressSuggestion[] };
+        setAddressSuggestions(payload.suggestions ?? []);
+      } catch (error) {
+        if ((error as Error).name === "AbortError") {
+          return;
+        }
+        setAddressSuggestions([]);
+        setAddressError(
+          error instanceof Error ? error.message : "Une erreur est survenue durant la recherche d’adresse.",
+        );
+      } finally {
+        setIsFetchingAddress(false);
+      }
+    }, 250);
+
+    return () => {
+      if (addressDebounceRef.current) {
+        clearTimeout(addressDebounceRef.current);
+        addressDebounceRef.current = null;
+      }
+      if (addressAbortControllerRef.current) {
+        addressAbortControllerRef.current.abort();
+        addressAbortControllerRef.current = null;
+      }
+      setIsFetchingAddress(false);
+    };
+  }, [communeId, isFormLocked, isLocationLocked, trimmedLocation, selectedSuggestion]);
+
+  const handleSelectSuggestion = useCallback((suggestion: AddressSuggestion) => {
+    setSelectedSuggestion(suggestion);
+    setLocation(suggestion.label);
+    setCoordinates({ latitude: suggestion.latitude, longitude: suggestion.longitude });
+    setAddressSuggestions([]);
+    setAddressError(null);
+  }, []);
 
   const handlePhotoChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -342,6 +462,13 @@ export function CitizenReportTunnel({
       return;
     }
 
+    if (isLocationLocked) {
+      setIsLocationLocked(false);
+      setGeolocationStatus("idle");
+      setGeolocationError(null);
+      return;
+    }
+
     if (typeof window === "undefined" || !("geolocation" in navigator)) {
       setGeolocationStatus("error");
       setGeolocationError("La géolocalisation n’est pas disponible sur cet appareil.");
@@ -352,14 +479,47 @@ export function CitizenReportTunnel({
     setGeolocationError(null);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const label = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
-        setLocation(label);
-        setCoordinates({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-        setGeolocationStatus("success");
+      async (position) => {
+        try {
+          const response = await fetch("/api/contrib/addresses/reverse", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              communeId,
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            }),
+          });
+
+          if (!response.ok) {
+            const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+            throw new Error(payload?.error ?? "Impossible de récupérer l’adresse exacte pour votre position.");
+          }
+
+          const payload = (await response.json()) as { address: AddressSuggestion };
+
+          setLocation(payload.address.label);
+          setCoordinates({
+            latitude: payload.address.latitude,
+            longitude: payload.address.longitude,
+          });
+          setSelectedSuggestion(payload.address);
+          setAddressSuggestions([]);
+          setAddressError(null);
+          setIsLocationLocked(true);
+          setGeolocationStatus("success");
+        } catch (error) {
+          console.error("Reverse geocoding failed", error);
+          setGeolocationStatus("error");
+          setGeolocationError(
+            error instanceof Error
+              ? error.message
+              : "Impossible de récupérer votre adresse. Renseignez le lieu manuellement.",
+          );
+          setIsLocationLocked(false);
+        }
       },
       (error) => {
         console.error("Geolocation error", error);
@@ -372,7 +532,7 @@ export function CitizenReportTunnel({
         timeout: 10_000,
       },
     );
-  }, [submissionState]);
+  }, [communeId, submissionState]);
 
   const currentStepMeta = REPORT_STEPS[currentStep - 1];
   const trimmedCommuneWebsite = communeWebsite?.trim();
@@ -746,38 +906,94 @@ export function CitizenReportTunnel({
                 }}
               />
 
-              <Input
-                label="Lieu concerné"
-                hintText="Adresse, nom de rue ou repère à proximité."
-                addon="Optionnel"
-                disabled={isFormLocked}
-                nativeInputProps={{
-                  value: location,
-                onChange: (event) => {
-                  setLocation(event.target.value);
-                  if (event.target.value.trim().length === 0) {
-                    setCoordinates(null);
+              <div className="fr-flow">
+                <Input
+                  label="Lieu concerné"
+                  hintText="Adresse, nom de rue ou repère à proximité."
+                  addon="Optionnel"
+                  disabled={isFormLocked}
+                  state={!isLocationValid ? "error" : showAddressSuccess ? "success" : "default"}
+                  stateRelatedMessage={
+                    !isLocationValid
+                      ? `Choisissez une adresse située dans ${communeName}.`
+                      : showAddressSuccess
+                        ? "Adresse validée"
+                        : undefined
                   }
-                },
-                  placeholder: "Ex. 12 rue de la République, entrée nord du parc…",
-                  disabled: isFormLocked,
-                }}
-                action={
-                  <Button
-                    type="button"
-                    priority="tertiary no outline"
-                    iconId={
-                      geolocationStatus === "loading"
-                        ? "fr-icon-refresh-line"
-                        : "ri-navigation-line"
-                    }
-                    onClick={handleLocate}
-                    disabled={geolocationStatus === "loading" || isFormLocked}
-                  >
-                    {geolocationStatus === "loading" ? "Localisation…" : "Me localiser"}
-                  </Button>
-                }
-              />
+                  nativeInputProps={{
+                    value: location,
+                    onChange: (event) => {
+                      const value = event.target.value;
+                      setLocation(value);
+                      setIsLocationLocked(false);
+                      setSelectedSuggestion(null);
+                      setCoordinates(null);
+                      if (value.trim().length === 0) {
+                        setAddressSuggestions([]);
+                        setAddressError(null);
+                      }
+                    },
+                    onFocus: () => {
+                      if (addressSuggestions.length === 0) {
+                        setAddressError(null);
+                      }
+                    },
+                    placeholder: "Ex. 12 rue de la République, entrée nord du parc…",
+                    disabled: isFormLocked || isLocationLocked,
+                  }}
+                  action={
+                    <Button
+                      type="button"
+                      priority="tertiary no outline"
+                      iconId={
+                        geolocationStatus === "loading"
+                          ? "fr-icon-refresh-line"
+                          : isLocationLocked
+                            ? "fr-icon-edit-line"
+                            : "ri-navigation-line"
+                      }
+                      onClick={handleLocate}
+                      disabled={geolocationStatus === "loading" || isFormLocked}
+                    >
+                      {geolocationStatus === "loading"
+                        ? "Localisation…"
+                        : isLocationLocked
+                          ? "Modifier"
+                          : "Me localiser"}
+                    </Button>
+                  }
+                />
+
+                {!isLocationLocked && (isFetchingAddress || addressSuggestions.length > 0 || addressError) ? (
+                  <div className="fr-card fr-card--no-border fr-card--shadow fr-mt-1w">
+                    <div className="fr-card__body">
+                      {isFetchingAddress ? (
+                        <p className="fr-text--sm fr-mb-0">Recherche d’adresses…</p>
+                      ) : addressError ? (
+                        <p className="fr-text--sm fr-mb-0 fr-text-mention--grey">{addressError}</p>
+                      ) : addressSuggestions.length > 0 ? (
+                        <ul className="fr-text--sm fr-pl-0 fr-ml-0" style={{ listStyle: "none" }}>
+                          {addressSuggestions.map((suggestion) => (
+                            <li key={suggestion.id} className="fr-py-1w">
+                              <button
+                                type="button"
+                                className="fr-btn fr-btn--tertiary fr-btn--sm fr-width-full"
+                                onClick={() => handleSelectSuggestion(suggestion)}
+                              >
+                                {suggestion.label}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="fr-text--sm fr-mb-0 fr-text-mention--grey">
+                          Aucune adresse correspondante. Affinez votre recherche.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
 
               {geolocationStatus === "error" && geolocationError && (
                 <Alert
@@ -793,7 +1009,11 @@ export function CitizenReportTunnel({
                   severity="success"
                   small
                   title="Localisation récupérée"
-                  description="Vous pouvez ajuster l’adresse si besoin."
+                  description={
+                    isLocationLocked
+                      ? "Adresse verrouillée. Cliquez sur Modifier pour saisir manuellement."
+                      : "Vous pouvez ajuster l’adresse si besoin."
+                  }
                 />
               )}
 

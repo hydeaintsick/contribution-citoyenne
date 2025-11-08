@@ -434,7 +434,7 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           title: "Accueil - Contribcit",
         }}
         serviceTitle="Contribcit"
-        serviceTagline="Pour une ville sûre qui nous unit"
+        serviceTagline="La parole aux citoyens des territoires"
         navigation={navigation}
         quickAccessItems={quickAccessItems}
       />

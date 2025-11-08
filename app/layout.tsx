@@ -64,7 +64,7 @@ export default async function RootLayout({
               }}
               contentDescription={
                 <>
-                  Contribcit - Pour une ville sûre qui nous unit
+                  Contribcit - La parole aux citoyens des territoires
                   <br />
                   La contribution citoyenne, simple et sécurisée
                 </>

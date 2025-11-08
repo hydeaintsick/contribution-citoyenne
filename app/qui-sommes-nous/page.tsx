@@ -21,7 +21,7 @@ export default function QuiSommesNousPage() {
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({
-          title: "Contribcit - Pour une ville sûre qui nous unit",
+          title: "Contribcit - La parole aux citoyens des territoires",
           text: shareText,
           url: window.location.origin,
         });

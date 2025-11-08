@@ -226,7 +226,11 @@ export function TownContributionDetail({
             typeof currentContribution.longitude === "number"
               ? `${currentContribution.latitude.toFixed(
                   5
-                )}, ${currentContribution.longitude.toFixed(5)}`
+                )}, ${currentContribution.longitude.toFixed(5)}${
+                  currentContribution.locationLabel
+                    ? ` (${currentContribution.locationLabel})`
+                    : ""
+                }`
               : "Non renseignées"}
           </li>
         </ul>

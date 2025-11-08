@@ -14,7 +14,7 @@ type ContributionListItem = {
   locationLabel?: string | null;
 };
 
-type Filter = "all" | "open" | "alert" | "suggestion";
+type Filter = "open" | "alert" | "suggestion";
 
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "medium",
@@ -26,52 +26,88 @@ export function TownContributionsTable({
 }: {
   items: ContributionListItem[];
 }) {
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filters, setFilters] = useState<Filter[]>([]);
+
+  const toggleFilter = (filter: Filter) => {
+    setFilters((current) =>
+      current.includes(filter)
+        ? current.filter((value) => value !== filter)
+        : [...current, filter]
+    );
+  };
 
   const filteredItems = useMemo(() => {
-    switch (filter) {
-      case "open":
-        return items.filter((item) => item.status === "OPEN");
-      case "alert":
-        return items.filter((item) => item.type === "ALERT");
-      case "suggestion":
-        return items.filter((item) => item.type === "SUGGESTION");
-      case "all":
-      default:
-        return items;
-    }
-  }, [filter, items]);
+    const hasOpenFilter = filters.includes("open");
+    const hasAlertFilter = filters.includes("alert");
+    const hasSuggestionFilter = filters.includes("suggestion");
+
+    return items.filter((item) => {
+      if (hasOpenFilter && item.status !== "OPEN") {
+        return false;
+      }
+
+      if (hasAlertFilter && !hasSuggestionFilter) {
+        return item.type === "ALERT";
+      }
+
+      if (hasSuggestionFilter && !hasAlertFilter) {
+        return item.type === "SUGGESTION";
+      }
+
+      return true;
+    });
+  }, [filters, items]);
 
   return (
     <div className="fr-flow">
       <div className="fr-btns-group fr-btns-group--inline fr-btns-group--sm">
         <Button
-          priority={filter === "all" ? "primary" : "secondary"}
-          onClick={() => setFilter("all")}
-          iconId={filter === "all" ? "fr-icon-check-line" : undefined}
+          priority={filters.length === 0 ? "primary" : "secondary"}
+          onClick={() => setFilters([])}
         >
-          Tous
+          {filters.length === 0 && (
+            <span
+              className="fr-icon-check-line fr-mr-1w"
+              aria-hidden="true"
+            ></span>
+          )}
+          <span>Tous</span>
         </Button>
         <Button
-          priority={filter === "open" ? "primary" : "secondary"}
-          onClick={() => setFilter("open")}
-          iconId={filter === "open" ? "fr-icon-check-line" : undefined}
+          priority={filters.includes("open") ? "primary" : "secondary"}
+          onClick={() => toggleFilter("open")}
         >
-          Non traité
+          {filters.includes("open") && (
+            <span
+              className="fr-icon-check-line fr-mr-1w"
+              aria-hidden="true"
+            ></span>
+          )}
+          <span>Non traité</span>
         </Button>
         <Button
-          priority={filter === "alert" ? "primary" : "secondary"}
-          onClick={() => setFilter("alert")}
-          iconId={filter === "alert" ? "fr-icon-check-line" : undefined}
+          priority={filters.includes("alert") ? "primary" : "secondary"}
+          onClick={() => toggleFilter("alert")}
         >
-          Alertes
+          {filters.includes("alert") && (
+            <span
+              className="fr-icon-check-line fr-mr-1w"
+              aria-hidden="true"
+            ></span>
+          )}
+          <span>Alertes</span>
         </Button>
         <Button
-          priority={filter === "suggestion" ? "primary" : "secondary"}
-          onClick={() => setFilter("suggestion")}
-          iconId={filter === "suggestion" ? "fr-icon-check-line" : undefined}
+          priority={filters.includes("suggestion") ? "primary" : "secondary"}
+          onClick={() => toggleFilter("suggestion")}
         >
-          Suggestions
+          {filters.includes("suggestion") && (
+            <span
+              className="fr-icon-check-line fr-mr-1w"
+              aria-hidden="true"
+            ></span>
+          )}
+          <span>Suggestions</span>
         </Button>
       </div>
 
