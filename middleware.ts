@@ -19,20 +19,55 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const isAccountManagerRestrictedRoute = pathname.startsWith("/admin/account-managers");
-  const isAdmin = session.user.role === "ADMIN";
-  const isAccountManager = session.user.role === "ACCOUNT_MANAGER";
+  const role = session.user.role;
 
-  if (
-    (!isAdmin && !isAccountManager) ||
-    (isAccountManager && isAccountManagerRestrictedRoute)
-  ) {
-    const loginUrl = new URL("/admin/login", request.url);
-    if (pathname !== "/admin/login") {
-      loginUrl.searchParams.set("redirectTo", pathname);
-    }
-    return NextResponse.redirect(loginUrl);
+  if (role === "ADMIN") {
+    return NextResponse.next();
   }
+
+  if (role === "ACCOUNT_MANAGER") {
+    const isRestricted = pathname.startsWith("/admin/account-managers");
+    if (isRestricted) {
+      const redirectUrl = new URL("/admin", request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+    return NextResponse.next();
+  }
+
+  if (role === "TOWN_MANAGER" || role === "TOWN_EMPLOYEE") {
+    const exactAllowed = new Set([
+      "/admin",
+      "/admin/",
+      "/admin/dashboard",
+      "/admin/profile",
+    ]);
+    const prefixAllowed = ["/admin/retours"];
+
+    if (role === "TOWN_MANAGER") {
+      exactAllowed.add("/admin/acces-salaries");
+      prefixAllowed.push("/admin/acces-salaries");
+    }
+
+    const isAllowed =
+      exactAllowed.has(pathname) ||
+      prefixAllowed.some(
+        (prefix) =>
+          pathname === prefix || pathname.startsWith(`${prefix}/`),
+      );
+
+    if (!isAllowed) {
+      const redirectUrl = new URL("/admin", request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    return NextResponse.next();
+  }
+
+  const loginUrl = new URL("/admin/login", request.url);
+  if (pathname !== "/admin/login") {
+    loginUrl.searchParams.set("redirectTo", pathname);
+  }
+  return NextResponse.redirect(loginUrl);
 
   return NextResponse.next();
 }

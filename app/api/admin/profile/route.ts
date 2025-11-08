@@ -16,11 +16,23 @@ const updateProfileSchema = z.object({
 
 export async function GET(request: NextRequest) {
   const session = await getSessionFromRequest(request);
+  if (!session) {
+    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+  }
+
+  const role = session.user.role;
+  const isMunicipal = role === "TOWN_MANAGER" || role === "TOWN_EMPLOYEE";
+
   if (
-    !session ||
-    (session.user.role !== "ADMIN" && session.user.role !== "ACCOUNT_MANAGER")
+    role !== "ADMIN" &&
+    role !== "ACCOUNT_MANAGER" &&
+    !isMunicipal
   ) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+  }
+
+  if (isMunicipal && !session.user.communeId) {
+    return NextResponse.json({ error: "Commune manquante pour l’utilisateur." }, { status: 403 });
   }
 
   const user = await prisma.user.findUnique({
@@ -39,11 +51,23 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const session = await getSessionFromRequest(request);
+  if (!session) {
+    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+  }
+
+  const role = session.user.role;
+  const isMunicipal = role === "TOWN_MANAGER" || role === "TOWN_EMPLOYEE";
+
   if (
-    !session ||
-    (session.user.role !== "ADMIN" && session.user.role !== "ACCOUNT_MANAGER")
+    role !== "ADMIN" &&
+    role !== "ACCOUNT_MANAGER" &&
+    !isMunicipal
   ) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+  }
+
+  if (isMunicipal && !session.user.communeId) {
+    return NextResponse.json({ error: "Commune manquante pour l’utilisateur." }, { status: 403 });
   }
 
   const json = await request.json().catch(() => null);

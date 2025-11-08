@@ -4,6 +4,8 @@ import { useCallback, useState } from "react";
 import { Input } from "@codegouvfr/react-dsfr/Input";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Alert } from "@codegouvfr/react-dsfr/Alert";
+import { Tag } from "@codegouvfr/react-dsfr/Tag";
+import type { Role } from "@prisma/client";
 
 type AdminProfileFormProps = {
   initialData: {
@@ -11,9 +13,18 @@ type AdminProfileFormProps = {
     firstName: string | null;
     lastName: string | null;
   };
+  role?: Role;
+  communeName?: string | null;
 };
 
-export function AdminProfileForm({ initialData }: AdminProfileFormProps) {
+const ROLE_LABELS: Record<Role, string> = {
+  ADMIN: "Administrateur Contribcit",
+  ACCOUNT_MANAGER: "Chargé de compte",
+  TOWN_MANAGER: "Manager municipal",
+  TOWN_EMPLOYEE: "Salarié municipal",
+};
+
+export function AdminProfileForm({ initialData, role, communeName }: AdminProfileFormProps) {
   const [firstName, setFirstName] = useState(initialData.firstName ?? "");
   const [lastName, setLastName] = useState(initialData.lastName ?? "");
   const [password, setPassword] = useState("");
@@ -76,6 +87,21 @@ export function AdminProfileForm({ initialData }: AdminProfileFormProps) {
       <p className="fr-text--sm">
         Mettez à jour vos coordonnées pour personnaliser l’expérience Contribcit.
       </p>
+
+      {role ? (
+        <div className="fr-grid-row fr-grid-row--gutters fr-grid-row--middle">
+          <div className="fr-col-auto">
+            <Tag small>{ROLE_LABELS[role]}</Tag>
+          </div>
+          {communeName ? (
+            <div className="fr-col">
+              <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
+                Commune rattachée&nbsp;: <strong>{communeName}</strong>
+              </p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {status === "success" && (
         <Alert

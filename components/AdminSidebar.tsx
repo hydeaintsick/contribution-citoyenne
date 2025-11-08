@@ -3,9 +3,13 @@
 import { useState, useCallback, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { SideMenu, type SideMenuProps } from "@codegouvfr/react-dsfr/SideMenu";
-import { Badge } from "@codegouvfr/react-dsfr/Badge";
 
-type AdminRole = "ADMIN" | "ACCOUNT_MANAGER" | null;
+type AdminRole =
+  | "ADMIN"
+  | "ACCOUNT_MANAGER"
+  | "TOWN_MANAGER"
+  | "TOWN_EMPLOYEE"
+  | null;
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -34,7 +38,12 @@ export function AdminSidebar() {
           user?: { role?: string | null };
         } | null;
         const role = data?.user?.role;
-        if (role === "ADMIN" || role === "ACCOUNT_MANAGER") {
+        if (
+          role === "ADMIN" ||
+          role === "ACCOUNT_MANAGER" ||
+          role === "TOWN_MANAGER" ||
+          role === "TOWN_EMPLOYEE"
+        ) {
           setUserRole(role);
         } else {
           setUserRole(null);
@@ -55,10 +64,9 @@ export function AdminSidebar() {
   }, []);
 
   const isAdmin = userRole === "ADMIN";
-
-  const handleComingSoonClick = useCallback((event: React.MouseEvent) => {
-    event.preventDefault();
-  }, []);
+  const isAccountManager = userRole === "ACCOUNT_MANAGER";
+  const isTownManager = userRole === "TOWN_MANAGER";
+  const isTownEmployee = userRole === "TOWN_EMPLOYEE";
 
   const handleLogout = useCallback(
     async (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -80,58 +88,118 @@ export function AdminSidebar() {
     [isLoggingOut, router]
   );
 
-  const items: SideMenuProps["items"] = [
-    {
-      text: (
-        <span className="fr-display-inline-flex fr-align-items-center fr-gap-1w fr-text-mention--grey">
-          Dashboard
-          <Badge small severity="info">
-            Bientôt disponible
-          </Badge>
-        </span>
-      ),
-      isActive: false,
-      linkProps: {
-        href: "#dashboard",
-        onClick: handleComingSoonClick,
-        "aria-disabled": true,
-        tabIndex: -1,
-      },
-    },
-    {
-      text: "Communes",
-      isActive: pathname === "/admin/communes",
-      linkProps: {
-        href: "/admin/communes",
-      },
-    },
-    ...(isAdmin
-      ? [
-          {
-            text: "Chargés de compte",
-            isActive: pathname === "/admin/account-managers",
-            linkProps: {
-              href: "/admin/account-managers",
-            },
+  const townDashboardActive =
+    pathname === "/admin" ||
+    pathname === "/admin/" ||
+    pathname === "/admin/dashboard";
+
+  const items: SideMenuProps["items"] = (() => {
+    if (!userRole) {
+      return [];
+    }
+
+    if (isAdmin || isAccountManager) {
+      const baseItems: SideMenuProps["items"] = [
+        {
+          text: "Tableau de bord",
+          isActive: pathname === "/admin" || pathname === "/admin/",
+          linkProps: {
+            href: "/admin",
           },
-        ]
-      : []),
-    {
-      text: "Mon profil",
-      isActive: pathname === "/admin/profile",
-      linkProps: {
-        href: "/admin/profile",
-      },
-    },
-    {
-      text: isLoggingOut ? "Déconnexion..." : "Déconnexion",
-      isActive: false,
-      linkProps: {
-        href: "/admin/logout",
-        onClick: handleLogout,
-      },
-    },
-  ];
+        },
+        {
+          text: "Communes",
+          isActive: pathname === "/admin/communes",
+          linkProps: {
+            href: "/admin/communes",
+          },
+        },
+      ];
+
+      if (isAdmin) {
+        baseItems.push({
+          text: "Chargés de compte",
+          isActive: pathname === "/admin/account-managers",
+          linkProps: {
+            href: "/admin/account-managers",
+          },
+        });
+      }
+
+      baseItems.push({
+        text: "Mon profil",
+        isActive: pathname === "/admin/profile",
+        linkProps: {
+          href: "/admin/profile",
+        },
+      });
+
+      baseItems.push({
+        text: isLoggingOut ? "Déconnexion..." : "Déconnexion",
+        isActive: false,
+        linkProps: {
+          href: "/admin/logout",
+          onClick: handleLogout,
+        },
+      });
+
+      return baseItems;
+    }
+
+    if (isTownManager || isTownEmployee) {
+      const townItems: SideMenuProps["items"] = [
+        {
+          text: "Dashboard",
+          isActive: townDashboardActive,
+          linkProps: {
+            href: "/admin",
+          },
+        },
+        {
+          text: "Retours citoyens",
+          isActive: pathname.startsWith("/admin/retours"),
+          linkProps: {
+            href: "/admin/retours",
+          },
+        },
+      ];
+
+      if (isTownManager) {
+        townItems.push({
+          text: "Accès salariés",
+          isActive: pathname.startsWith("/admin/acces-salaries"),
+          linkProps: {
+            href: "/admin/acces-salaries",
+          },
+        });
+      }
+
+      townItems.push({
+        text: "Mon profil",
+        isActive: pathname === "/admin/profile",
+        linkProps: {
+          href: "/admin/profile",
+        },
+      });
+
+      townItems.push({
+        text: isLoggingOut ? "Déconnexion..." : "Déconnexion",
+        isActive: false,
+        linkProps: {
+          href: "/admin/logout",
+          onClick: handleLogout,
+        },
+      });
+
+      return townItems;
+    }
+
+    return [];
+  })();
+
+  if (!items.length) {
+    return null;
+  }
 
   return (
     <SideMenu

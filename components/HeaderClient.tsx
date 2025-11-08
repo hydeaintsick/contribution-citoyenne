@@ -128,7 +128,7 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
       isMounted = false;
       controller.abort();
     };
-  }, [updateSessionState]);
+  }, [pathname, updateSessionState]);
 
   const handleLogout = useCallback(async () => {
     if (isLoggingOut) {
@@ -149,7 +149,7 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
     }
   }, [isLoggingOut, router, updateSessionState]);
 
-  const isAdmin = sessionUser?.role === "ADMIN";
+  const userRole = sessionUser?.role ?? null;
 
   const navigation = useMemo(() => {
     if (!isAdminArea) {
@@ -187,6 +187,127 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
       ];
     }
 
+    if (!userRole) {
+      return [
+        {
+          text: "Dashboard",
+          linkProps: {
+            href: "/admin",
+          },
+        },
+        {
+          text: "Mon profil",
+          linkProps: {
+            href: "/admin/profile",
+          },
+        },
+      ];
+    }
+
+    if (userRole === "ADMIN") {
+      return [
+        {
+          text: "Dashboard",
+          linkProps: {
+            href: "/admin",
+          },
+        },
+        {
+          text: "Communes",
+          linkProps: {
+            href: "/admin/communes",
+          },
+        },
+        {
+          text: "Chargés de compte",
+          linkProps: {
+            href: "/admin/account-managers",
+          },
+        },
+        {
+          text: "Mon profil",
+          linkProps: {
+            href: "/admin/profile",
+          },
+        },
+      ];
+    }
+
+    if (userRole === "ACCOUNT_MANAGER") {
+      return [
+        {
+          text: "Dashboard",
+          linkProps: {
+            href: "/admin",
+          },
+        },
+        {
+          text: "Communes",
+          linkProps: {
+            href: "/admin/communes",
+          },
+        },
+        {
+          text: "Mon profil",
+          linkProps: {
+            href: "/admin/profile",
+          },
+        },
+      ];
+    }
+
+    if (userRole === "TOWN_MANAGER") {
+      return [
+        {
+          text: "Dashboard",
+          linkProps: {
+            href: "/admin",
+          },
+        },
+        {
+          text: "Retours citoyens",
+          linkProps: {
+            href: "/admin/retours",
+          },
+        },
+        {
+          text: "Accès salariés",
+          linkProps: {
+            href: "/admin/acces-salaries",
+          },
+        },
+        {
+          text: "Mon profil",
+          linkProps: {
+            href: "/admin/profile",
+          },
+        },
+      ];
+    }
+
+    if (userRole === "TOWN_EMPLOYEE") {
+      return [
+        {
+          text: "Dashboard",
+          linkProps: {
+            href: "/admin",
+          },
+        },
+        {
+          text: "Retours citoyens",
+          linkProps: {
+            href: "/admin/retours",
+          },
+        },
+        {
+          text: "Mon profil",
+          linkProps: {
+            href: "/admin/profile",
+          },
+        },
+      ];
+    }
+
     return [
       {
         text: "Dashboard",
@@ -195,29 +316,13 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
         },
       },
       {
-        text: "Communes",
-        linkProps: {
-          href: "/admin/communes",
-        },
-      },
-      ...(isAdmin
-        ? [
-            {
-              text: "Chargés de compte",
-              linkProps: {
-                href: "/admin/account-managers",
-              },
-            },
-          ]
-        : []),
-      {
         text: "Mon profil",
         linkProps: {
           href: "/admin/profile",
         },
       },
     ];
-  }, [isAdmin, isAdminArea]);
+  }, [isAdminArea, userRole]);
 
   const quickAccessItems = useMemo<QuickAccessItems>(() => {
     const themeToggleItem: QuickAccessItems[number] = {

@@ -24,9 +24,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="admin-shell admin-shell--default">
       <div className="admin-shell-container fr-container fr-py-8w">
-        <main className="fr-p-6w fr-background-alt--grey fr-radius--md">
-          {children}
-        </main>
+        <main className="fr-p-6w fr-background-alt--grey fr-radius--md">{children}</main>
       </div>
     </div>
   );

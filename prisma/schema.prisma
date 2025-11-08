@@ -14,6 +14,16 @@ enum Role {
   TOWN_EMPLOYEE
 }
 
+enum ContributionType {
+  ALERT
+  SUGGESTION
+}
+
+enum ContributionStatus {
+  OPEN
+  CLOSED
+}
+
 enum CityAuditAction {
   CREATED
   UPDATED
@@ -36,6 +46,7 @@ model User {
   cityAuditLogs   CityAuditLog[]
   createdCommunes Commune[]      @relation("CommuneCreatedBy")
   updatedCommunes Commune[]      @relation("CommuneUpdatedBy")
+  closedReports   Contribution[] @relation("ContributionClosedBy")
 }
 
 model Commune {
@@ -59,6 +70,7 @@ model Commune {
 
   users     User[]
   auditLogs CityAuditLog[]
+  reports   Contribution[]
 }
 
 model CityAuditLog {
@@ -79,4 +91,27 @@ model UserLoginLog {
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())
+}
+
+model Contribution {
+  id            String             @id @default(auto()) @map("_id") @db.ObjectId
+  communeId     String             @db.ObjectId
+  commune       Commune            @relation(fields: [communeId], references: [id], onDelete: Cascade)
+  type          ContributionType
+  status        ContributionStatus @default(OPEN)
+  categoryValue String
+  categoryLabel String
+  subcategory   String
+  details       String
+  locationLabel String?
+  latitude      Float?
+  longitude     Float?
+  photoUrl      String?
+  photoPublicId String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  closedAt      DateTime?
+  closureNote   String?
+  closedById    String?            @db.ObjectId
+  closedBy      User?              @relation("ContributionClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
 }

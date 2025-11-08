@@ -18,8 +18,18 @@ export default async function AdminProfilePage() {
 
   const session = await parseSessionCookie(sessionCookie);
 
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ACCOUNT_MANAGER")) {
+  if (
+    !session ||
+    !["ADMIN", "ACCOUNT_MANAGER", "TOWN_MANAGER", "TOWN_EMPLOYEE"].includes(session.user.role)
+  ) {
     redirect("/admin/login?redirectTo=/admin/profile");
+  }
+
+  if (
+    (session.user.role === "TOWN_MANAGER" || session.user.role === "TOWN_EMPLOYEE") &&
+    !session.user.communeId
+  ) {
+    redirect("/admin");
   }
 
   const user = await prisma.user.findUnique({
@@ -35,6 +45,16 @@ export default async function AdminProfilePage() {
     redirect("/admin/login");
   }
 
+  let communeName: string | null = null;
+
+  if (session.user.communeId) {
+    const commune = await prisma.commune.findUnique({
+      where: { id: session.user.communeId },
+      select: { name: true },
+    });
+    communeName = commune?.name ?? null;
+  }
+
   return (
     <div className="fr-flow">
       <AdminProfileForm
@@ -43,6 +63,8 @@ export default async function AdminProfilePage() {
           firstName: user.firstName,
           lastName: user.lastName,
         }}
+        role={session.user.role}
+        communeName={communeName}
       />
     </div>
   );

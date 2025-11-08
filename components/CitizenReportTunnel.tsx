@@ -121,6 +121,7 @@ export function CitizenReportTunnel({
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
   const [details, setDetails] = useState<string>("");
   const [location, setLocation] = useState<string>("");
+  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [photoUploadState, setPhotoUploadState] = useState<
     "idle" | "uploading" | "success" | "error"
   >("idle");
@@ -153,6 +154,7 @@ export function CitizenReportTunnel({
     setSelectedSubcategory("");
     setDetails("");
     setLocation("");
+    setCoordinates(null);
     setPhotoUploadInfo(null);
     setPhotoUploadState("idle");
     setPhotoUploadError(null);
@@ -349,6 +351,10 @@ export function CitizenReportTunnel({
       (position) => {
         const label = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
         setLocation(label);
+        setCoordinates({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
         setGeolocationStatus("success");
       },
       (error) => {
@@ -408,6 +414,12 @@ export function CitizenReportTunnel({
             subcategory: selectedSubcategory,
             details: cleanedDetails,
             location: location.trim() || null,
+            coordinates: coordinates
+              ? {
+                  latitude: coordinates.latitude,
+                  longitude: coordinates.longitude,
+                }
+              : null,
             photo: photoUploadInfo
               ? {
                   url: photoUploadInfo.url,
@@ -438,6 +450,7 @@ export function CitizenReportTunnel({
       details,
       location,
       photoUploadInfo,
+      coordinates,
       reportType,
       selectedCategory,
       selectedCategoryLabel,
@@ -732,7 +745,12 @@ export function CitizenReportTunnel({
                 disabled={isFormLocked}
                 nativeInputProps={{
                   value: location,
-                  onChange: (event) => setLocation(event.target.value),
+                onChange: (event) => {
+                  setLocation(event.target.value);
+                  if (event.target.value.trim().length === 0) {
+                    setCoordinates(null);
+                  }
+                },
                   placeholder: "Ex. 12 rue de la République, entrée nord du parc…",
                   disabled: isFormLocked,
                 }}

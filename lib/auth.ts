@@ -53,6 +53,7 @@ export async function authenticateUser(
     id: user.id,
     email: user.email,
     role: user.role,
+    communeId: user.communeId ?? null,
     firstName: user.firstName,
     lastName: user.lastName,
     lastLoginAt: now.toISOString(),
