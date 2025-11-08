@@ -8,7 +8,15 @@ type ContribPageProps = {
   }>;
 };
 
-async function getCommuneName(communeId: string) {
+type CommuneDetails = {
+  name: string;
+  websiteUrl: string | null;
+  isVisible: boolean;
+};
+
+async function getCommuneDetails(
+  communeId: string
+): Promise<CommuneDetails | null> {
   try {
     const commune = await prisma.commune.findUnique({
       where: {
@@ -16,6 +24,8 @@ async function getCommuneName(communeId: string) {
       },
       select: {
         name: true,
+        websiteUrl: true,
+        isVisible: true,
       },
     });
 
@@ -23,7 +33,7 @@ async function getCommuneName(communeId: string) {
       return null;
     }
 
-    return commune.name;
+    return commune;
   } catch (error) {
     console.error("Failed to load commune", error);
     return null;
@@ -37,11 +47,19 @@ export default async function ContribPage({ params }: ContribPageProps) {
     notFound();
   }
 
-  const communeName = (await getCommuneName(communeId)) ?? "votre commune";
+  const commune = await getCommuneDetails(communeId);
+
+  if (!commune || !commune.isVisible) {
+    notFound();
+  }
 
   return (
     <main className="fr-py-6w">
-      <CitizenReportTunnel communeId={communeId} communeName={communeName} />
+      <CitizenReportTunnel
+        communeId={communeId}
+        communeName={commune.name}
+        communeWebsite={commune.websiteUrl ?? undefined}
+      />
     </main>
   );
 }

@@ -26,6 +26,18 @@ const createCommuneSchema = z.object({
     z.number(),
     z.string().trim().transform((value) => Number.parseFloat(value)),
   ]),
+  websiteUrl: z
+    .union([
+      z.string().trim().length(0),
+      z.string().trim().url("L’URL du site doit être valide."),
+    ])
+    .optional()
+    .transform((value) => {
+      if (!value || value.length === 0) {
+        return undefined;
+      }
+      return value;
+    }),
   manager: z.object({
     email: z.string().email("Email du manager invalide."),
     password: z
@@ -75,6 +87,7 @@ export async function POST(request: NextRequest) {
     bbox,
     latitude,
     longitude,
+    websiteUrl,
     manager,
   } = parseResult.data;
 
@@ -134,6 +147,7 @@ export async function POST(request: NextRequest) {
           bbox,
           latitude,
           longitude,
+          websiteUrl,
           createdById: session.user.id,
           updatedById: session.user.id,
         },

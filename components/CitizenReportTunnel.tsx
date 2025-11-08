@@ -107,9 +107,14 @@ const MIN_DETAILS_LENGTH = 12;
 export type CitizenReportTunnelProps = {
   communeId: string;
   communeName: string;
+  communeWebsite?: string | null;
 };
 
-export function CitizenReportTunnel({ communeId, communeName }: CitizenReportTunnelProps) {
+export function CitizenReportTunnel({
+  communeId,
+  communeName,
+  communeWebsite,
+}: CitizenReportTunnelProps) {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [reportType, setReportType] = useState<ReportType | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -360,6 +365,7 @@ export function CitizenReportTunnel({ communeId, communeName }: CitizenReportTun
   }, [submissionState]);
 
   const currentStepMeta = REPORT_STEPS[currentStep - 1];
+  const trimmedCommuneWebsite = communeWebsite?.trim();
 
   const handleSubmit = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -462,7 +468,19 @@ export function CitizenReportTunnel({ communeId, communeName }: CitizenReportTun
           >
             <div className="fr-callout">
               <h1 id="citizen-report-step-1" className="fr-callout__title fr-h4">
-                Bienvenue sur le portail citoyen de la ville de {communeName}
+                Bienvenue sur le portail citoyen de la ville de{" "}
+                {trimmedCommuneWebsite ? (
+                  <a
+                    href={trimmedCommuneWebsite}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="fr-link fr-link--md"
+                  >
+                    {communeName}
+                  </a>
+                ) : (
+                  communeName
+                )}
               </h1>
               <p className="fr-text--sm fr-mb-0">
                 Signalez un problème ou partagez une idée pour améliorer la vie locale. Vous

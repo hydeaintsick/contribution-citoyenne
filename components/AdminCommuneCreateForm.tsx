@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Input } from "@codegouvfr/react-dsfr/Input";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Alert } from "@codegouvfr/react-dsfr/Alert";
@@ -34,9 +33,9 @@ type AdminCommuneCreateFormProps = {
 };
 
 export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateFormProps) {
-  const router = useRouter();
   const [postalCode, setPostalCode] = useState("");
   const [communeData, setCommuneData] = useState<CommunePayload | null>(null);
+  const [websiteUrl, setWebsiteUrl] = useState("");
   const [verificationState, setVerificationState] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
@@ -47,8 +46,6 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
   const [manager, setManager] = useState({ ...INITIAL_MANAGER_STATE });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formStatus, setFormStatus] = useState<FormStatus | null>(null);
-
-  const hasVerifiedCommune = useMemo(() => communeData !== null, [communeData]);
 
   const handleVerifyPostalCode = useCallback(async () => {
     setFormStatus(null);
@@ -107,6 +104,7 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
   const resetForm = useCallback(() => {
     setPostalCode("");
     setCommuneData(null);
+    setWebsiteUrl("");
     setVerificationState("idle");
     setVerificationMessage(null);
     setManager({ ...INITIAL_MANAGER_STATE });
@@ -143,6 +141,7 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
           },
           body: JSON.stringify({
             ...communeData,
+            websiteUrl: websiteUrl.trim(),
             manager: {
               email: manager.email,
               password: manager.password,
@@ -172,7 +171,6 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
           type: "success",
           message: `La commune ${payload.commune.name} (${payload.commune.postalCode}) a été créée avec succès.`,
         });
-        router.refresh();
         onCommuneCreated?.();
         resetForm();
       } catch (error) {
@@ -185,7 +183,7 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
         setIsSubmitting(false);
       }
     },
-    [communeData, manager, onCommuneCreated, resetForm, router],
+    [communeData, manager, onCommuneCreated, resetForm, websiteUrl],
   );
 
   const bboxDisplayValue = useMemo(() => {
@@ -289,6 +287,19 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
               }}
             />
           </div>
+        </div>
+
+        <div className="fr-mt-2w">
+          <Input
+            label="Site internet (optionnel)"
+            nativeInputProps={{
+              type: "url",
+              value: websiteUrl,
+              onChange: (event) => setWebsiteUrl(event.target.value),
+              placeholder: "https://www.ville-exemple.fr",
+              inputMode: "url",
+            }}
+          />
         </div>
 
         <div className="fr-mt-2w">

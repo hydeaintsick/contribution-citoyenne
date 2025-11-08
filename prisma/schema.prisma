@@ -48,6 +48,8 @@ model Commune {
   latitude    Float
   longitude   Float
   country     String   @default("FR")
+  websiteUrl  String?
+  isVisible   Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdById String?  @db.ObjectId

@@ -161,6 +161,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           },
         },
         {
+          text: "Annuaire",
+          linkProps: {
+            href: "/annuaire",
+          },
+        },
+        {
           text: "Comment ça marche",
           linkProps: {
             href: "/#how-it-works",
