@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "postinstall": "node scripts/copy-dsfr.js",
+    "postinstall": "node scripts/copy-dsfr.js && npx prisma generate",
     "build": "node scripts/copy-dsfr.js && next build",
     "start": "next start",
     "lint": "eslint",
