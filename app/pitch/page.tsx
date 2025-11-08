@@ -26,7 +26,8 @@ const opportunityTimeline = [
   {
     period: "2025",
     title: "Loi Engagement & Proximité",
-    detail: "Renforce l'obligation de participation citoyenne et de transparence locale.",
+    detail:
+      "Renforce l'obligation de participation citoyenne et de transparence locale.",
   },
   {
     period: "2026",
@@ -36,12 +37,14 @@ const opportunityTimeline = [
   {
     period: "2027",
     title: "Préparation Jeux Olympiques 2030",
-    detail: "Besoin de capteurs temps réel sur la satisfaction usagers & touristes.",
+    detail:
+      "Besoin de capteurs temps réel sur la satisfaction usagers & touristes.",
   },
   {
     period: "2030",
     title: "Participation généralisée",
-    detail: "Les collectivités doivent prouver leur impact auprès des citoyens.",
+    detail:
+      "Les collectivités doivent prouver leur impact auprès des citoyens.",
   },
 ];
 
@@ -76,7 +79,8 @@ const budgets = [
   {
     phase: "Investigation (0-6 mois)",
     amount: "~100 k€ TTC",
-    resources: "Intrapreneur 60 %, coach beta.gouv, équipe Contribcit (produit/UX/data)",
+    resources:
+      "Intrapreneur 60 %, coach beta.gouv, équipe Contribcit (produit/UX/data)",
     funding: "Budget sponsor ministériel",
   },
   {
@@ -126,9 +130,9 @@ export default function PitchPage() {
               Contribcit, la voix des territoires
             </h1>
             <p className="fr-text--lead fr-mb-4w">
-              Nous unifions les retours citoyens, touristiques et associatifs pour
-              donner aux collectivités et à l'État un baromètre temps réel du
-              terrain.
+              Nous unifions les retours citoyens, touristiques et associatifs
+              pour donner aux collectivités et à l'État un baromètre temps réel
+              du terrain.
             </p>
             <div className="fr-grid-row fr-grid-row--gutters">
               <div className="fr-col-12 fr-col-md-6">
@@ -167,8 +171,9 @@ export default function PitchPage() {
           <h2 className="fr-display--sm fr-mb-3w">Pourquoi maintenant ?</h2>
           <p className="fr-text--lg fr-mb-6w">
             Contribcit répond à une triple urgence : rendre simple la prise de
-            parole citoyenne, outiller les collectivités dans leur priorisation et
-            offrir à l'État un observatoire qualitatif consolidé du territoire.
+            parole citoyenne, outiller les collectivités dans leur priorisation
+            et offrir à l'État un observatoire qualitatif consolidé du
+            territoire.
           </p>
           <div className="fr-grid-row fr-grid-row--gutters">
             {painPoints.map((item) => (
@@ -206,7 +211,9 @@ export default function PitchPage() {
                 <div className="fr-timeline__container">
                   {opportunityTimeline.map((step) => (
                     <div key={step.period} className="fr-timeline__item">
-                      <div className="fr-timeline__item-title">{step.period}</div>
+                      <div className="fr-timeline__item-title">
+                        {step.period}
+                      </div>
                       <div className="fr-timeline__item-description">
                         <h3 className="fr-h4 fr-mb-1w">{step.title}</h3>
                         <p className="fr-text--sm">{step.detail}</p>
@@ -241,10 +248,12 @@ export default function PitchPage() {
               <div className="fr-card fr-card--horizontal fr-card--icon-left">
                 <div className="fr-card__body">
                   <div className="fr-card__content">
-                    <h3 className="fr-card__title">Tableau de bord collectivités</h3>
+                    <h3 className="fr-card__title">
+                      Tableau de bord collectivités
+                    </h3>
                     <p className="fr-card__desc">
-                      Cartographie dynamique, priorisation automatique, intégration
-                      avec les outils métiers existants.
+                      Cartographie dynamique, priorisation automatique,
+                      intégration avec les outils métiers existants.
                     </p>
                   </div>
                 </div>
@@ -256,8 +265,8 @@ export default function PitchPage() {
                   <div className="fr-card__content">
                     <h3 className="fr-card__title">Vue macro État</h3>
                     <p className="fr-card__desc">
-                      Agrégation nationale anonymisée, détection de signaux faibles,
-                      open data pour éclairer l'action publique.
+                      Agrégation nationale anonymisée, détection de signaux
+                      faibles, open data pour éclairer l'action publique.
                     </p>
                   </div>
                 </div>
@@ -270,7 +279,9 @@ export default function PitchPage() {
               <div className="fr-content-media">
                 <div className="fr-content-media__img fr-ratio-16x9 fr-background-alt--blue-france">
                   <div className="fr-content-media__img-placeholder">
-                    <p className="fr-text--lg fr-text--bold">Storyboard utilisateur</p>
+                    <p className="fr-text--lg fr-text--bold">
+                      Storyboard utilisateur
+                    </p>
                     <p>Scanner • Signaler • Suivre</p>
                   </div>
                 </div>
@@ -287,7 +298,9 @@ export default function PitchPage() {
               <div className="fr-content-media">
                 <div className="fr-content-media__img fr-ratio-16x9 fr-background-alt--pink-tuile">
                   <div className="fr-content-media__img-placeholder">
-                    <p className="fr-text--lg fr-text--bold">Dashboard collectivité</p>
+                    <p className="fr-text--lg fr-text--bold">
+                      Dashboard collectivité
+                    </p>
                     <p>Carte • Volume • Tendances</p>
                   </div>
                 </div>
@@ -313,7 +326,9 @@ export default function PitchPage() {
                 <div className="fr-card__body">
                   <p className="fr-badge fr-badge--success fr-mb-3w">82 %</p>
                   <h3 className="fr-card__title">Taux de complétion</h3>
-                  <p className="fr-card__desc">contre 45 % pour un formulaire classique.</p>
+                  <p className="fr-card__desc">
+                    contre 45 % pour un formulaire classique.
+                  </p>
                 </div>
               </div>
             </div>
@@ -322,7 +337,9 @@ export default function PitchPage() {
                 <div className="fr-card__body">
                   <p className="fr-badge fr-badge--info fr-mb-3w">1 200</p>
                   <h3 className="fr-card__title">Retours terrain</h3>
-                  <p className="fr-card__desc">collectés sur 6 territoires pilotes en 3 mois.</p>
+                  <p className="fr-card__desc">
+                    collectés sur 6 territoires pilotes en 3 mois.
+                  </p>
                 </div>
               </div>
             </div>
@@ -338,11 +355,15 @@ export default function PitchPage() {
           </div>
 
           <div className="fr-alert fr-alert--success fr-mt-6w">
-            <h3 className="fr-alert__title">Décisions prises grâce à Contribcit</h3>
+            <h3 className="fr-alert__title">
+              Décisions prises grâce à Contribcit
+            </h3>
             <ul className="fr-pl-3w fr-mb-0">
               <li>Réaménagement de zones piétonnes et apaisement trafic.</li>
               <li>Programme propreté renforcé sur quartiers identifiés.</li>
-              <li>Optimisation parcours visiteur pour une station touristique.</li>
+              <li>
+                Optimisation parcours visiteur pour une station touristique.
+              </li>
             </ul>
           </div>
         </div>
@@ -421,7 +442,9 @@ export default function PitchPage() {
               <div key={step} className="fr-col-12 fr-col-md-6 fr-col-lg-3">
                 <div className="fr-card fr-card--shadow">
                   <div className="fr-card__body">
-                    <p className="fr-badge fr-badge--info fr-mb-3w">Étape {index + 1}</p>
+                    <p className="fr-badge fr-badge--info fr-mb-3w">
+                      Étape {index + 1}
+                    </p>
                     <p className="fr-card__desc">{step}</p>
                   </div>
                 </div>
@@ -437,15 +460,17 @@ export default function PitchPage() {
             <div className="fr-col-12 fr-col-lg-8 fr-text--center fr-text-invert">
               <h2 className="fr-display--sm fr-mb-3w">Une équipe engagée</h2>
               <p className="fr-text--lg fr-mb-4w">
-                Contribcit est portée par un duo fondateur expérimenté accompagné
-                d'un cercle d'experts territoriaux.
+                Contribcit est portée par un duo fondateur expérimenté
+                accompagné d'un cercle d'experts territoriaux.
               </p>
               <div className="fr-grid-row fr-grid-row--gutters fr-mb-5w">
                 <div className="fr-col-12 fr-col-md-6">
                   <div className="fr-card fr-card--horizontal fr-card--no-border fr-card--shadow fr-card--inverted">
                     <div className="fr-card__body">
                       <h3 className="fr-card__title">Sébastien Imbert</h3>
-                      <p className="fr-card__desc">Fondateur & CTO – 10 ans d'innovation publique</p>
+                      <p className="fr-card__desc">
+                        Fondateur & CTO - 10 ans d'innovation publique
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -453,7 +478,9 @@ export default function PitchPage() {
                   <div className="fr-card fr-card--horizontal fr-card--no-border fr-card--shadow fr-card--inverted">
                     <div className="fr-card__body">
                       <h3 className="fr-card__title">Victor Mahé</h3>
-                      <p className="fr-card__desc">CEO – Partenariats collectivités & ministères</p>
+                      <p className="fr-card__desc">
+                        Partenariats collectivités & ministères
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -463,10 +490,16 @@ export default function PitchPage() {
                 tourisme durable, représentants associatifs.
               </p>
               <div className="fr-btns-group fr-btns-group--inline fr-btns-group--center">
-                <Link className="fr-btn fr-btn--inverted" href="mailto:contact@contribcit.fr">
+                <Link
+                  className="fr-btn fr-btn--inverted"
+                  href="mailto:contact@contribcit.fr"
+                >
                   Échanger avec l'équipe
                 </Link>
-                <Link className="fr-btn fr-btn--secondary" href="/docs/business/beta-gouv-pitch-deck.md">
+                <Link
+                  className="fr-btn fr-btn--secondary"
+                  href="/docs/business/beta-gouv-pitch-deck.md"
+                >
                   Consulter la note détaillée
                 </Link>
               </div>
