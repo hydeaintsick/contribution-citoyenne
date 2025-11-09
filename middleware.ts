@@ -40,6 +40,7 @@ export async function middleware(request: NextRequest) {
       "/admin/",
       "/admin/dashboard",
       "/admin/profile",
+      "/admin/qr-code",
     ]);
     const prefixAllowed = ["/admin/retours"];
 
@@ -51,8 +52,7 @@ export async function middleware(request: NextRequest) {
     const isAllowed =
       exactAllowed.has(pathname) ||
       prefixAllowed.some(
-        (prefix) =>
-          pathname === prefix || pathname.startsWith(`${prefix}/`),
+        (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
       );
 
     if (!isAllowed) {
@@ -75,4 +75,3 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/admin/:path*"],
 };
-

@@ -14,6 +14,7 @@ type SessionUser = {
   id: string;
   email: string;
   role: UserRole;
+  communeId?: string | null;
   firstName?: string | null;
   lastName?: string | null;
   lastLoginAt?: string | null;
@@ -283,6 +284,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           },
         },
         {
+          text: "QRCode",
+          linkProps: {
+            href: "/admin/qr-code",
+          },
+        },
+        {
           text: "Accès salariés",
           linkProps: {
             href: "/admin/acces-salaries",
@@ -309,6 +316,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           text: "Retours citoyens",
           linkProps: {
             href: "/admin/retours",
+          },
+        },
+        {
+          text: "QRCode",
+          linkProps: {
+            href: "/admin/qr-code",
           },
         },
         {
