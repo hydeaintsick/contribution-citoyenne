@@ -1,14 +1,23 @@
 import { NextResponse } from "next/server";
 import type { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
 import { cloudinary, CLOUDINARY_FOLDER, isCloudinaryConfigured } from "@/lib/cloudinary";
+import sharp from "sharp";
 
 export const runtime = "nodejs";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_IMAGE_WIDTH = 1600;
+const MAX_IMAGE_HEIGHT = 1600;
+
+type CompressedImage = {
+  buffer: Buffer;
+  format: string;
+};
 
 function uploadBuffer(
   buffer: Buffer,
-  filename?: string,
+  filename: string,
+  format: string,
 ): Promise<UploadApiResponse | UploadApiErrorResponse> {
   return new Promise((resolve, reject) => {
     const upload = cloudinary.uploader.upload_stream(
@@ -18,6 +27,7 @@ function uploadBuffer(
         use_filename: Boolean(filename),
         unique_filename: true,
         overwrite: false,
+        format,
       },
       (error, result) => {
         if (error) {
@@ -34,6 +44,41 @@ function uploadBuffer(
 
     upload.end(buffer);
   });
+}
+
+async function compressImage(
+  buffer: Buffer,
+  mimeType: string,
+): Promise<CompressedImage> {
+  try {
+    const image = sharp(buffer, {
+      failOnError: false,
+      limitInputPixels: 80_000_000,
+    }).rotate();
+
+    const pipeline = image.resize({
+      width: MAX_IMAGE_WIDTH,
+      height: MAX_IMAGE_HEIGHT,
+      fit: "inside",
+      withoutEnlargement: true,
+    });
+
+    const processedBuffer = await pipeline.webp({
+      quality: 80,
+      smartSubsample: true,
+    }).toBuffer();
+
+    return {
+      buffer: processedBuffer,
+      format: "webp",
+    };
+  } catch (error) {
+    console.error("Image compression failed, falling back to original buffer", error);
+    return {
+      buffer,
+      format: mimeType.split("/")[1] ?? "jpg",
+    };
+  }
 }
 
 export async function POST(request: Request) {
@@ -70,7 +115,14 @@ export async function POST(request: Request) {
   const buffer = Buffer.from(await file.arrayBuffer());
 
   try {
-    const result = await uploadBuffer(buffer, file.name);
+    const compressed = await compressImage(buffer, file.type);
+
+    const sanitizedName = file.name
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9-_]/g, "_");
+    const uploadName = `${sanitizedName || "bug-report"}.${compressed.format}`;
+
+    const result = await uploadBuffer(compressed.buffer, uploadName, compressed.format);
 
     if ("secure_url" in result) {
       return NextResponse.json(

@@ -43,6 +43,147 @@ type AddressSuggestion = {
   city: string | null;
 };
 
+const MAX_UPLOAD_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_PHOTO_DIMENSION = 1600;
+const PHOTO_COMPRESSION_QUALITIES = [0.82, 0.68, 0.56, 0.46, 0.36];
+
+type LoadedImageSource = {
+  source: CanvasImageSource;
+  width: number;
+  height: number;
+  cleanup: () => void;
+};
+
+function toWebpFilename(name: string): string {
+  const baseName = name.replace(/\.[^/.]+$/, "");
+  return `${baseName || "photo"}.webp`;
+}
+
+async function loadImageSource(file: File): Promise<LoadedImageSource> {
+  if (typeof window === "undefined") {
+    throw new Error("Image compression is unavailable during SSR.");
+  }
+
+  if ("createImageBitmap" in window) {
+    try {
+      const bitmap = await createImageBitmap(file);
+      return {
+        source: bitmap,
+        width: bitmap.width,
+        height: bitmap.height,
+        cleanup: () => bitmap.close(),
+      };
+    } catch (error) {
+      console.warn("createImageBitmap failed, falling back to Image()", error);
+    }
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+
+  return new Promise<LoadedImageSource>((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve({
+        source: image,
+        width: image.naturalWidth || image.width,
+        height: image.naturalHeight || image.height,
+        cleanup: () => {
+          // No additional cleanup required for HTMLImageElement.
+        },
+      });
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Impossible de lire cette image."));
+    };
+
+    image.src = objectUrl;
+  });
+}
+
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  quality: number
+): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), "image/webp", quality);
+  });
+}
+
+async function compressPhotoFile(file: File): Promise<File> {
+  if (typeof window === "undefined" || !file.type.startsWith("image/")) {
+    return file;
+  }
+
+  let loaded: LoadedImageSource | null = null;
+
+  try {
+    loaded = await loadImageSource(file);
+
+    const maxDimension = Math.max(loaded.width, loaded.height);
+    const scale =
+      maxDimension > MAX_PHOTO_DIMENSION
+        ? MAX_PHOTO_DIMENSION / maxDimension
+        : 1;
+
+    const targetWidth = Math.max(1, Math.round(loaded.width * scale));
+    const targetHeight = Math.max(1, Math.round(loaded.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      return file;
+    }
+
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(loaded.source, 0, 0, targetWidth, targetHeight);
+
+    let selectedFile: File | null = null;
+
+    for (const quality of PHOTO_COMPRESSION_QUALITIES) {
+      // eslint-disable-next-line no-await-in-loop
+      const blob = await canvasToBlob(canvas, quality);
+
+      if (!blob || blob.size === 0) {
+        continue;
+      }
+
+      const candidate = new File([blob], toWebpFilename(file.name), {
+        type: "image/webp",
+        lastModified: Date.now(),
+      });
+
+      selectedFile = candidate;
+
+      if (candidate.size <= MAX_UPLOAD_FILE_SIZE) {
+        break;
+      }
+    }
+
+    if (
+      selectedFile &&
+      (selectedFile.size < file.size || file.size > MAX_UPLOAD_FILE_SIZE)
+    ) {
+      return selectedFile;
+    }
+
+    return file;
+  } catch (error) {
+    console.error("Photo compression failed", error);
+    return file;
+  } finally {
+    loaded?.cleanup();
+  }
+}
+
 const REPORT_STEPS = [
   {
     title: "Type de remontée",
@@ -438,19 +579,29 @@ export function CitizenReportTunnel({
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) {
-        setPhotoUploadError("La taille maximale autorisée est de 5 Mo.");
+      setPhotoUploadState("uploading");
+      setPhotoUploadError(null);
+      setPhotoUploadInfo(null);
+
+      let fileToUpload = file;
+
+      try {
+        fileToUpload = await compressPhotoFile(file);
+      } catch (compressionError) {
+        console.error("Photo compression error", compressionError);
+      }
+
+      if (fileToUpload.size > MAX_UPLOAD_FILE_SIZE) {
+        setPhotoUploadError(
+          "Impossible de compresser la photo en dessous de 5 Mo. Choisissez une image plus légère."
+        );
         setPhotoUploadState("error");
         setPhotoUploadInfo(null);
         return;
       }
 
-      setPhotoUploadState("uploading");
-      setPhotoUploadError(null);
-      setPhotoUploadInfo(null);
-
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", fileToUpload, fileToUpload.name);
 
       try {
         const response = await fetch("/api/uploads/cloudinary", {
@@ -1133,7 +1284,7 @@ export function CitizenReportTunnel({
               <div className="fr-flow">
                 <Upload
                   label="Ajouter une photo (optionnel)"
-                  hint="Formats JPEG ou PNG, taille maximale 5 Mo."
+                  hint="Formats JPEG, PNG ou WebP, taille maximale 5 Mo (compression automatique)."
                   nativeInputProps={{
                     accept: "image/*",
                     onChange: handlePhotoChange,

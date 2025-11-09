@@ -24,6 +24,19 @@ enum ContributionStatus {
   CLOSED
 }
 
+enum BugReportType {
+  BUG
+  FEATURE
+}
+
+enum BugReportStatus {
+  TO_BE_QUALIFIED
+  TO_DO
+  IN_PROGRESS
+  DEPLOYED
+  DONE
+}
+
 enum CityAuditAction {
   CREATED
   UPDATED
@@ -114,4 +127,21 @@ model Contribution {
   closureNote   String?
   closedById    String?            @db.ObjectId
   closedBy      User?              @relation("ContributionClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+}
+
+model BugReport {
+  id                 String          @id @default(auto()) @map("_id") @db.ObjectId
+  type               BugReportType
+  status             BugReportStatus @default(TO_BE_QUALIFIED)
+  title              String
+  description        String
+  captchaToken       String?
+  screenshotUrl      String?
+  screenshotPublicId String?
+  screenshotWidth    Int?
+  screenshotHeight   Int?
+  screenshotBytes    Int?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  resolvedAt         DateTime?
 }

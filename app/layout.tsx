@@ -89,6 +89,18 @@ export default async function RootLayout({
                   },
                 },
                 {
+                  text: "Signaler un bug",
+                  linkProps: {
+                    href: "/bug",
+                  },
+                },
+                {
+                  text: "Suivi des bugs",
+                  linkProps: {
+                    href: "/suivi-des-bugs",
+                  },
+                },
+                {
                   text: "Code source",
                   linkProps: {
                     href: "https://github.com/hydeaintsick/contribution-citoyenne",

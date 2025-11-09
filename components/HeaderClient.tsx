@@ -219,6 +219,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           },
         },
         {
+          text: "Retours produits",
+          linkProps: {
+            href: "/admin/retours-produits",
+          },
+        },
+        {
           text: "Chargés de compte",
           linkProps: {
             href: "/admin/account-managers",
@@ -245,6 +251,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           text: "Communes",
           linkProps: {
             href: "/admin/communes",
+          },
+        },
+        {
+          text: "Retours produits",
+          linkProps: {
+            href: "/admin/retours-produits",
           },
         },
         {
