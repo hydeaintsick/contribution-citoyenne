@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 import { useMemo } from "react";
 
@@ -42,26 +43,25 @@ export function TownQrCodeCard({
                 justifyItems: "center",
               }}
             >
+              <Image
+                src="/marianne.png"
+                alt="Symbole Marianne"
+                width={40}
+                height={60}
+                style={{
+                  borderRadius: "1rem",
+                  objectFit: "cover",
+                }}
+                priority
+              />
               <span
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
+                  display: "block",
                   fontSize: "0.75rem",
                   fontWeight: 600,
                   letterSpacing: "0.3em",
                 }}
               >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    width: "0.75rem",
-                    height: "1.5rem",
-                    background:
-                      "linear-gradient(180deg, #000091 0%, #000091 33%, #ffffff 33%, #ffffff 66%, #e1000f 66%, #e1000f 100%)",
-                    borderRadius: "0.125rem",
-                    marginRight: "0.75rem",
-                  }}
-                />
                 RÉPUBLIQUE FRANÇAISE
               </span>
               <span
