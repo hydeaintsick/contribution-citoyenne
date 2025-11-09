@@ -3,7 +3,10 @@ import type { Metadata } from "next";
 const siteName = "Contribcit";
 const siteDescription =
   "Offrez à vos habitants un canal simple pour alerter et suggérer. Avec Contribcit, un QR code suffit pour remonter les informations de terrain, cartographier les besoins et accélérer le traitement.";
-const siteUrl = process.env.BASE_URL || "https://contribcit.fr";
+const siteUrl = process.env.BASE_URL || "https://contribcit.org";
+const previewImagePath = "/marianne.png";
+const previewImageAlt =
+  "Contribcit - Marianne, symbole de la République française";
 
 export function createMetadata(): Metadata {
   return {
@@ -22,10 +25,10 @@ export function createMetadata(): Metadata {
       description: siteDescription,
       images: [
         {
-          url: "/opengraph-image.png",
+          url: previewImagePath,
           width: 1200,
           height: 630,
-          alt: siteName,
+          alt: previewImageAlt,
         },
       ],
     },
@@ -33,7 +36,12 @@ export function createMetadata(): Metadata {
       card: "summary_large_image",
       title: siteName,
       description: siteDescription,
-      images: ["/opengraph-image.png"],
+      images: [
+        {
+          url: previewImagePath,
+          alt: previewImageAlt,
+        },
+      ],
     },
     alternates: {
       canonical: siteUrl,
@@ -53,7 +61,7 @@ export function createJsonLd() {
         description: siteDescription,
         logo: {
           "@type": "ImageObject",
-          url: `${siteUrl}/opengraph-image.png`,
+          url: `${siteUrl}${previewImagePath}`,
         },
       },
       {
@@ -71,6 +79,7 @@ export function createJsonLd() {
           availability: "https://schema.org/InStock",
           priceCurrency: "EUR",
         },
+        image: `${siteUrl}${previewImagePath}`,
       },
     ],
   };
