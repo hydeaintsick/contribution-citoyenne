@@ -1,11 +1,9 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import {
-  getSessionCookieName,
-  parseSessionCookie,
-} from "@/lib/auth";
+import { getSessionCookieName, parseSessionCookie } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { TownQrCodeCard } from "@/components/TownQrCodeCard";
+import { QrEmbedTutorial } from "@/components/QrEmbedTutorial";
 
 export default async function TownQrCodePage() {
   const headerList = await headers();
@@ -51,7 +49,8 @@ export default async function TownQrCodePage() {
     "";
   const hostHeader =
     headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "";
-  const originHeader = headerList.get("origin") ?? headerList.get("referer") ?? "";
+  const originHeader =
+    headerList.get("origin") ?? headerList.get("referer") ?? "";
 
   const protocol = protoHeader.split(",")[0]?.split(";")[0]?.trim() || "https";
   const host = hostHeader.split(",")[0]?.trim() ?? "";
@@ -77,9 +76,15 @@ export default async function TownQrCodePage() {
     baseUrl = fallback;
   }
 
-  const contributionUrl = baseUrl
-    ? `${baseUrl.replace(/\/$/, "")}/contrib/${commune.id}`
+  const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
+
+  const contributionUrl = normalizedBaseUrl
+    ? `${normalizedBaseUrl}/contrib/${commune.id}`
     : `/contrib/${commune.id}`;
+
+  const embedUrl = normalizedBaseUrl
+    ? `${normalizedBaseUrl}/embed/qr/${commune.id}`
+    : `/embed/qr/${commune.id}`;
 
   return (
     <main className="fr-pt-6w fr-pb-8w">
@@ -99,7 +104,7 @@ export default async function TownQrCodePage() {
         communeName={commune.name}
         contributionUrl={contributionUrl}
       />
+      <QrEmbedTutorial embedBaseUrl={embedUrl} />
     </main>
   );
 }
-

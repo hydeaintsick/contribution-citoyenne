@@ -87,3 +87,14 @@ body {
   overflow: hidden;
   box-shadow: inset 0 0 0 1px var(--border-default-grey);
 }
+
+body.contribcit-embed-qr {
+  background-color: #000091;
+  color: #ffffff;
+}
+
+body.contribcit-embed-qr .fr-header,
+body.contribcit-embed-qr .fr-footer,
+body.contribcit-embed-qr .fr-consent-banner {
+  display: none !important;
+}
