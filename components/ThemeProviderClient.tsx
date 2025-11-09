@@ -18,7 +18,8 @@ type ThemeContextValue = {
   setTheme: (theme: Theme) => void;
 };
 
-const THEME_STORAGE_KEY = "contribcit-theme";
+const LEGACY_THEME_STORAGE_KEY = "contribcit-theme";
+const DSFR_THEME_STORAGE_KEY = "scheme";
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
@@ -27,9 +28,23 @@ function resolveInitialTheme(): Theme {
     return "light";
   }
 
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (storedTheme === "light" || storedTheme === "dark") {
-    return storedTheme;
+  const dsfrStoredTheme = window.localStorage.getItem(DSFR_THEME_STORAGE_KEY);
+  if (dsfrStoredTheme === "light" || dsfrStoredTheme === "dark") {
+    return dsfrStoredTheme;
+  }
+
+  const legacyStoredTheme = window.localStorage.getItem(
+    LEGACY_THEME_STORAGE_KEY
+  );
+  if (legacyStoredTheme === "light" || legacyStoredTheme === "dark") {
+    return legacyStoredTheme;
+  }
+
+  if (
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  ) {
+    return "dark";
   }
 
   return "light";
@@ -40,6 +55,7 @@ function applyTheme(theme: Theme) {
     return;
   }
   document.documentElement.setAttribute("data-fr-theme", theme);
+  document.documentElement.setAttribute("data-fr-scheme", theme);
 }
 
 export function ThemeProviderClient({ children }: { children: ReactNode }) {
@@ -48,7 +64,8 @@ export function ThemeProviderClient({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyTheme(theme);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+      window.localStorage.setItem(LEGACY_THEME_STORAGE_KEY, theme);
+      window.localStorage.setItem(DSFR_THEME_STORAGE_KEY, theme);
     }
   }, [theme]);
   const setTheme = useCallback((nextTheme: Theme) => {
@@ -65,10 +82,12 @@ export function ThemeProviderClient({ children }: { children: ReactNode }) {
       toggleTheme,
       setTheme,
     }),
-    [theme, toggleTheme, setTheme],
+    [theme, toggleTheme, setTheme]
   );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {
@@ -78,4 +97,3 @@ export function useTheme() {
   }
   return context;
 }
-

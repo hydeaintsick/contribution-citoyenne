@@ -25,7 +25,12 @@ export default async function RootLayout({
   const jsonLd = createJsonLd();
 
   return (
-    <html lang="fr" data-fr-theme="light" suppressHydrationWarning>
+    <html
+      lang="fr"
+      data-fr-theme="light"
+      data-fr-scheme="light"
+      suppressHydrationWarning
+    >
       <head>
         <script
           type="application/ld+json"

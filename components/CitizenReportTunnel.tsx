@@ -429,7 +429,13 @@ export function CitizenReportTunnel({
 
   const trimmedDetails = details.trim();
   const trimmedLocation = location.trim();
-  const isLocationValid = trimmedLocation.length === 0 || !!coordinates;
+  const hasCoordinates = !!coordinates;
+  const isManualLocationSufficient =
+    trimmedLocation.length >= MIN_ADDRESS_QUERY_LENGTH;
+  const isLocationValid =
+    trimmedLocation.length === 0 ||
+    hasCoordinates ||
+    isManualLocationSufficient;
   const isSubmitDisabled =
     submissionState === "loading" ||
     !reportType ||
@@ -1165,7 +1171,7 @@ export function CitizenReportTunnel({
                   }
                   stateRelatedMessage={
                     !isLocationValid
-                      ? `Choisissez une adresse située dans ${communeName}.`
+                      ? "Précisez davantage le lieu ou sélectionnez une adresse proposée."
                       : showAddressSuccess
                       ? "Adresse validée"
                       : undefined
