@@ -4,6 +4,7 @@ import { getSessionCookieName, parseSessionCookie } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { TownQrCodeCard } from "@/components/TownQrCodeCard";
 import { QrEmbedTutorial } from "@/components/QrEmbedTutorial";
+import { ContributionDirectLink } from "@/components/ContributionDirectLink";
 
 export default async function TownQrCodePage() {
   const headerList = await headers();
@@ -89,7 +90,7 @@ export default async function TownQrCodePage() {
   return (
     <main className="fr-pt-6w fr-pb-8w">
       <section className="fr-container fr-container--fluid">
-        <div className="fr-grid-row fr-grid-row--center">
+        <div className="fr-grid-row">
           <div className="fr-col-12 fr-col-lg-10">
             <h1 className="fr-h2">QR Code de la ville</h1>
             <p className="fr-text--lg fr-mb-4w">
@@ -105,6 +106,19 @@ export default async function TownQrCodePage() {
         contributionUrl={contributionUrl}
       />
       <QrEmbedTutorial embedBaseUrl={embedUrl} />
+      <section className="fr-container fr-container--fluid fr-mt-4w">
+        <div className="fr-grid-row">
+          <div className="fr-col-12 fr-col-lg-10">
+            <h2 className="fr-h3 fr-mb-2w">Intégrer le tunnel directement</h2>
+            <p className="fr-text--sm">
+              Vous pouvez aussi partager le lien vers le tunnel ci-dessous pour
+              l&apos;intégrer directement sur vos supports numériques, sans
+              passer par le QR Code.
+            </p>
+            <ContributionDirectLink contributionUrl={contributionUrl} />
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

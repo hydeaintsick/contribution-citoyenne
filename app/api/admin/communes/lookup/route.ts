@@ -16,6 +16,9 @@ type NominatimResult = {
   lon?: string;
   osm_type?: string;
   osm_id?: number;
+  place_id?: number;
+  class?: string;
+  type?: string;
   address?: {
     city?: string;
     town?: string;
@@ -84,7 +87,10 @@ function normalizeArrondissementName(city: string, district?: string) {
 export async function GET(request: NextRequest) {
   const session = await getSessionFromRequest(request);
 
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "ACCOUNT_MANAGER")) {
+  if (
+    !session ||
+    (session.user.role !== "ADMIN" && session.user.role !== "ACCOUNT_MANAGER")
+  ) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
 
@@ -96,7 +102,7 @@ export async function GET(request: NextRequest) {
   if (!validation.success) {
     return NextResponse.json(
       { error: validation.error.issues[0]?.message ?? "Code postal invalide." },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -121,7 +127,7 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       return NextResponse.json(
         { error: "Le service d'annuaire est indisponible." },
-        { status: 502 },
+        { status: 502 }
       );
     }
 
@@ -132,7 +138,7 @@ export async function GET(request: NextRequest) {
         {
           error: "Aucune commune trouvée pour ce code postal.",
         },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -143,18 +149,47 @@ export async function GET(request: NextRequest) {
       lon,
       osm_id: osmId,
       osm_type: osmType,
+      place_id: placeId,
+      type: placeType,
+      class: placeClass,
       address,
     } = results[0];
 
-    if (!boundingbox || !lat || !lon || !osmType || typeof osmId === "undefined") {
+    if (!boundingbox || !lat || !lon) {
       return NextResponse.json(
         { error: "Les informations de la commune sont incomplètes." },
-        { status: 502 },
+        { status: 502 }
+      );
+    }
+
+    const resolvedOsmId =
+      typeof osmId !== "undefined"
+        ? String(osmId)
+        : typeof placeId !== "undefined"
+        ? String(placeId)
+        : null;
+
+    if (!resolvedOsmId) {
+      return NextResponse.json(
+        { error: "Les informations de la commune sont incomplètes." },
+        { status: 502 }
+      );
+    }
+
+    const resolvedOsmType = osmType ?? placeType ?? placeClass;
+
+    if (!resolvedOsmType) {
+      return NextResponse.json(
+        { error: "Les informations de la commune sont incomplètes." },
+        { status: 502 }
       );
     }
 
     const baseCity =
-      address?.city || address?.town || address?.village || address?.municipality;
+      address?.city ||
+      address?.town ||
+      address?.village ||
+      address?.municipality;
 
     const arrondissementName =
       address?.city_district ||
@@ -162,13 +197,13 @@ export async function GET(request: NextRequest) {
       address?.state_district ||
       address?.suburb;
 
-    let name =
-      baseCity ||
-      address?.county ||
-      displayName;
+    let name = baseCity || address?.county || displayName;
 
     if (baseCity && ARRONDISSEMENT_CITIES.has(baseCity) && arrondissementName) {
-      const normalized = normalizeArrondissementName(baseCity, arrondissementName);
+      const normalized = normalizeArrondissementName(
+        baseCity,
+        arrondissementName
+      );
       if (normalized !== baseCity) {
         name = normalized;
       }
@@ -181,7 +216,7 @@ export async function GET(request: NextRequest) {
     if (!name) {
       return NextResponse.json(
         { error: "Impossible de déterminer le nom de la commune." },
-        { status: 502 },
+        { status: 502 }
       );
     }
 
@@ -190,15 +225,15 @@ export async function GET(request: NextRequest) {
     if (bboxNumbers.some((value) => Number.isNaN(value))) {
       return NextResponse.json(
         { error: "La zone géographique de la commune est invalide." },
-        { status: 502 },
+        { status: 502 }
       );
     }
 
     return NextResponse.json({
       name,
       postalCode: validation.data.postalCode,
-      osmId: String(osmId),
-      osmType,
+      osmId: resolvedOsmId,
+      osmType: resolvedOsmType,
       bbox: bboxNumbers,
       latitude: Number.parseFloat(lat),
       longitude: Number.parseFloat(lon),
@@ -207,8 +242,7 @@ export async function GET(request: NextRequest) {
     console.error("OSM lookup failed", error);
     return NextResponse.json(
       { error: "La vérification auprès d'OSM a échoué. Veuillez réessayer." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
-
