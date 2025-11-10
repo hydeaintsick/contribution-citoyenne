@@ -12,7 +12,7 @@ type FormState =
 
 const typeOptions: Array<{ value: BugReportTypeOption; label: string }> = [
   { value: "BUG", label: "Bug" },
-  { value: "FONCTIONNALITE", label: "Demande de fonctionnalité" },
+  { value: "FONCTIONNALITE", label: "Feature" },
 ];
 
 type ScreenshotInfo = {

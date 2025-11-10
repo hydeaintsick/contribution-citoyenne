@@ -152,9 +152,58 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
 
   const userRole = sessionUser?.role ?? null;
 
+  const normalizePath = useCallback((href: string) => {
+    const [pathWithoutHash] = href.split("#");
+    const [pathWithoutSearch] = (pathWithoutHash ?? href).split("?");
+    const path = pathWithoutSearch ?? href;
+    if (path === "/") {
+      return path;
+    }
+    return path.replace(/\/+$/, "");
+  }, []);
+
+  const computeMatchScore = useCallback(
+    (href: string) => {
+      if (href.includes("#")) {
+        return 0;
+      }
+      const linkPath = normalizePath(href);
+      if (!linkPath) {
+        return 0;
+      }
+      const currentPath = normalizePath(pathname);
+      if (linkPath === currentPath) {
+        return linkPath.length;
+      }
+      if (linkPath !== "/" && currentPath.startsWith(`${linkPath}/`)) {
+        return linkPath.length;
+      }
+      return 0;
+    },
+    [normalizePath, pathname]
+  );
+
+  const withActiveNavigation = useCallback(
+    <T extends { linkProps: { href: string } }>(items: T[]) => {
+      let bestScore = 0;
+      const scores = items.map(({ linkProps }) => {
+        const score = computeMatchScore(linkProps.href);
+        if (score > bestScore) {
+          bestScore = score;
+        }
+        return score;
+      });
+      return items.map((item, index) => ({
+        ...item,
+        isActive: bestScore > 0 && scores[index] === bestScore,
+      }));
+    },
+    [computeMatchScore]
+  );
+
   const navigation = useMemo(() => {
     if (!isAdminArea) {
-      return [
+      return withActiveNavigation([
         {
           text: "Accueil",
           linkProps: {
@@ -185,11 +234,11 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
             href: "/qui-sommes-nous",
           },
         },
-      ];
+      ]);
     }
 
     if (!userRole) {
-      return [
+      return withActiveNavigation([
         {
           text: "Dashboard",
           linkProps: {
@@ -202,11 +251,11 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
             href: "/admin/profile",
           },
         },
-      ];
+      ]);
     }
 
     if (userRole === "ADMIN") {
-      return [
+      return withActiveNavigation([
         {
           text: "Dashboard",
           linkProps: {
@@ -237,11 +286,11 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
             href: "/admin/profile",
           },
         },
-      ];
+      ]);
     }
 
     if (userRole === "ACCOUNT_MANAGER") {
-      return [
+      return withActiveNavigation([
         {
           text: "Dashboard",
           linkProps: {
@@ -266,11 +315,11 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
             href: "/admin/profile",
           },
         },
-      ];
+      ]);
     }
 
     if (userRole === "TOWN_MANAGER") {
-      return [
+      return withActiveNavigation([
         {
           text: "Dashboard",
           linkProps: {
@@ -301,11 +350,11 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
             href: "/admin/profile",
           },
         },
-      ];
+      ]);
     }
 
     if (userRole === "TOWN_EMPLOYEE") {
-      return [
+      return withActiveNavigation([
         {
           text: "Dashboard",
           linkProps: {
@@ -330,10 +379,10 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
             href: "/admin/profile",
           },
         },
-      ];
+      ]);
     }
 
-    return [
+    return withActiveNavigation([
       {
         text: "Dashboard",
         linkProps: {
@@ -346,8 +395,8 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           href: "/admin/profile",
         },
       },
-    ];
-  }, [isAdminArea, userRole]);
+    ]);
+  }, [isAdminArea, userRole, withActiveNavigation]);
 
   const quickAccessItems = useMemo<QuickAccessItems>(() => {
     const themeToggleItem: QuickAccessItems[number] = {

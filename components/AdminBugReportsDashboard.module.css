@@ -1,0 +1,120 @@
+.tableContainer {
+  width: min(64rem, 100%);
+  margin-inline: auto;
+}
+
+.tableContent {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  border-spacing: 0;
+}
+
+.descriptionCell {
+  vertical-align: top;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 28rem;
+}
+
+.descriptionPreview {
+  line-height: 1.375;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detailDescription {
+  white-space: pre-wrap;
+}
+
+.actionsCell {
+  vertical-align: top;
+  width: 8rem;
+  text-align: right;
+}
+
+.actionButton {
+  min-width: 4.5rem;
+  padding-inline: var(--spacing-2v);
+}
+
+.statusSelector {
+  position: relative;
+  display: inline-flex;
+}
+
+.statusBadgeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2v);
+  border: none;
+  cursor: pointer;
+  padding-inline: var(--spacing-3v);
+  padding-block: var(--spacing-2v);
+}
+
+.statusBadgeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.statusBadgeCaret {
+  font-size: 0.65rem;
+  margin-inline-start: var(--spacing-1v);
+}
+
+.statusMenu {
+  position: absolute;
+  inset-block-start: calc(100% + var(--spacing-2v));
+  inset-inline-end: 0;
+  z-index: 10;
+  background-color: var(--background-default-grey);
+  border: 1px solid var(--border-default-grey);
+  border-radius: var(--radius-sm);
+  min-width: 12rem;
+  padding: var(--spacing-1v) 0;
+  box-shadow: var(--overlap-shadow);
+}
+
+.statusMenu li {
+  list-style: none;
+}
+
+.statusMenuButton {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: var(--spacing-2v) var(--spacing-3v);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.statusMenuButton:hover,
+.statusMenuButton:focus {
+  background-color: var(--background-alt-grey);
+}
+
+.statusMenuButtonActive {
+  font-weight: 600;
+}
+
+.statusMenuButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (max-width: 62rem) {
+  .tableContainer {
+    width: 100%;
+  }
+}
+

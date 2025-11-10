@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import styles from "./AdminBugReportsDashboard.module.css";
 import {
   BUG_REPORT_STATUS_BADGES,
   BUG_REPORT_STATUS_LABELS,
@@ -61,6 +62,114 @@ function FilterButton({
 const statusOptions = BUG_REPORT_STATUS_ORDER;
 const typeOptions = Object.keys(BUG_REPORT_TYPE_LABELS) as BugReportTypeValue[];
 
+type StatusBadgeSelectorProps = {
+  reportId: string;
+  status: BugReportStatusValue;
+  isUpdating: boolean;
+  onChange: (nextStatus: BugReportStatusValue) => void;
+};
+
+function StatusBadgeSelector({
+  reportId,
+  status,
+  isUpdating,
+  onChange,
+}: StatusBadgeSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuId = `bug-report-status-menu-${reportId}`;
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        menuRef.current &&
+        event.target instanceof Node &&
+        !menuRef.current.contains(event.target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const handleToggle = () => {
+    if (isUpdating) {
+      return;
+    }
+    setIsOpen((previous) => !previous);
+  };
+
+  const handleSelect = (nextStatus: BugReportStatusValue) => {
+    if (nextStatus !== status) {
+      onChange(nextStatus);
+    }
+    setIsOpen(false);
+  };
+
+  return (
+    <div className={styles.statusSelector} ref={menuRef}>
+      <button
+        type="button"
+        className={`fr-badge ${BUG_REPORT_STATUS_BADGES[status]} ${styles.statusBadgeButton} p-4`}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-controls={menuId}
+        onClick={handleToggle}
+        disabled={isUpdating}
+      >
+        {BUG_REPORT_STATUS_LABELS[status]}
+        <span aria-hidden className={styles.statusBadgeCaret}>
+          ▾
+        </span>
+      </button>
+      {isOpen ? (
+        <ul
+          id={menuId}
+          role="listbox"
+          className={styles.statusMenu}
+          aria-label="Choisir un statut"
+        >
+          {statusOptions.map((option) => (
+            <li key={option}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={option === status}
+                className={`${styles.statusMenuButton}${
+                  option === status ? ` ${styles.statusMenuButtonActive}` : ""
+                }`}
+                onClick={() => handleSelect(option)}
+                disabled={isUpdating}
+              >
+                {BUG_REPORT_STATUS_LABELS[option]}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
 export function AdminBugReportsDashboard({
   initialReports,
 }: AdminBugReportsDashboardProps) {
@@ -75,6 +184,7 @@ export function AdminBugReportsDashboard({
   const [pendingUpdates, setPendingUpdates] = useState<Record<string, boolean>>(
     {}
   );
+  const [focusedReport, setFocusedReport] = useState<BugReportRow | null>(null);
 
   const dateFormatter = useMemo(
     () =>
@@ -115,6 +225,14 @@ export function AdminBugReportsDashboard({
   const resetFilters = () => {
     clearStatusFilters();
     clearTypeFilters();
+  };
+
+  const openReportDetail = (report: BugReportRow) => {
+    setFocusedReport(report);
+  };
+
+  const closeReportDetail = () => {
+    setFocusedReport(null);
   };
 
   const filteredReports = useMemo(() => {
@@ -206,6 +324,7 @@ export function AdminBugReportsDashboard({
     statusFilters.size > 0 ||
     typeFilters.size > 0 ||
     filteredReports.length === 0;
+  const isModalOpen = focusedReport !== null;
 
   return (
     <section>
@@ -275,16 +394,16 @@ export function AdminBugReportsDashboard({
         </div>
       ) : null}
 
-      <div className="fr-table fr-table--layout-fixed fr-mt-3w">
-        <div className="fr-table__content">
-          <table>
+      <div
+        className={`fr-table fr-table--layout-fixed fr-mt-3w ${styles.tableContainer}`}
+      >
+        <div className={`fr-table__content ${styles.tableContent}`}>
+          <table className={styles.table}>
             <thead>
               <tr>
                 <th scope="col">Type</th>
                 <th scope="col">Description</th>
                 <th scope="col">Statut</th>
-                <th scope="col">Capture</th>
-                <th scope="col">Dernière mise à jour</th>
                 <th scope="col" className="fr-text--right">
                   Actions
                 </th>
@@ -293,7 +412,7 @@ export function AdminBugReportsDashboard({
             <tbody>
               {filteredReports.length === 0 ? (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={4}>
                     <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
                       Aucun signalement ne correspond aux filtres sélectionnés.
                     </p>
@@ -313,15 +432,14 @@ export function AdminBugReportsDashboard({
                         >
                           {BUG_REPORT_TYPE_LABELS[report.type]}
                         </span>
-                        <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
-                          #{report.id}
-                        </p>
                       </td>
-                      <td>
+                      <td className={styles.descriptionCell}>
                         <p className="fr-text--md fr-text--bold fr-mb-1v">
                           {report.title}
                         </p>
-                        <p className="fr-text--sm fr-mb-1w">
+                        <p
+                          className={`fr-text--sm fr-mb-1w ${styles.descriptionPreview}`}
+                        >
                           {report.description}
                         </p>
                         <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
@@ -330,84 +448,24 @@ export function AdminBugReportsDashboard({
                         </p>
                       </td>
                       <td>
-                        <span
-                          className={`fr-badge ${
-                            BUG_REPORT_STATUS_BADGES[report.status]
-                          } fr-mb-1w`}
-                        >
-                          {BUG_REPORT_STATUS_LABELS[report.status]}
-                        </span>
-                      </td>
-                      <td>
-                        {report.screenshotUrl ? (
-                          <div className="fr-download">
-                            <p className="fr-download__detail">
-                              {report.screenshotBytes != null
-                                ? `${Math.max(
-                                    1,
-                                    Math.round(report.screenshotBytes / 1024)
-                                  )} Ko`
-                                : "Capture fournie"}
-                              <br />
-                              {report.screenshotWidth && report.screenshotHeight
-                                ? `${report.screenshotWidth}×${report.screenshotHeight}px`
-                                : null}
-                            </p>
-                            <a
-                              className="fr-download__link"
-                              href={report.screenshotUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Ouvrir
-                              <span className="fr-link__detail">
-                                nouvelle fenêtre
-                              </span>
-                            </a>
-                          </div>
-                        ) : (
-                          <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
-                            Aucune capture
-                          </p>
-                        )}
-                      </td>
-                      <td>
-                        <p className="fr-text--sm fr-mb-0">
-                          {report.resolvedAt
-                            ? dateFormatter.format(new Date(report.resolvedAt))
-                            : dateFormatter.format(new Date(report.updatedAt))}
-                        </p>
-                        <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
-                          {report.resolvedAt
-                            ? "Résolu"
-                            : "Dernière mise à jour"}
-                        </p>
-                      </td>
-                      <td className="fr-text--right">
-                        <label
-                          className="fr-label fr-text--xs fr-text-mention--grey"
-                          htmlFor={`bug-report-status-${report.id}`}
-                        >
-                          Changer le statut
-                        </label>
-                        <select
-                          id={`bug-report-status-${report.id}`}
-                          className="fr-select fr-mt-1w"
-                          value={report.status}
-                          disabled={isUpdating}
-                          onChange={(event) =>
-                            handleStatusChange(
-                              report.id,
-                              event.target.value as BugReportStatusValue
-                            )
+                        <StatusBadgeSelector
+                          reportId={report.id}
+                          status={report.status}
+                          isUpdating={isUpdating}
+                          onChange={(nextStatus) =>
+                            handleStatusChange(report.id, nextStatus)
                           }
+                        />
+                      </td>
+                      <td className={`fr-text--right ${styles.actionsCell}`}>
+                        <button
+                          type="button"
+                          className={`fr-btn fr-btn--sm fr-btn--secondary ${styles.actionButton} align-center justify-center`}
+                          onClick={() => openReportDetail(report)}
+                          disabled={isUpdating}
                         >
-                          {statusOptions.map((status) => (
-                            <option key={status} value={status}>
-                              {BUG_REPORT_STATUS_LABELS[status]}
-                            </option>
-                          ))}
-                        </select>
+                          Voir
+                        </button>
                       </td>
                     </tr>
                   );
@@ -415,6 +473,126 @@ export function AdminBugReportsDashboard({
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div
+        className={`fr-modal${isModalOpen ? " fr-modal--opened" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bug-report-detail-modal-title"
+        id="bug-report-detail-modal"
+      >
+        <div className="fr-container fr-container--fluid fr-container-md">
+          <div className="fr-modal__body">
+            <div className="fr-modal__header">
+              <button
+                className="fr-btn fr-btn--close"
+                type="button"
+                title="Fermer"
+                onClick={closeReportDetail}
+              >
+                Fermer
+              </button>
+            </div>
+            <div className="fr-modal__content fr-flow">
+              {focusedReport ? (
+                <>
+                  <h1 className="fr-h4" id="bug-report-detail-modal-title">
+                    {focusedReport.title}
+                  </h1>
+                  <p className="fr-text--xs fr-text-mention--grey fr-mb-1w">
+                    #{focusedReport.id}
+                  </p>
+                  <div className="fr-badges-group fr-badges-group--sm">
+                    <span
+                      className={`fr-badge ${
+                        BUG_REPORT_TYPE_BADGES[focusedReport.type]
+                      }`}
+                    >
+                      {BUG_REPORT_TYPE_LABELS[focusedReport.type]}
+                    </span>
+                    <span
+                      className={`fr-badge ${
+                        BUG_REPORT_STATUS_BADGES[focusedReport.status]
+                      }`}
+                    >
+                      {BUG_REPORT_STATUS_LABELS[focusedReport.status]}
+                    </span>
+                  </div>
+                  <p className={`fr-text--md ${styles.detailDescription}`}>
+                    {focusedReport.description}
+                  </p>
+                  <div className="fr-grid-row fr-grid-row--gutters">
+                    <div className="fr-col-12 fr-col-md-6">
+                      <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
+                        Créé le
+                      </p>
+                      <p className="fr-text--sm fr-mb-1w">
+                        {dateFormatter.format(
+                          new Date(focusedReport.createdAt)
+                        )}
+                      </p>
+                    </div>
+                    <div className="fr-col-12 fr-col-md-6">
+                      <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
+                        Dernière mise à jour
+                      </p>
+                      <p className="fr-text--sm fr-mb-1w">
+                        {dateFormatter.format(
+                          new Date(focusedReport.updatedAt)
+                        )}
+                      </p>
+                    </div>
+                    {focusedReport.resolvedAt ? (
+                      <div className="fr-col-12 fr-col-md-6">
+                        <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
+                          Résolu le
+                        </p>
+                        <p className="fr-text--sm fr-mb-1w">
+                          {dateFormatter.format(
+                            new Date(focusedReport.resolvedAt)
+                          )}
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                  {focusedReport.screenshotUrl ? (
+                    <div className="fr-download">
+                      <p className="fr-download__detail">
+                        {focusedReport.screenshotBytes != null
+                          ? `${Math.max(
+                              1,
+                              Math.round(focusedReport.screenshotBytes / 1024)
+                            )} Ko`
+                          : "Capture fournie"}
+                        <br />
+                        {focusedReport.screenshotWidth &&
+                        focusedReport.screenshotHeight
+                          ? `${focusedReport.screenshotWidth}×${focusedReport.screenshotHeight}px`
+                          : null}
+                      </p>
+                      <a
+                        className="fr-download__link"
+                        href={focusedReport.screenshotUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Ouvrir la capture
+                        <span className="fr-link__detail">
+                          nouvelle fenêtre
+                        </span>
+                      </a>
+                    </div>
+                  ) : (
+                    <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
+                      Aucune capture fournie.
+                    </p>
+                  )}
+                </>
+              ) : null}
+            </div>
+          </div>
         </div>
       </div>
     </section>

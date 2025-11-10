@@ -18,7 +18,7 @@ export const BUG_REPORT_STATUS_BADGES: Record<BugReportStatus, string> = {
 
 export const BUG_REPORT_TYPE_LABELS: Record<BugReportType, string> = {
   BUG: "Bug",
-  FEATURE: "Demande de fonctionnalité",
+  FEATURE: "Feature",
 };
 
 export const BUG_REPORT_TYPE_BADGES: Record<BugReportType, string> = {
