@@ -17,6 +17,9 @@
       "path": "./node_modules/cz-conventional-changelog"
     }
   },
+  "overrides": {
+    "tmp": "^0.2.5"
+  },
   "dependencies": {
     "@codegouvfr/react-dsfr": "^1.28.0",
     "@gouvfr/dsfr": "^1.14.0",
