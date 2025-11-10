@@ -46,7 +46,9 @@ La mission : fluidifier la boucle de contribution entre habitants et collectivit
 - **Portail public (`/`)**
 
   - Landing inspirée communication d'État.
-  - Tunnel citoyen (`/contrib/[communeId]`) pour soumettre alertes et suggestions avec cartes Leaflet et upload Cloudinary.
+
+- Tunnel citoyen (`/contrib/[communeSlug]`) pour soumettre alertes et suggestions avec cartes Leaflet et upload Cloudinary.
+
   - Pages éditoriales : confidentialité, FAQ, suivi des bugs publiquement.
 
 - **Back-office DSFR (`/admin`)**

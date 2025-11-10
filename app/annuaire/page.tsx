@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { CityDirectory } from "@/components/CityDirectory";
+import { ensureCommuneSlug } from "@/lib/communes";
 
 export const revalidate = 3600;
 
@@ -15,11 +16,19 @@ export default async function AnnuairePage() {
       name: true,
       postalCode: true,
       websiteUrl: true,
+      slug: true,
     },
     orderBy: {
       name: "asc",
     },
   });
+
+  const communesWithSlugs = await Promise.all(
+    communes.map(async (commune) => ({
+      ...commune,
+      slug: await ensureCommuneSlug(commune),
+    }))
+  );
 
   return (
     <main className="fr-container fr-container--fluid fr-py-6w fr-flow">
@@ -31,7 +40,7 @@ export default async function AnnuairePage() {
         </p>
       </header>
 
-      <CityDirectory communes={communes} />
+      <CityDirectory communes={communesWithSlugs} />
     </main>
   );
 }

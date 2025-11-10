@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { TownQrCodeCard } from "@/components/TownQrCodeCard";
 import { QrEmbedTutorial } from "@/components/QrEmbedTutorial";
 import { ContributionDirectLink } from "@/components/ContributionDirectLink";
+import { ensureCommuneSlug } from "@/lib/communes";
 
 export default async function TownQrCodePage() {
   const headerList = await headers();
@@ -36,6 +37,8 @@ export default async function TownQrCodePage() {
     select: {
       id: true,
       name: true,
+      slug: true,
+      postalCode: true,
     },
   });
 
@@ -79,13 +82,15 @@ export default async function TownQrCodePage() {
 
   const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
 
+  const slug = await ensureCommuneSlug(commune);
+
   const contributionUrl = normalizedBaseUrl
-    ? `${normalizedBaseUrl}/contrib/${commune.id}`
-    : `/contrib/${commune.id}`;
+    ? `${normalizedBaseUrl}/contrib/${slug}`
+    : `/contrib/${slug}`;
 
   const embedUrl = normalizedBaseUrl
-    ? `${normalizedBaseUrl}/embed/qr/${commune.id}`
-    : `/embed/qr/${commune.id}`;
+    ? `${normalizedBaseUrl}/embed/qr/${slug}`
+    : `/embed/qr/${slug}`;
 
   return (
     <main className="fr-pt-6w fr-pb-8w">

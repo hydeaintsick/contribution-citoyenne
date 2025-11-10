@@ -9,6 +9,7 @@ type CityDirectoryCommune = {
   name: string;
   postalCode: string;
   websiteUrl: string | null;
+  slug: string;
 };
 
 type CityDirectoryProps = {
@@ -107,10 +108,7 @@ export function CityDirectory({ communes }: CityDirectoryProps) {
                       )}
                     </div>
                     <div className="fr-col-auto fr-grid-row fr-grid-row--middle fr-grid-row--gutters">
-                      <Link
-                        href={`/contrib/${city.id}`}
-                        className="fr-btn fr-btn--primary fr-btn--sm"
-                      >
+                      <Link href={`/contrib/${city.slug}`} className="fr-btn fr-btn--primary fr-btn--sm">
                         Contribuer
                       </Link>
                     </div>

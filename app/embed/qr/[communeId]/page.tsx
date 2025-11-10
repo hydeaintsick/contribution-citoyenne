@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { EmbedChromeHider } from "@/components/EmbedChromeHider";
-import { prisma } from "@/lib/prisma";
+import { fetchCommuneBySlugOrId } from "@/lib/communes";
 
 type EmbedQrPageProps =
   | { params: { communeId: string } }
@@ -25,16 +25,14 @@ export default async function EmbedQrPage(props: EmbedQrPageProps) {
     notFound();
   }
 
-  const commune = await prisma.commune.findUnique({
-    where: { id: communeIdParam },
-    select: {
-      id: true,
-      name: true,
-    },
-  });
+  const commune = await fetchCommuneBySlugOrId(communeIdParam);
 
   if (!commune) {
     notFound();
+  }
+
+  if (commune.slug && commune.slug !== communeIdParam) {
+    redirect(`/embed/qr/${commune.slug}`);
   }
 
   const headerList = await headers();
@@ -75,8 +73,8 @@ export default async function EmbedQrPage(props: EmbedQrPageProps) {
   const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
 
   const contributionUrl = normalizedBaseUrl
-    ? `${normalizedBaseUrl}/contrib/${commune.id}`
-    : `/contrib/${commune.id}`;
+    ? `${normalizedBaseUrl}/contrib/${commune.slug}`
+    : `/contrib/${commune.slug}`;
 
   const accentColor = "#000091";
   const textColor = "#ffffff";

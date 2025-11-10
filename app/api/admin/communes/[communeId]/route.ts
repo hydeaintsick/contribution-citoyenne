@@ -102,6 +102,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         select: {
           id: true,
           name: true,
+          slug: true,
           websiteUrl: true,
           isVisible: true,
           users: {
@@ -199,6 +200,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         select: {
           id: true,
           name: true,
+          slug: true,
           postalCode: true,
           websiteUrl: true,
           isVisible: true,

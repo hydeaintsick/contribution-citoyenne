@@ -3,6 +3,7 @@ import { z } from "zod";
 import { CityAuditAction } from "@prisma/client";
 import { getSessionFromRequest, hashPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { generateCommuneSlug } from "@/lib/slug";
 
 const bboxSchema = z
   .array(z.union([z.number(), z.string().transform((value) => Number.parseFloat(value))]))
@@ -137,10 +138,13 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = await hashPassword(manager.password);
 
+    const slug = generateCommuneSlug(name, postalCode);
+
     const { commune: createdCommune } = await prisma.$transaction(async (tx) => {
       const commune = await tx.commune.create({
         data: {
           name,
+          slug,
           postalCode,
           osmId,
           osmType,
@@ -185,6 +189,7 @@ export async function POST(request: NextRequest) {
         commune: {
           id: createdCommune.id,
           name: createdCommune.name,
+          slug: createdCommune.slug,
           postalCode: createdCommune.postalCode,
         },
       },
