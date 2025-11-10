@@ -62,6 +62,7 @@ function FilterButton({
 
 const statusOptions = BUG_REPORT_STATUS_ORDER;
 const typeOptions = Object.keys(BUG_REPORT_TYPE_LABELS) as BugReportTypeValue[];
+const PAGE_SIZE = 10;
 
 type StatusBadgeSelectorProps = {
   reportId: string;
@@ -181,6 +182,7 @@ export function AdminBugReportsDashboard({
   const [typeFilters, setTypeFilters] = useState<Set<BugReportTypeValue>>(
     () => new Set()
   );
+  const [currentPage, setCurrentPage] = useState(1);
   const [feedback, setFeedback] = useState<FeedbackState>({ status: "idle" });
   const [pendingUpdates, setPendingUpdates] = useState<Record<string, boolean>>(
     {}
@@ -212,6 +214,7 @@ export function AdminBugReportsDashboard({
       }
       return next;
     });
+    setCurrentPage(1);
   };
 
   const toggleTypeFilter = (type: BugReportTypeValue) => {
@@ -224,10 +227,17 @@ export function AdminBugReportsDashboard({
       }
       return next;
     });
+    setCurrentPage(1);
   };
 
-  const clearStatusFilters = () => setStatusFilters(new Set());
-  const clearTypeFilters = () => setTypeFilters(new Set());
+  const clearStatusFilters = () => {
+    setStatusFilters(new Set());
+    setCurrentPage(1);
+  };
+  const clearTypeFilters = () => {
+    setTypeFilters(new Set());
+    setCurrentPage(1);
+  };
 
   const resetFilters = () => {
     clearStatusFilters();
@@ -261,6 +271,34 @@ export function AdminBugReportsDashboard({
         );
       });
   }, [bugReports, statusFilters, typeFilters]);
+
+  const totalPages = useMemo(() => {
+    if (filteredReports.length === 0) {
+      return 1;
+    }
+    return Math.max(1, Math.ceil(filteredReports.length / PAGE_SIZE));
+  }, [filteredReports.length]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    } else if (currentPage < 1) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedReports = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredReports.slice(start, start + PAGE_SIZE);
+  }, [filteredReports, currentPage]);
+
+  const startIndex =
+    filteredReports.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const endIndex =
+    filteredReports.length === 0
+      ? 0
+      : Math.min(filteredReports.length, currentPage * PAGE_SIZE);
+  const shouldShowPagination = filteredReports.length > PAGE_SIZE;
 
   const isCommitModalOpen = commitModalState !== null;
   const commitModalReport = commitModalState
@@ -433,8 +471,14 @@ export function AdminBugReportsDashboard({
       <header className="fr-mb-4w">
         <h2 className="fr-text--lg fr-mb-1w">Signalements</h2>
         <p className="fr-text--sm fr-text-mention--grey">
-          {filteredReports.length} résultat(s) affiché(s) sur{" "}
-          {bugReports.length}.
+          {filteredReports.length === 0 ? (
+            <>0 résultat affiché sur {bugReports.length}.</>
+          ) : (
+            <>
+              Résultats {startIndex}-{endIndex} sur {filteredReports.length}{" "}
+              (total {bugReports.length}).
+            </>
+          )}
         </p>
       </header>
 
@@ -521,7 +565,7 @@ export function AdminBugReportsDashboard({
                   </td>
                 </tr>
               ) : (
-                filteredReports.map((report) => {
+                paginatedReports.map((report) => {
                   const isUpdating = Boolean(pendingUpdates[report.id]);
 
                   return (
@@ -576,6 +620,63 @@ export function AdminBugReportsDashboard({
             </tbody>
           </table>
         </div>
+        {shouldShowPagination ? (
+          <div className="fr-table__footer fr-table__footer--middle">
+            <nav
+              className="fr-pagination"
+              role="navigation"
+              aria-label="Pagination des signalements"
+            >
+              <ul className="fr-pagination__list">
+                <li>
+                  <button
+                    type="button"
+                    className="fr-pagination__link fr-pagination__link--prev fr-pagination__link--label"
+                    onClick={() =>
+                      setCurrentPage((previous) => Math.max(1, previous - 1))
+                    }
+                    aria-label="Page précédente"
+                    disabled={currentPage === 1}
+                  >
+                    Page précédente
+                  </button>
+                </li>
+                {Array.from({ length: totalPages }).map((_, index) => {
+                  const pageNumber = index + 1;
+                  return (
+                    <li key={pageNumber}>
+                      <button
+                        type="button"
+                        className="fr-pagination__link"
+                        aria-current={
+                          pageNumber === currentPage ? "page" : undefined
+                        }
+                        onClick={() => setCurrentPage(pageNumber)}
+                      >
+                        {pageNumber}
+                      </button>
+                    </li>
+                  );
+                })}
+                <li>
+                  <button
+                    type="button"
+                    className="fr-pagination__link fr-pagination__link--next fr-pagination__link--label"
+                    onClick={() =>
+                      setCurrentPage((previous) =>
+                        Math.min(totalPages, previous + 1)
+                      )
+                    }
+                    aria-label="Page suivante"
+                    disabled={currentPage === totalPages}
+                  >
+                    Page suivante
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        ) : null}
       </div>
 
       <div
