@@ -37,29 +37,40 @@ enum BugReportStatus {
   DONE
 }
 
+enum ContactTicketType {
+  COMMUNE
+  ORGANISME_FINANCIER
+}
+
+enum ContactTicketStatus {
+  PENDING
+  RESOLVED
+}
+
 enum CityAuditAction {
   CREATED
   UPDATED
 }
 
 model User {
-  id              String         @id @default(auto()) @map("_id") @db.ObjectId
-  email           String         @unique
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  email           String          @unique
   password        String
   firstName       String?
   lastName        String?
   phone           String?
-  role            Role           @default(ADMIN)
-  commune         Commune?       @relation(fields: [communeId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  communeId       String?        @db.ObjectId
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  role            Role            @default(ADMIN)
+  commune         Commune?        @relation(fields: [communeId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  communeId       String?         @db.ObjectId
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
   lastLoginAt     DateTime?
   loginLogs       UserLoginLog[]
   cityAuditLogs   CityAuditLog[]
-  createdCommunes Commune[]      @relation("CommuneCreatedBy")
-  updatedCommunes Commune[]      @relation("CommuneUpdatedBy")
-  closedReports   Contribution[] @relation("ContributionClosedBy")
+  createdCommunes Commune[]       @relation("CommuneCreatedBy")
+  updatedCommunes Commune[]       @relation("CommuneUpdatedBy")
+  closedReports   Contribution[]  @relation("ContributionClosedBy")
+  contactTickets  ContactTicket[]
 }
 
 model Commune {
@@ -146,4 +157,28 @@ model BugReport {
   updatedAt          DateTime        @updatedAt
   resolvedAt         DateTime?
   githubCommitUrl    String?
+}
+
+model ContactTicket {
+  id            String              @id @default(auto()) @map("_id") @db.ObjectId
+  contactType   ContactTicketType
+  status        ContactTicketStatus @default(PENDING)
+  fingerprint   String
+  name          String
+  email         String
+  function      String
+  commune       String?
+  organisme     String?
+  message       String
+  consent       Boolean
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  processedAt   DateTime?
+  processedById String?             @db.ObjectId
+  processedBy   User?               @relation(fields: [processedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([status])
+  @@index([contactType])
+  @@index([createdAt])
+  @@index([fingerprint, createdAt])
 }

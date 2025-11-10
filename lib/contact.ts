@@ -47,33 +47,34 @@ export const contactSchema = z
 
 export type ContactFormData = z.infer<typeof contactSchema>;
 
-export function createMailtoLink(data: ContactFormData): string {
-  const isCommune = data.contactType === "commune";
-  const entityName = isCommune ? data.commune : data.organisme;
-  const entityLabel = isCommune ? "Commune" : "Organisme";
-  const entityValue = isCommune ? data.commune : data.organisme;
-  
-  const subject = encodeURIComponent(`Demande de contact Contribcit - ${entityName}`);
-  const body = encodeURIComponent(
-    `Bonjour,
+export const contactSubmissionSchema = contactSchema.safeExtend({
+  fingerprint: z
+    .string()
+    .min(10, "Empreinte du navigateur introuvable, veuillez réessayer.")
+    .max(255, "Empreinte du navigateur invalide."),
+});
 
-${isCommune 
-  ? "Je souhaite obtenir une démonstration de Contribcit pour ma commune."
-  : "Je suis un organisme financier et je souhaite financer le projet Contribcit."
-}
+export type ContactSubmissionData = z.infer<typeof contactSubmissionSchema>;
 
-Type de contact : ${isCommune ? "Commune" : "Organisme financier"}
-Nom : ${data.name}
-Email : ${data.email}
-Fonction : ${data.function}
-${entityLabel} : ${entityValue}
+export const CONTACT_FORM_COOLDOWN_MS = 72 * 60 * 60 * 1000;
 
-Message :
-${data.message}
+export const CONTACT_TICKET_STATUS_ORDER = ["PENDING", "RESOLVED"] as const;
+export type ContactTicketStatusValue = (typeof CONTACT_TICKET_STATUS_ORDER)[number];
 
-Cordialement,
-${data.name}`
-  );
-  return `mailto:contact@contribcit.fr?subject=${subject}&body=${body}`;
-}
+export const CONTACT_TICKET_STATUS_LABELS: Record<ContactTicketStatusValue, string> = {
+  PENDING: "À traiter",
+  RESOLVED: "Traité",
+};
 
+export const CONTACT_TICKET_STATUS_BADGES: Record<ContactTicketStatusValue, "warning" | "success"> = {
+  PENDING: "warning",
+  RESOLVED: "success",
+};
+
+export const CONTACT_TICKET_TYPE_ORDER = ["COMMUNE", "ORGANISME_FINANCIER"] as const;
+export type ContactTicketTypeValue = (typeof CONTACT_TICKET_TYPE_ORDER)[number];
+
+export const CONTACT_TICKET_TYPE_LABELS: Record<ContactTicketTypeValue, string> = {
+  COMMUNE: "Commune",
+  ORGANISME_FINANCIER: "Organisme financier",
+};

@@ -1,0 +1,16 @@
+.filtersRow {
+  align-items: flex-end;
+}
+
+.filtersButtonCol {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+@media (min-width: 48rem) {
+  .filtersButtonCol {
+    justify-content: flex-end;
+  }
+}
+
