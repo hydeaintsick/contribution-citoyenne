@@ -10,6 +10,7 @@ const ADMIN_ROLES = new Set(["ADMIN", "ACCOUNT_MANAGER"]);
 
 const updateSchema = z.object({
   status: z.nativeEnum(BugReportStatus),
+  githubCommitUrl: z.string().trim().optional().or(z.literal(null)),
 });
 
 export async function PUT(
@@ -38,7 +39,34 @@ export async function PUT(
     );
   }
 
-  const { status } = parsed.data;
+  const { status, githubCommitUrl: rawGithubCommitUrl } = parsed.data;
+
+  let githubCommitUrl: string | null = null;
+
+  const normalizedGithubCommitUrl =
+    typeof rawGithubCommitUrl === "string"
+      ? rawGithubCommitUrl.trim()
+      : rawGithubCommitUrl ?? undefined;
+
+  if (status === BugReportStatus.DONE && normalizedGithubCommitUrl) {
+    try {
+      const url = new URL(normalizedGithubCommitUrl);
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        throw new Error("Le lien doit commencer par http:// ou https://.");
+      }
+      githubCommitUrl = url.toString();
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : "Lien de commit GitHub invalide.",
+        },
+        { status: 400 },
+      );
+    }
+  }
 
   try {
     const bugReport = await prisma.bugReport.update({
@@ -49,6 +77,8 @@ export async function PUT(
           status === BugReportStatus.DEPLOYED || status === BugReportStatus.DONE
             ? new Date()
             : null,
+        githubCommitUrl:
+          status === BugReportStatus.DONE ? githubCommitUrl : null,
       },
     });
 
@@ -74,6 +104,7 @@ export async function PUT(
         screenshotWidth: bugReport.screenshotWidth,
         screenshotHeight: bugReport.screenshotHeight,
         screenshotBytes: bugReport.screenshotBytes,
+        githubCommitUrl: bugReport.githubCommitUrl,
       },
     });
   } catch (error) {

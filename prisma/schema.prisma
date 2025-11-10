@@ -144,4 +144,5 @@ model BugReport {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   resolvedAt         DateTime?
+  githubCommitUrl    String?
 }

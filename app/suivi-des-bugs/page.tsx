@@ -107,6 +107,18 @@ export default async function BugTrackingPage() {
                                 ? `Mis en production le ${formatDate(report.resolvedAt)}`
                                 : `Dernière mise à jour le ${formatDate(report.updatedAt)}`}
                             </p>
+                            {report.githubCommitUrl ? (
+                              <p className="fr-mt-2w fr-text--sm fr-mb-0">
+                                <a
+                                  className="fr-link"
+                                  href={report.githubCommitUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  Voir le commit GitHub associé
+                                </a>
+                              </p>
+                            ) : null}
                             {report.screenshotUrl ? (
                               <div className="fr-mt-3w">
                                 <figure className="fr-content-media">

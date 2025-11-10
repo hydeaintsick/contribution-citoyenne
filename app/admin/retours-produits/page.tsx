@@ -49,6 +49,7 @@ export default async function AdminBugReportsPage() {
     screenshotWidth: report.screenshotWidth,
     screenshotHeight: report.screenshotHeight,
     screenshotBytes: report.screenshotBytes,
+    githubCommitUrl: report.githubCommitUrl,
   }));
 
   return (

@@ -112,9 +112,130 @@
   opacity: 0.6;
 }
 
+.modalBody {
+  padding: var(--spacing-5v) var(--spacing-6v);
+}
+
+.modalHeader {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.modalContent {
+  padding-block: 0;
+}
+
+.reportDetail {
+  display: grid;
+  gap: var(--spacing-5v);
+}
+
+.detailHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-4v);
+}
+
+.reference {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.badgeGroup {
+  gap: var(--spacing-2v);
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--spacing-3v);
+}
+
+.metaItem {
+  background-color: var(--background-alt-grey);
+  border: 1px solid var(--border-default-grey);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-3v);
+  display: grid;
+  gap: var(--spacing-1v);
+}
+
+.commitButton {
+  align-self: flex-start;
+}
+
+.screenshotCard {
+  margin: 0;
+  padding: var(--spacing-3v);
+  border: 1px solid var(--border-default-grey);
+  border-radius: var(--radius-sm);
+  background-color: var(--background-default-grey);
+  display: grid;
+  gap: var(--spacing-2v);
+}
+
+.screenshotCard figcaption {
+  display: grid;
+  gap: var(--spacing-1v);
+}
+
+.screenshotImageWrapper {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background-color: var(--background-alt-grey);
+  display: flex;
+  justify-content: center;
+}
+
+.screenshotImageWrapper img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.emptyScreenshot {
+  padding: var(--spacing-3v);
+  border: 1px dashed var(--border-default-grey);
+  border-radius: var(--radius-sm);
+  background-color: var(--background-alt-grey);
+}
+
+.commitForm {
+  gap: var(--spacing-4v);
+}
+
+.commitIntro {
+  display: grid;
+  gap: var(--spacing-2v);
+}
+
+.commitButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-3v);
+  flex-wrap: wrap;
+}
+
 @media (max-width: 62rem) {
   .tableContainer {
     width: 100%;
+  }
+}
+
+@media (max-width: 48rem) {
+  .modalBody {
+    padding: var(--spacing-5v) var(--spacing-4v);
+  }
+
+  .detailHeader {
+    flex-direction: column;
+    gap: var(--spacing-3v);
+  }
+
+  .badgeGroup {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 

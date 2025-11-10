@@ -32,6 +32,7 @@ export async function GET() {
       screenshotWidth: bugReport.screenshotWidth,
       screenshotHeight: bugReport.screenshotHeight,
       screenshotBytes: bugReport.screenshotBytes,
+      githubCommitUrl: bugReport.githubCommitUrl,
     })),
   });
 }

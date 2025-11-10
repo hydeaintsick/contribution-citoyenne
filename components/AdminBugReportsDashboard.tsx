@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./AdminBugReportsDashboard.module.css";
 import {
   BUG_REPORT_STATUS_BADGES,
@@ -23,6 +23,7 @@ type BugReportRow = {
   createdAt: string;
   updatedAt: string;
   resolvedAt: string | null;
+  githubCommitUrl: string | null;
   screenshotUrl: string | null;
   screenshotPublicId: string | null;
   screenshotWidth: number | null;
@@ -185,6 +186,12 @@ export function AdminBugReportsDashboard({
     {}
   );
   const [focusedReport, setFocusedReport] = useState<BugReportRow | null>(null);
+  const [commitModalState, setCommitModalState] = useState<{
+    reportId: string;
+    nextStatus: BugReportStatusValue;
+  } | null>(null);
+  const [commitUrlInput, setCommitUrlInput] = useState("");
+  const [commitModalError, setCommitModalError] = useState<string | null>(null);
 
   const dateFormatter = useMemo(
     () =>
@@ -255,9 +262,32 @@ export function AdminBugReportsDashboard({
       });
   }, [bugReports, statusFilters, typeFilters]);
 
-  const handleStatusChange = async (
+  const isCommitModalOpen = commitModalState !== null;
+  const commitModalReport = commitModalState
+    ? bugReports.find((report) => report.id === commitModalState.reportId) ??
+      null
+    : null;
+  const isCommitSubmitting = commitModalState
+    ? Boolean(pendingUpdates[commitModalState.reportId])
+    : false;
+  const commitInputId = commitModalState
+    ? `github-commit-url-${commitModalState.reportId}`
+    : "github-commit-url";
+  const commitHintId = `${commitInputId}-hint`;
+  const commitErrorId = commitModalError ? `${commitInputId}-error` : undefined;
+  const commitInputDescribedBy =
+    [commitHintId, commitErrorId].filter(Boolean).join(" ") || undefined;
+
+  const closeCommitModal = () => {
+    setCommitModalState(null);
+    setCommitUrlInput("");
+    setCommitModalError(null);
+  };
+
+  const performStatusChange = async (
     reportId: string,
-    nextStatus: BugReportStatusValue
+    nextStatus: BugReportStatusValue,
+    githubCommitUrl: string | null
   ) => {
     setPendingUpdates((previous) => ({ ...previous, [reportId]: true }));
     setFeedback({ status: "idle" });
@@ -269,7 +299,10 @@ export function AdminBugReportsDashboard({
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ status: nextStatus }),
+        body: JSON.stringify({
+          status: nextStatus,
+          githubCommitUrl: nextStatus === "DONE" ? githubCommitUrl : null,
+        }),
       });
 
       if (!response.ok) {
@@ -294,15 +327,30 @@ export function AdminBugReportsDashboard({
                 status: updated.status,
                 updatedAt: updated.updatedAt,
                 resolvedAt: updated.resolvedAt,
+                githubCommitUrl: updated.githubCommitUrl ?? null,
               }
             : report
         )
+      );
+
+      setFocusedReport((previous) =>
+        previous && previous.id === reportId
+          ? {
+              ...previous,
+              status: updated.status,
+              updatedAt: updated.updatedAt,
+              resolvedAt: updated.resolvedAt,
+              githubCommitUrl: updated.githubCommitUrl ?? null,
+            }
+          : previous
       );
 
       setFeedback({
         status: "success",
         message: "Le statut du signalement a été mis à jour.",
       });
+
+      return true;
     } catch (error) {
       console.error("Bug report status update failed", error);
       setFeedback({
@@ -312,11 +360,65 @@ export function AdminBugReportsDashboard({
             ? error.message
             : "Mise à jour du statut impossible.",
       });
+      return false;
     } finally {
       setPendingUpdates((previous) => {
         const { [reportId]: _omit, ...rest } = previous;
         return rest;
       });
+    }
+  };
+
+  const handleStatusChange = (
+    reportId: string,
+    nextStatus: BugReportStatusValue
+  ) => {
+    if (nextStatus === "DONE") {
+      const currentReport = bugReports.find((report) => report.id === reportId);
+      setCommitModalState({ reportId, nextStatus });
+      setCommitUrlInput(currentReport?.githubCommitUrl ?? "");
+      setCommitModalError(null);
+      return;
+    }
+
+    void performStatusChange(reportId, nextStatus, null);
+  };
+
+  const handleCommitModalSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!commitModalState) {
+      return;
+    }
+
+    setCommitModalError(null);
+
+    const trimmed = commitUrlInput.trim();
+    let normalizedUrl: string | null = null;
+
+    if (trimmed.length > 0) {
+      try {
+        const url = new URL(trimmed);
+        if (url.protocol !== "http:" && url.protocol !== "https:") {
+          throw new Error();
+        }
+        normalizedUrl = url.toString();
+      } catch {
+        setCommitModalError(
+          "Lien de commit GitHub invalide. Utilisez un lien commençant par http:// ou https://."
+        );
+        return;
+      }
+    }
+
+    const success = await performStatusChange(
+      commitModalState.reportId,
+      commitModalState.nextStatus,
+      normalizedUrl
+    );
+
+    if (success) {
+      closeCommitModal();
     }
   };
 
@@ -484,8 +586,8 @@ export function AdminBugReportsDashboard({
         id="bug-report-detail-modal"
       >
         <div className="fr-container fr-container--fluid fr-container-md">
-          <div className="fr-modal__body">
-            <div className="fr-modal__header">
+          <div className={`fr-modal__body ${styles.modalBody}`}>
+            <div className={`fr-modal__header ${styles.modalHeader}`}>
               <button
                 className="fr-btn fr-btn--close"
                 type="button"
@@ -495,101 +597,231 @@ export function AdminBugReportsDashboard({
                 Fermer
               </button>
             </div>
-            <div className="fr-modal__content fr-flow">
+            <div className={`fr-modal__content fr-flow ${styles.modalContent}`}>
               {focusedReport ? (
-                <>
-                  <h1 className="fr-h4" id="bug-report-detail-modal-title">
-                    {focusedReport.title}
-                  </h1>
-                  <p className="fr-text--xs fr-text-mention--grey fr-mb-1w">
-                    #{focusedReport.id}
-                  </p>
-                  <div className="fr-badges-group fr-badges-group--sm">
-                    <span
-                      className={`fr-badge ${
-                        BUG_REPORT_TYPE_BADGES[focusedReport.type]
-                      }`}
+                <article className={styles.reportDetail}>
+                  <header className={styles.detailHeader}>
+                    <div>
+                      <p
+                        className={`fr-text--xs fr-text-mention--grey fr-mb-1v ${styles.reference}`}
+                      >
+                        #{focusedReport.id}
+                      </p>
+                      <h1
+                        className="fr-h4 fr-mb-0"
+                        id="bug-report-detail-modal-title"
+                      >
+                        {focusedReport.title}
+                      </h1>
+                    </div>
+                    <div
+                      className={`fr-badges-group fr-badges-group--sm ${styles.badgeGroup}`}
                     >
-                      {BUG_REPORT_TYPE_LABELS[focusedReport.type]}
-                    </span>
-                    <span
-                      className={`fr-badge ${
-                        BUG_REPORT_STATUS_BADGES[focusedReport.status]
-                      }`}
-                    >
-                      {BUG_REPORT_STATUS_LABELS[focusedReport.status]}
-                    </span>
-                  </div>
+                      <span
+                        className={`fr-badge ${
+                          BUG_REPORT_TYPE_BADGES[focusedReport.type]
+                        }`}
+                      >
+                        {BUG_REPORT_TYPE_LABELS[focusedReport.type]}
+                      </span>
+                      <span
+                        className={`fr-badge ${
+                          BUG_REPORT_STATUS_BADGES[focusedReport.status]
+                        }`}
+                      >
+                        {BUG_REPORT_STATUS_LABELS[focusedReport.status]}
+                      </span>
+                    </div>
+                  </header>
+
                   <p className={`fr-text--md ${styles.detailDescription}`}>
                     {focusedReport.description}
                   </p>
-                  <div className="fr-grid-row fr-grid-row--gutters">
-                    <div className="fr-col-12 fr-col-md-6">
-                      <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
+
+                  <div className={styles.metaGrid}>
+                    <div className={styles.metaItem}>
+                      <span className="fr-text--xs fr-text-mention--grey">
                         Créé le
-                      </p>
-                      <p className="fr-text--sm fr-mb-1w">
+                      </span>
+                      <span className="fr-text--sm">
                         {dateFormatter.format(
                           new Date(focusedReport.createdAt)
                         )}
-                      </p>
+                      </span>
                     </div>
-                    <div className="fr-col-12 fr-col-md-6">
-                      <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
+                    <div className={styles.metaItem}>
+                      <span className="fr-text--xs fr-text-mention--grey">
                         Dernière mise à jour
-                      </p>
-                      <p className="fr-text--sm fr-mb-1w">
+                      </span>
+                      <span className="fr-text--sm">
                         {dateFormatter.format(
                           new Date(focusedReport.updatedAt)
                         )}
-                      </p>
+                      </span>
                     </div>
                     {focusedReport.resolvedAt ? (
-                      <div className="fr-col-12 fr-col-md-6">
-                        <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
+                      <div className={styles.metaItem}>
+                        <span className="fr-text--xs fr-text-mention--grey">
                           Résolu le
-                        </p>
-                        <p className="fr-text--sm fr-mb-1w">
+                        </span>
+                        <span className="fr-text--sm">
                           {dateFormatter.format(
                             new Date(focusedReport.resolvedAt)
                           )}
-                        </p>
+                        </span>
                       </div>
                     ) : null}
                   </div>
+
+                  {focusedReport.githubCommitUrl ? (
+                    <a
+                      className={`fr-btn fr-btn--sm fr-btn--secondary ${styles.commitButton}`}
+                      href={focusedReport.githubCommitUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Voir le commit GitHub associé
+                    </a>
+                  ) : null}
+
                   {focusedReport.screenshotUrl ? (
-                    <div className="fr-download">
-                      <p className="fr-download__detail">
-                        {focusedReport.screenshotBytes != null
-                          ? `${Math.max(
-                              1,
-                              Math.round(focusedReport.screenshotBytes / 1024)
-                            )} Ko`
-                          : "Capture fournie"}
-                        <br />
-                        {focusedReport.screenshotWidth &&
-                        focusedReport.screenshotHeight
-                          ? `${focusedReport.screenshotWidth}×${focusedReport.screenshotHeight}px`
-                          : null}
-                      </p>
-                      <a
-                        className="fr-download__link"
-                        href={focusedReport.screenshotUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Ouvrir la capture
-                        <span className="fr-link__detail">
-                          nouvelle fenêtre
-                        </span>
-                      </a>
-                    </div>
+                    <figure className={styles.screenshotCard}>
+                      <div className={styles.screenshotImageWrapper}>
+                        <img
+                          src={focusedReport.screenshotUrl}
+                          alt="Capture d’écran partagée avec le signalement"
+                          loading="lazy"
+                          width={focusedReport.screenshotWidth ?? undefined}
+                          height={focusedReport.screenshotHeight ?? undefined}
+                        />
+                      </div>
+                      <figcaption>
+                        <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
+                          {focusedReport.screenshotBytes != null
+                            ? `${Math.max(
+                                1,
+                                Math.round(focusedReport.screenshotBytes / 1024)
+                              )} Ko`
+                            : "Capture fournie"}
+                          {focusedReport.screenshotWidth &&
+                          focusedReport.screenshotHeight
+                            ? ` • ${focusedReport.screenshotWidth}×${focusedReport.screenshotHeight}px`
+                            : null}
+                        </p>
+                        <a
+                          className="fr-link fr-link--sm"
+                          href={focusedReport.screenshotUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Ouvrir la capture (nouvelle fenêtre)
+                        </a>
+                      </figcaption>
+                    </figure>
                   ) : (
-                    <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
-                      Aucune capture fournie.
-                    </p>
+                    <div className={styles.emptyScreenshot}>
+                      <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
+                        Aucune capture fournie.
+                      </p>
+                    </div>
                   )}
-                </>
+                </article>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`fr-modal${isCommitModalOpen ? " fr-modal--opened" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bug-report-commit-modal-title"
+        id="bug-report-commit-modal"
+      >
+        <div className="fr-container fr-container--fluid fr-container-md">
+          <div className={`fr-modal__body ${styles.modalBody}`}>
+            <div className={`fr-modal__header ${styles.modalHeader}`}>
+              <button
+                className="fr-btn fr-btn--close"
+                type="button"
+                title="Fermer"
+                onClick={closeCommitModal}
+                disabled={isCommitSubmitting}
+              >
+                Fermer
+              </button>
+            </div>
+            <div className={`fr-modal__content fr-flow ${styles.modalContent}`}>
+              {commitModalState && commitModalReport ? (
+                <form
+                  className={`fr-flow ${styles.commitForm}`}
+                  onSubmit={handleCommitModalSubmit}
+                >
+                  <div className={styles.commitIntro}>
+                    <p className="fr-text--xs fr-text-mention--grey fr-mb-1v">
+                      #{commitModalReport.id}
+                    </p>
+                    <h1
+                      className="fr-h5 fr-mb-0"
+                      id="bug-report-commit-modal-title"
+                    >
+                      Ajouter un lien de commit (facultatif)
+                    </h1>
+                    <p className="fr-text--sm fr-mb-0">
+                      Ce lien sera visible sur la page publique lorsque le
+                      statut passe à « Terminé ».
+                    </p>
+                  </div>
+
+                  <div className="fr-input-group">
+                    <label className="fr-label" htmlFor={commitInputId}>
+                      Lien du commit GitHub
+                      <span className="fr-hint-text" id={commitHintId}>
+                        Exemple :
+                        https://github.com/organisation/projet/commit/abc123
+                      </span>
+                    </label>
+                    <input
+                      className={`fr-input${
+                        commitModalError ? " fr-input--error" : ""
+                      }`}
+                      type="url"
+                      id={commitInputId}
+                      name="githubCommitUrl"
+                      value={commitUrlInput}
+                      onChange={(event) =>
+                        setCommitUrlInput(event.target.value)
+                      }
+                      placeholder="https://github.com/..."
+                      aria-describedby={commitInputDescribedBy}
+                      disabled={isCommitSubmitting}
+                    />
+                    {commitModalError ? (
+                      <p className="fr-error-text" id={commitErrorId}>
+                        {commitModalError}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className={styles.commitButtons}>
+                    <button
+                      type="button"
+                      className="fr-btn fr-btn--secondary"
+                      onClick={closeCommitModal}
+                      disabled={isCommitSubmitting}
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      className="fr-btn"
+                      disabled={isCommitSubmitting}
+                    >
+                      Valider le statut « Terminé »
+                    </button>
+                  </div>
+                </form>
               ) : null}
             </div>
           </div>
