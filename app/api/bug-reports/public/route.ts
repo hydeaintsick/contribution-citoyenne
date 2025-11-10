@@ -11,6 +11,17 @@ export async function GET() {
         in: PUBLIC_BUG_REPORT_STATUSES,
       },
     },
+    select: {
+      id: true,
+      type: true,
+      status: true,
+      title: true,
+      description: true,
+      createdAt: true,
+      updatedAt: true,
+      resolvedAt: true,
+      githubCommitUrl: true,
+    },
     orderBy: {
       createdAt: "desc",
     },
@@ -28,10 +39,6 @@ export async function GET() {
       resolvedAt: bugReport.resolvedAt
         ? bugReport.resolvedAt.toISOString()
         : null,
-      screenshotUrl: bugReport.screenshotUrl,
-      screenshotWidth: bugReport.screenshotWidth,
-      screenshotHeight: bugReport.screenshotHeight,
-      screenshotBytes: bugReport.screenshotBytes,
       githubCommitUrl: bugReport.githubCommitUrl,
     })),
   });

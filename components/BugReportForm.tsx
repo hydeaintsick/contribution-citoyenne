@@ -25,6 +25,7 @@ type ScreenshotInfo = {
 };
 
 type UploadState = "idle" | "uploading" | "error" | "success";
+const MAX_SCREENSHOT_FILE_SIZE = 5 * 1024 * 1024;
 
 export function BugReportForm() {
   const [selectedType, setSelectedType] = useState<BugReportTypeOption>("BUG");
@@ -64,7 +65,7 @@ export function BugReportForm() {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_SCREENSHOT_FILE_SIZE) {
       setUploadError("La taille maximale autorisée est de 5 Mo.");
       setUploadState("error");
       setScreenshot(null);
@@ -75,7 +76,7 @@ export function BugReportForm() {
     setUploadError(null);
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", file, file.name);
 
     try {
       const response = await fetch("/api/uploads/cloudinary", {

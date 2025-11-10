@@ -119,24 +119,6 @@ export default async function BugTrackingPage() {
                                 </a>
                               </p>
                             ) : null}
-                            {report.screenshotUrl ? (
-                              <div className="fr-mt-3w">
-                                <figure className="fr-content-media">
-                                  <div className="fr-content-media__img">
-                                    <img
-                                      src={report.screenshotUrl}
-                                      alt="Capture d’écran partagée avec le signalement"
-                                      loading="lazy"
-                                      width={report.screenshotWidth ?? undefined}
-                                      height={report.screenshotHeight ?? undefined}
-                                    />
-                                  </div>
-                                  <figcaption>
-                                    Capture fournie par l’utilisateur
-                                  </figcaption>
-                                </figure>
-                              </div>
-                            ) : null}
                           </div>
                         </article>
                       </div>
