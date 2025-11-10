@@ -22,9 +22,14 @@ type BanReverseFeature = {
 };
 
 const BAN_REVERSE_URL = "https://api-adresse.data.gouv.fr/reverse/";
-const DEFAULT_USER_AGENT = "Contribcit/1.0 (+https://contribcit.fr)";
+const DEFAULT_USER_AGENT = "Contribcit/1.0 (+https://contribcit.org)";
 
-function isWithinBbox(latitude: number, longitude: number, bbox: number[], tolerance = 0) {
+function isWithinBbox(
+  latitude: number,
+  longitude: number,
+  bbox: number[],
+  tolerance = 0
+) {
   if (bbox.length !== 4) {
     return true;
   }
@@ -42,7 +47,10 @@ export async function POST(request: NextRequest) {
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ error: "Payload JSON invalide." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Payload JSON invalide." },
+      { status: 400 }
+    );
   }
 
   const validation = reverseSchema.safeParse(payload);
@@ -50,7 +58,7 @@ export async function POST(request: NextRequest) {
     const [issue] = validation.error.issues;
     return NextResponse.json(
       { error: issue?.message ?? "Données de géolocalisation invalides." },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -73,14 +81,14 @@ export async function POST(request: NextRequest) {
     if (!commune || !commune.isVisible) {
       return NextResponse.json(
         { error: "Commune introuvable ou indisponible." },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
     if (!isWithinBbox(latitude, longitude, commune.bbox, 0.001)) {
       return NextResponse.json(
         { error: "Les coordonnées sont en dehors de la commune sélectionnée." },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -104,18 +112,22 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       return NextResponse.json(
         { error: "Le service de géocodage est indisponible." },
-        { status: 502 },
+        { status: 502 }
       );
     }
 
-    const result = (await response.json().catch(() => null)) as
-      | { features?: BanReverseFeature[] }
-      | null;
+    const result = (await response.json().catch(() => null)) as {
+      features?: BanReverseFeature[];
+    } | null;
 
-    if (!result || !Array.isArray(result.features) || result.features.length === 0) {
+    if (
+      !result ||
+      !Array.isArray(result.features) ||
+      result.features.length === 0
+    ) {
       return NextResponse.json(
         { error: "Aucune adresse trouvée pour ces coordonnées." },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -125,14 +137,14 @@ export async function POST(request: NextRequest) {
     if (typeof lat !== "number" || typeof lon !== "number") {
       return NextResponse.json(
         { error: "Les données de géolocalisation sont incomplètes." },
-        { status: 502 },
+        { status: 502 }
       );
     }
 
     if (!isWithinBbox(lat, lon, commune.bbox, 0.001)) {
       return NextResponse.json(
         { error: "L’adresse trouvée n’appartient pas à la commune." },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -140,7 +152,7 @@ export async function POST(request: NextRequest) {
     if (!label) {
       return NextResponse.json(
         { error: "Impossible de déterminer l’adresse correspondante." },
-        { status: 502 },
+        { status: 502 }
       );
     }
 
@@ -159,7 +171,7 @@ export async function POST(request: NextRequest) {
     console.error("BAN reverse failed", error);
     return NextResponse.json(
       { error: "La conversion des coordonnées en adresse a échoué." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
