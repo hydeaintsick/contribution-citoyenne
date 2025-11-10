@@ -184,7 +184,7 @@ export default function QuiSommesNousPage() {
               >
                 <Image
                   src="https://media.licdn.com/dms/image/v2/D4E03AQEIDt3s4Ci6Ig/profile-displayphoto-shrink_800_800/B4EZVtHwFFGgAo-/0/1741292504799?e=1764201600&v=beta&t=SU5Yb_-Ui_gtWHsbZGoflCNfR95OiAoX70uHQbT0ExI"
-                  alt="Victor MAHE - COO"
+                  alt="Victor MAHE - Partenariats collectivités & ministères"
                   width={200}
                   height={200}
                   style={{
@@ -208,7 +208,7 @@ export default function QuiSommesNousPage() {
                   margin: "0.5rem auto 0",
                 }}
               >
-                COO
+                Partenariats collectivités & ministères
               </p>
               <div style={{ textAlign: "center", marginTop: "0.75rem" }}>
                 <a
