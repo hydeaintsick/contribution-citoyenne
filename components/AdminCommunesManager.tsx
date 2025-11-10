@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Tag } from "@codegouvfr/react-dsfr/Tag";
@@ -30,6 +30,8 @@ type CommuneWithManager = Commune & {
 type AdminCommunesManagerProps = {
   communes: CommuneWithManager[];
 };
+
+const PAGE_SIZE = 10;
 
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "medium",
@@ -79,6 +81,70 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
   const [visibilityError, setVisibilityError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+
+  const filteredCommunes = useMemo(() => {
+    if (!normalizedSearchTerm) {
+      return communes;
+    }
+
+    return communes.filter((commune) => {
+      const manager = commune.users[0] ?? null;
+      const managerFullName = manager
+        ? [manager.firstName, manager.lastName].filter(Boolean).join(" ").trim()
+        : "";
+
+      const searchableFields = [
+        commune.name,
+        commune.postalCode,
+        commune.osmId,
+        commune.slug ?? "",
+        manager?.email ?? "",
+        managerFullName,
+      ];
+
+      return searchableFields.some((field) =>
+        field.toString().toLowerCase().includes(normalizedSearchTerm),
+      );
+    });
+  }, [communes, normalizedSearchTerm]);
+
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredCommunes.length / PAGE_SIZE));
+  }, [filteredCommunes.length]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    } else if (currentPage < 1) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedCommunes = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredCommunes.slice(start, start + PAGE_SIZE);
+  }, [currentPage, filteredCommunes]);
+
+  const startIndex = filteredCommunes.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const endIndex =
+    filteredCommunes.length === 0
+      ? 0
+      : Math.min(filteredCommunes.length, currentPage * PAGE_SIZE);
+  const shouldShowPagination = filteredCommunes.length > PAGE_SIZE;
+
+  const handleSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+    setCurrentPage(1);
+  }, []);
+
+  const handleResetSearch = useCallback(() => {
+    setSearchTerm("");
+    setCurrentPage(1);
+  }, []);
 
   const openCreateModal = useCallback(() => setIsCreateModalOpen(true), []);
   const closeCreateModal = useCallback(() => setIsCreateModalOpen(false), []);
@@ -184,7 +250,7 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
 
   const renderedCommunes = useMemo(
     () =>
-      communes.map((commune) => {
+      paginatedCommunes.map((commune) => {
         const manager = commune.users[0] ?? null;
         const lastAudit = commune.auditLogs[0] ?? null;
 
@@ -278,7 +344,7 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
           </tr>
         );
       }),
-    [communes, openDeleteModal, openEditModal, openVisibilityModal],
+    [paginatedCommunes, openDeleteModal, openEditModal, openVisibilityModal],
   );
 
   return (
@@ -300,6 +366,46 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
 
         <section className="fr-flow">
           <h2 className="fr-h5">Communes enregistrées</h2>
+          <p className="fr-text--sm fr-text-mention--grey fr-mb-1w">
+            {filteredCommunes.length === 0 ? (
+              <>0 résultat affiché sur {communes.length}.</>
+            ) : (
+              <>
+                Résultats {startIndex}-{endIndex} sur {filteredCommunes.length} (total {communes.length}).
+              </>
+            )}
+          </p>
+
+          <div className="fr-grid-row fr-grid-row--middle fr-grid-row--gutters">
+            <div className="fr-col-12 fr-col-lg-6">
+              <div className="fr-input-group">
+                <label className="fr-label" htmlFor="admin-communes-search">
+                  Rechercher une commune
+                  <span className="fr-hint-text">Nom, code postal, OSM, manager ou email</span>
+                </label>
+                <input
+                  id="admin-communes-search"
+                  type="search"
+                  className="fr-input"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  placeholder="Paris, 75000, Dupont…"
+                />
+              </div>
+            </div>
+            {searchTerm ? (
+              <div className="fr-col-auto">
+                <button
+                  type="button"
+                  className="fr-btn fr-btn--sm fr-btn--tertiary-no-outline"
+                  onClick={handleResetSearch}
+                >
+                  Effacer la recherche
+                </button>
+              </div>
+            ) : null}
+          </div>
+
           {communes.length === 0 ? (
             <div className="fr-callout">
               <h3 className="fr-callout__title">Aucune commune</h3>
@@ -324,11 +430,70 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
                           </th>
                         </tr>
                       </thead>
-                      <tbody>{renderedCommunes}</tbody>
+                      <tbody>
+                        {filteredCommunes.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="fr-text--center fr-py-4w">
+                              <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
+                                Aucune commune ne correspond à votre recherche.
+                              </p>
+                            </td>
+                          </tr>
+                        ) : (
+                          renderedCommunes
+                        )}
+                      </tbody>
                     </table>
                   </div>
                 </div>
               </div>
+              {shouldShowPagination ? (
+                <div className="fr-table__footer fr-table__footer--middle">
+                  <nav className="fr-pagination" role="navigation" aria-label="Pagination des communes">
+                    <ul className="fr-pagination__list">
+                      <li>
+                        <button
+                          type="button"
+                          className="fr-pagination__link fr-pagination__link--prev fr-pagination__link--label"
+                          onClick={() => setCurrentPage((previous) => Math.max(1, previous - 1))}
+                          aria-label="Page précédente"
+                          disabled={currentPage === 1}
+                        >
+                          Page précédente
+                        </button>
+                      </li>
+                      {Array.from({ length: totalPages }).map((_, index) => {
+                        const pageNumber = index + 1;
+                        return (
+                          <li key={pageNumber}>
+                            <button
+                              type="button"
+                              className="fr-pagination__link"
+                              aria-current={pageNumber === currentPage ? "page" : undefined}
+                              onClick={() => setCurrentPage(pageNumber)}
+                            >
+                              {pageNumber}
+                            </button>
+                          </li>
+                        );
+                      })}
+                      <li>
+                        <button
+                          type="button"
+                          className="fr-pagination__link fr-pagination__link--next fr-pagination__link--label"
+                          onClick={() =>
+                            setCurrentPage((previous) => Math.min(totalPages, previous + 1))
+                          }
+                          aria-label="Page suivante"
+                          disabled={currentPage === totalPages}
+                        >
+                          Page suivante
+                        </button>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              ) : null}
             </div>
           )}
         </section>
