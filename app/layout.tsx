@@ -7,6 +7,7 @@ import { HeaderClient } from "@/components/HeaderClient";
 import { ConsentBannerClient } from "@/components/ConsentBannerClient";
 import { DsfrProviderClient } from "@/components/DsfrProviderClient";
 import { ThemeProviderClient } from "@/components/ThemeProviderClient";
+import { PosthogProviderClient } from "@/components/PosthogProviderClient";
 import { createMetadata, createJsonLd } from "@/lib/seo";
 import { getSessionCookieName, parseSessionCookie } from "@/lib/session";
 import "./globals.css";
@@ -47,74 +48,76 @@ export default async function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
-        <DsfrProviderClient>
-          <ThemeProviderClient>
-            <HeaderClient initialSessionUser={initialSessionUser} />
-            <ConsentBannerClient />
-            {children}
-            <Footer
-              accessibility="non compliant"
-              brandTop={
-                <>
-                  RÉPUBLIQUE
-                  <br />
-                  FRANÇAISE
-                </>
-              }
-              homeLinkProps={{
-                href: "/",
-                title: "Accueil - Contribcit",
-              }}
-              contentDescription={
-                <>
-                  Contribcit - La parole aux citoyens des territoires
-                  <br />
-                  La contribution citoyenne, simple et sécurisée
-                </>
-              }
-              bottomItems={[
-                {
-                  text: "Mentions légales",
-                  linkProps: {
-                    href: "/#mentions-legales",
+        <PosthogProviderClient>
+          <DsfrProviderClient>
+            <ThemeProviderClient>
+              <HeaderClient initialSessionUser={initialSessionUser} />
+              <ConsentBannerClient />
+              {children}
+              <Footer
+                accessibility="non compliant"
+                brandTop={
+                  <>
+                    RÉPUBLIQUE
+                    <br />
+                    FRANÇAISE
+                  </>
+                }
+                homeLinkProps={{
+                  href: "/",
+                  title: "Accueil - Contribcit",
+                }}
+                contentDescription={
+                  <>
+                    Contribcit - La parole aux citoyens des territoires
+                    <br />
+                    La contribution citoyenne, simple et sécurisée
+                  </>
+                }
+                bottomItems={[
+                  {
+                    text: "Mentions légales",
+                    linkProps: {
+                      href: "/#mentions-legales",
+                    },
                   },
-                },
-                {
-                  text: "Politique de confidentialité",
-                  linkProps: {
-                    href: "/confidentialite",
+                  {
+                    text: "Politique de confidentialité",
+                    linkProps: {
+                      href: "/confidentialite",
+                    },
                   },
-                },
-                {
-                  text: "Contact",
-                  linkProps: {
-                    href: "/#contact",
+                  {
+                    text: "Contact",
+                    linkProps: {
+                      href: "/#contact",
+                    },
                   },
-                },
-                {
-                  text: "Signaler un bug",
-                  linkProps: {
-                    href: "/bug",
+                  {
+                    text: "Signaler un bug",
+                    linkProps: {
+                      href: "/bug",
+                    },
                   },
-                },
-                {
-                  text: "Suivi des bugs",
-                  linkProps: {
-                    href: "/suivi-des-bugs",
+                  {
+                    text: "Suivi des bugs",
+                    linkProps: {
+                      href: "/suivi-des-bugs",
+                    },
                   },
-                },
-                {
-                  text: "Code source",
-                  linkProps: {
-                    href: "https://github.com/hydeaintsick/contribution-citoyenne",
-                    target: "_blank",
-                    rel: "noopener noreferrer",
+                  {
+                    text: "Code source",
+                    linkProps: {
+                      href: "https://github.com/hydeaintsick/contribution-citoyenne",
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    },
                   },
-                },
-              ]}
-            />
-          </ThemeProviderClient>
-        </DsfrProviderClient>
+                ]}
+              />
+            </ThemeProviderClient>
+          </DsfrProviderClient>
+        </PosthogProviderClient>
         <Analytics />
         <SpeedInsights />
       </body>

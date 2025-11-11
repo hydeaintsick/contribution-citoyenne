@@ -13,14 +13,20 @@ export function ConsentBannerClient() {
     }
   }, []);
 
+  const notifyChange = () => {
+    window.dispatchEvent(new Event("consent-analytics-change"));
+  };
+
   const acceptAll = () => {
     localStorage.setItem("consent-analytics", "true");
+    notifyChange();
     setIsVisible(false);
     // Ici vous pouvez charger Matomo ou autre service d'analyse
   };
 
   const rejectAll = () => {
     localStorage.setItem("consent-analytics", "false");
+    notifyChange();
     setIsVisible(false);
   };
 
