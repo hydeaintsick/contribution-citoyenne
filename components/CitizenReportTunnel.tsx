@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useId } from "react";
 import {
   AnimatePresence,
   motion,
@@ -277,6 +277,9 @@ export function CitizenReportTunnel({
   communeName,
   communeWebsite,
 }: CitizenReportTunnelProps) {
+  const locationInputId = useId();
+  const locationSuggestionsId = `${locationInputId}-suggestions`;
+
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [reportType, setReportType] = useState<ReportType | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -448,6 +451,10 @@ export function CitizenReportTunnel({
 
   const showAddressSuccess =
     Boolean(trimmedLocation) && isLocationValid && coordinates;
+
+  const isSuggestionsPanelVisible =
+    !isLocationLocked &&
+    (isFetchingAddress || addressSuggestions.length > 0 || Boolean(addressError));
 
   useEffect(() => {
     if (isLocationLocked || isFormLocked) {
@@ -1160,7 +1167,6 @@ export function CitizenReportTunnel({
                 <Input
                   label="Lieu concerné"
                   hintText="Adresse, nom de rue ou repère à proximité."
-                  addon="Optionnel"
                   disabled={isFormLocked}
                   state={
                     !isLocationValid
@@ -1169,6 +1175,14 @@ export function CitizenReportTunnel({
                       ? "success"
                       : "default"
                   }
+                  classes={{
+                    root: "contribcit-location-group",
+                    wrap: "contribcit-location-control",
+                    nativeInputOrTextArea: "contribcit-location-input",
+                    message: "contribcit-location-message",
+                  }}
+                  id={locationInputId}
+                  nativeLabelProps={{ htmlFor: locationInputId }}
                   stateRelatedMessage={
                     !isLocationValid
                       ? "Précisez davantage le lieu ou sélectionnez une adresse proposée."
@@ -1177,6 +1191,7 @@ export function CitizenReportTunnel({
                       : undefined
                   }
                   nativeInputProps={{
+                    id: locationInputId,
                     value: location,
                     onChange: (event) => {
                       const value = event.target.value;
@@ -1197,11 +1212,19 @@ export function CitizenReportTunnel({
                     placeholder:
                       "Ex. 12 rue de la République, entrée nord du parc…",
                     disabled: isFormLocked || isLocationLocked,
+                    autoComplete: "street-address",
+                    "aria-autocomplete": "list",
+                    "aria-controls": isSuggestionsPanelVisible
+                      ? locationSuggestionsId
+                      : undefined,
+                    "aria-expanded": isSuggestionsPanelVisible,
+                    "aria-haspopup": "listbox",
                   }}
                   action={
                     <Button
                       type="button"
                       priority="tertiary no outline"
+                      className="contribcit-location-locate-btn"
                       iconId={
                         geolocationStatus === "loading"
                           ? "fr-icon-refresh-line"
@@ -1221,46 +1244,59 @@ export function CitizenReportTunnel({
                   }
                 />
 
-                {!isLocationLocked &&
-                (isFetchingAddress ||
-                  addressSuggestions.length > 0 ||
-                  addressError) ? (
-                  <div className="fr-card fr-card--no-border fr-card--shadow fr-mt-1w">
-                    <div className="fr-card__body">
-                      {isFetchingAddress ? (
-                        <p className="fr-text--sm fr-mb-0">
-                          Recherche d’adresses…
-                        </p>
-                      ) : addressError ? (
-                        <p className="fr-text--sm fr-mb-0 fr-text-mention--grey">
-                          {addressError}
-                        </p>
-                      ) : addressSuggestions.length > 0 ? (
-                        <ul
-                          className="fr-text--sm fr-pl-0 fr-ml-0"
-                          style={{ listStyle: "none" }}
-                        >
-                          {addressSuggestions.map((suggestion) => (
-                            <li key={suggestion.id} className="fr-py-1w">
-                              <button
-                                type="button"
-                                className="fr-btn fr-btn--tertiary fr-btn--sm fr-width-full"
-                                onClick={() =>
-                                  handleSelectSuggestion(suggestion)
-                                }
+                {isSuggestionsPanelVisible ? (
+                  <div
+                    className="contribcit-location-suggestions"
+                    role="region"
+                    aria-live="polite"
+                  >
+                    {isFetchingAddress ? (
+                      <p className="fr-text--sm fr-mb-0 contribcit-location-spinner">
+                        Recherche d’adresses…
+                      </p>
+                    ) : addressError ? (
+                      <p className="fr-text--sm fr-mb-0 fr-text-mention--grey">
+                        {addressError}
+                      </p>
+                    ) : addressSuggestions.length > 0 ? (
+                      <ul
+                        id={locationSuggestionsId}
+                        className="contribcit-location-suggestions__list"
+                        role="listbox"
+                        aria-label="Adresses suggérées"
+                      >
+                        {addressSuggestions.map((suggestion) => (
+                          <li key={suggestion.id}>
+                            <button
+                              type="button"
+                              className="contribcit-location-suggestions__item"
+                              role="option"
+                              onClick={() => handleSelectSuggestion(suggestion)}
+                            >
+                              <span
+                                aria-hidden="true"
+                                className="contribcit-location-suggestions__icon"
                               >
+                                📍
+                              </span>
+                              <span className="contribcit-location-suggestions__label">
                                 {suggestion.label}
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="fr-text--sm fr-mb-0 fr-text-mention--grey">
-                          Aucune adresse correspondante. Affinez votre
-                          recherche.
-                        </p>
-                      )}
-                    </div>
+                              </span>
+                              <span
+                                aria-hidden="true"
+                                className="contribcit-location-suggestions__chevron"
+                              >
+                                →
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="fr-text--sm fr-mb-0 fr-text-mention--grey">
+                        Aucune adresse correspondante. Affinez votre recherche.
+                      </p>
+                    )}
                   </div>
                 ) : null}
               </div>
@@ -1269,6 +1305,7 @@ export function CitizenReportTunnel({
                 <Alert
                   severity="error"
                   small
+                  className="contribcit-location-alert"
                   title="Géolocalisation indisponible"
                   description={geolocationError}
                 />
@@ -1278,6 +1315,7 @@ export function CitizenReportTunnel({
                 <Alert
                   severity="success"
                   small
+                  className="contribcit-location-alert"
                   title="Localisation récupérée"
                   description={
                     isLocationLocked
