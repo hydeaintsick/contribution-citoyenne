@@ -1,9 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import {
-  getSessionCookieName,
-  parseSessionCookie,
-} from "@/lib/auth";
+import { getSessionCookieName, parseSessionCookie } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { TownContributionsTable } from "@/components/TownContributionsTable";
 
@@ -50,8 +47,8 @@ export default async function TownReturnsPage() {
   return (
     <div className="fr-flow">
       <header className="fr-flow">
-        <h1 className="fr-h3 fr-mb-0">Retours citoyens</h1>
-        <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
+        <h1 className="fr-h3 fr-mb-1">Retours citoyens</h1>
+        <p className="fr-text--sm fr-text-mention--grey fr-mb-1">
           Filtrez les signalements des citoyens pour suivre leur traitement.
         </p>
       </header>
@@ -70,4 +67,3 @@ export default async function TownReturnsPage() {
     </div>
   );
 }
-
