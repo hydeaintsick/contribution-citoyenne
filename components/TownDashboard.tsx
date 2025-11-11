@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MapContainer, TileLayer, CircleMarker, Tooltip as MapTooltip } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  CircleMarker,
+  Tooltip as MapTooltip,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import {
   CartesianGrid,
@@ -13,7 +18,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
+import type {
+  NameType,
+  ValueType,
+} from "recharts/types/component/DefaultTooltipContent";
 import type { TooltipProps } from "recharts";
 import type { TownDashboardData, TrendPoint } from "@/lib/contributionStats";
 
@@ -91,7 +99,12 @@ export function TownDashboard({ commune, data }: TownDashboardProps) {
       default:
         return data.timeline.weekly;
     }
-  }, [data.timeline.monthly, data.timeline.weekly, data.timeline.yearly, granularity]);
+  }, [
+    data.timeline.monthly,
+    data.timeline.weekly,
+    data.timeline.yearly,
+    granularity,
+  ]);
 
   const mapCenter = useMemo<[number, number]>(() => {
     const [[south, west], [north, east]] = data.map.bounds;
@@ -104,7 +117,7 @@ export function TownDashboard({ commune, data }: TownDashboardProps) {
     <div className="fr-flow">
       <header className="fr-flow">
         <h1 className="fr-h3">Tableau de bord municipal</h1>
-        <p className="fr-text--lead fr-mb-0">
+        <p className="fr-text--lead fr-mb-2">
           La ville de{" "}
           {commune.websiteUrl ? (
             <a
@@ -182,7 +195,8 @@ export function TownDashboard({ commune, data }: TownDashboardProps) {
                   Évolution des retours citoyens
                 </p>
                 <p className="fr-text--sm fr-text-mention--grey fr-mt-1v fr-mb-0">
-                  Comparez les alertes (rouge) et suggestions (bleu) selon la période.
+                  Comparez les alertes (rouge) et suggestions (bleu) selon la
+                  période.
                 </p>
               </div>
               <div className="fr-col-auto">
@@ -212,7 +226,8 @@ export function TownDashboard({ commune, data }: TownDashboardProps) {
                     Aucun retour citoyen pour le moment.
                   </p>
                   <p className="fr-text--sm fr-mb-0">
-                    Les premiers signalements apparaîtront ici dès leur enregistrement.
+                    Les premiers signalements apparaîtront ici dès leur
+                    enregistrement.
                   </p>
                 </div>
               ) : (
@@ -255,7 +270,9 @@ export function TownDashboard({ commune, data }: TownDashboardProps) {
         <div className="fr-card fr-card--no-arrow fr-card--shadow fr-card--horizontal">
           <div className="fr-card__body fr-px-4w fr-pb-4w fr-pt-0">
             <div className="fr-card__header fr-p-4w">
-              <p className="fr-card__title fr-mb-0">Couverture géographique des retours</p>
+              <p className="fr-card__title fr-mb-0">
+                Couverture géographique des retours
+              </p>
               <p className="fr-mt-1w fr-text--sm fr-text-mention--grey fr-mb-0">
                 Bleu&nbsp;: suggestion · Rouge&nbsp;: alerte
               </p>
@@ -280,7 +297,8 @@ export function TownDashboard({ commune, data }: TownDashboardProps) {
                       radius={8}
                       pathOptions={{
                         color: point.type === "ALERT" ? "#dc4d43" : "#0053b3",
-                        fillColor: point.type === "ALERT" ? "#dc4d43" : "#0053b3",
+                        fillColor:
+                          point.type === "ALERT" ? "#dc4d43" : "#0053b3",
                         fillOpacity: 0.7,
                         weight: 2,
                       }}
@@ -298,7 +316,9 @@ export function TownDashboard({ commune, data }: TownDashboardProps) {
                             }).format(new Date(point.createdAt))}
                           </p>
                           {point.locationLabel ? (
-                            <p className="fr-text--xs fr-mb-0">{point.locationLabel}</p>
+                            <p className="fr-text--xs fr-mb-0">
+                              {point.locationLabel}
+                            </p>
                           ) : null}
                         </div>
                       </MapTooltip>
@@ -315,8 +335,8 @@ export function TownDashboard({ commune, data }: TownDashboardProps) {
                   Aucune localisation précise disponible
                 </p>
                 <p className="fr-text--sm fr-mb-0">
-                  Encouragez les citoyens à partager leur position ou un lieu pour enrichir la
-                  cartographie.
+                  Encouragez les citoyens à partager leur position ou un lieu
+                  pour enrichir la cartographie.
                 </p>
               </div>
             ) : null}
@@ -326,4 +346,3 @@ export function TownDashboard({ commune, data }: TownDashboardProps) {
     </div>
   );
 }
-
