@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { cookies } from "next/headers";
 import { Footer } from "@codegouvfr/react-dsfr/Footer";
 import { HeaderClient } from "@/components/HeaderClient";
@@ -115,6 +116,7 @@ export default async function RootLayout({
           </ThemeProviderClient>
         </DsfrProviderClient>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
