@@ -137,9 +137,23 @@
   gap: var(--spacing-4v);
 }
 
+.detailHeaderRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-3v);
+}
+
 .reference {
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+.detailActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--spacing-2v);
 }
 
 .badgeGroup {
@@ -194,6 +208,17 @@
   height: auto;
 }
 
+.detailForm {
+  gap: var(--spacing-4v);
+}
+
+.detailFormButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-3v);
+  flex-wrap: wrap;
+}
+
 .emptyScreenshot {
   padding: var(--spacing-3v);
   border: 1px dashed var(--border-default-grey);
@@ -217,6 +242,54 @@
   flex-wrap: wrap;
 }
 
+.commentSection {
+  display: grid;
+  gap: var(--spacing-4v);
+}
+
+.commentList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--spacing-3v);
+}
+
+.commentItem {
+  padding: var(--spacing-3v);
+  border: 1px solid var(--border-default-grey);
+  border-radius: var(--radius-sm);
+  background-color: var(--background-default-grey);
+  display: grid;
+  gap: var(--spacing-2v);
+}
+
+.commentItemHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-2v);
+  flex-wrap: wrap;
+}
+
+.commentAuthor {
+  font-weight: 600;
+}
+
+.commentMessage {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.commentForm {
+  gap: var(--spacing-3v);
+}
+
+.commentFormButtons {
+  display: flex;
+  justify-content: flex-end;
+}
+
 @media (max-width: 62rem) {
   .tableContainer {
     width: 100%;
@@ -233,8 +306,17 @@
     gap: var(--spacing-3v);
   }
 
+  .detailHeaderRight {
+    width: 100%;
+    align-items: stretch;
+  }
+
   .badgeGroup {
     width: 100%;
+    justify-content: flex-start;
+  }
+
+  .detailActions {
     justify-content: flex-start;
   }
 }

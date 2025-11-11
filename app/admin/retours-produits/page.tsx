@@ -33,6 +33,23 @@ export default async function AdminBugReportsPage() {
     orderBy: {
       createdAt: "desc",
     },
+    include: {
+      comments: {
+        include: {
+          author: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+    },
   });
 
   const initialReports = bugReports.map((report) => ({
@@ -50,6 +67,19 @@ export default async function AdminBugReportsPage() {
     screenshotHeight: report.screenshotHeight,
     screenshotBytes: report.screenshotBytes,
     githubCommitUrl: report.githubCommitUrl,
+    comments: report.comments.map((comment) => ({
+      id: comment.id,
+      message: comment.message,
+      createdAt: comment.createdAt.toISOString(),
+      author: comment.author
+        ? {
+            id: comment.author.id,
+            firstName: comment.author.firstName,
+            lastName: comment.author.lastName,
+            email: comment.author.email,
+          }
+        : null,
+    })),
   }));
 
   return (

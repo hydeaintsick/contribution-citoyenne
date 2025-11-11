@@ -53,24 +53,25 @@ enum CityAuditAction {
 }
 
 model User {
-  id              String          @id @default(auto()) @map("_id") @db.ObjectId
-  email           String          @unique
-  password        String
-  firstName       String?
-  lastName        String?
-  phone           String?
-  role            Role            @default(ADMIN)
-  commune         Commune?        @relation(fields: [communeId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  communeId       String?         @db.ObjectId
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  lastLoginAt     DateTime?
-  loginLogs       UserLoginLog[]
-  cityAuditLogs   CityAuditLog[]
-  createdCommunes Commune[]       @relation("CommuneCreatedBy")
-  updatedCommunes Commune[]       @relation("CommuneUpdatedBy")
-  closedReports   Contribution[]  @relation("ContributionClosedBy")
-  contactTickets  ContactTicket[]
+  id                String             @id @default(auto()) @map("_id") @db.ObjectId
+  email             String             @unique
+  password          String
+  firstName         String?
+  lastName          String?
+  phone             String?
+  role              Role               @default(ADMIN)
+  commune           Commune?           @relation(fields: [communeId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  communeId         String?            @db.ObjectId
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  lastLoginAt       DateTime?
+  loginLogs         UserLoginLog[]
+  cityAuditLogs     CityAuditLog[]
+  createdCommunes   Commune[]          @relation("CommuneCreatedBy")
+  updatedCommunes   Commune[]          @relation("CommuneUpdatedBy")
+  closedReports     Contribution[]     @relation("ContributionClosedBy")
+  contactTickets    ContactTicket[]
+  bugReportComments BugReportComment[]
 }
 
 model Commune {
@@ -142,9 +143,9 @@ model Contribution {
 }
 
 model BugReport {
-  id                 String          @id @default(auto()) @map("_id") @db.ObjectId
+  id                 String             @id @default(auto()) @map("_id") @db.ObjectId
   type               BugReportType
-  status             BugReportStatus @default(TO_BE_QUALIFIED)
+  status             BugReportStatus    @default(TO_BE_QUALIFIED)
   title              String
   description        String
   captchaToken       String?
@@ -153,10 +154,11 @@ model BugReport {
   screenshotWidth    Int?
   screenshotHeight   Int?
   screenshotBytes    Int?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
   resolvedAt         DateTime?
   githubCommitUrl    String?
+  comments           BugReportComment[]
 }
 
 model ContactTicket {
@@ -181,4 +183,17 @@ model ContactTicket {
   @@index([contactType])
   @@index([createdAt])
   @@index([fingerprint, createdAt])
+}
+
+model BugReportComment {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  bugReportId String    @db.ObjectId
+  bugReport   BugReport @relation(fields: [bugReportId], references: [id], onDelete: Cascade)
+  authorId    String?   @db.ObjectId
+  author      User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  message     String
+  createdAt   DateTime  @default(now())
+
+  @@index([bugReportId])
+  @@index([createdAt])
 }

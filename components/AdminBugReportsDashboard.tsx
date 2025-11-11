@@ -14,6 +14,20 @@ import {
 type BugReportStatusValue = (typeof BUG_REPORT_STATUS_ORDER)[number];
 type BugReportTypeValue = keyof typeof BUG_REPORT_TYPE_LABELS;
 
+type BugReportCommentAuthor = {
+  id: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+};
+
+type BugReportCommentRow = {
+  id: string;
+  message: string;
+  createdAt: string;
+  author: BugReportCommentAuthor | null;
+};
+
 type BugReportRow = {
   id: string;
   type: BugReportTypeValue;
@@ -29,7 +43,10 @@ type BugReportRow = {
   screenshotWidth: number | null;
   screenshotHeight: number | null;
   screenshotBytes: number | null;
+  comments: BugReportCommentRow[];
 };
+
+type BugReportUpdatePayload = Omit<BugReportRow, "comments">;
 
 type AdminBugReportsDashboardProps = {
   initialReports: BugReportRow[];
@@ -194,6 +211,14 @@ export function AdminBugReportsDashboard({
   } | null>(null);
   const [commitUrlInput, setCommitUrlInput] = useState("");
   const [commitModalError, setCommitModalError] = useState<string | null>(null);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editType, setEditType] = useState<BugReportTypeValue>("BUG");
+  const [detailFormError, setDetailFormError] = useState<string | null>(null);
+  const [pendingCommentIds, setPendingCommentIds] = useState<Record<string, boolean>>({});
+  const [commentDraft, setCommentDraft] = useState("");
+  const [commentError, setCommentError] = useState<string | null>(null);
 
   const dateFormatter = useMemo(
     () =>
@@ -287,6 +312,27 @@ export function AdminBugReportsDashboard({
     }
   }, [currentPage, totalPages]);
 
+  useEffect(() => {
+    if (!focusedReport) {
+      setIsEditingDetails(false);
+      setEditTitle("");
+      setEditDescription("");
+      setEditType("BUG");
+      setDetailFormError(null);
+      setCommentDraft("");
+      setCommentError(null);
+      return;
+    }
+
+    setIsEditingDetails(false);
+    setEditTitle(focusedReport.title);
+    setEditDescription(focusedReport.description);
+    setEditType(focusedReport.type);
+    setDetailFormError(null);
+    setCommentDraft("");
+    setCommentError(null);
+  }, [focusedReport]);
+
   const paginatedReports = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredReports.slice(start, start + PAGE_SIZE);
@@ -351,7 +397,7 @@ export function AdminBugReportsDashboard({
       }
 
       const payload = await response.json().catch(() => null);
-      const updated = payload?.bugReport as BugReportRow | undefined;
+      const updated = payload?.bugReport as BugReportUpdatePayload | undefined;
 
       if (!updated) {
         throw new Error("Réponse inattendue du serveur.");
@@ -362,6 +408,9 @@ export function AdminBugReportsDashboard({
           report.id === reportId
             ? {
                 ...report,
+                title: updated.title,
+                description: updated.description,
+                type: updated.type,
                 status: updated.status,
                 updatedAt: updated.updatedAt,
                 resolvedAt: updated.resolvedAt,
@@ -375,6 +424,9 @@ export function AdminBugReportsDashboard({
         previous && previous.id === reportId
           ? {
               ...previous,
+              title: updated.title,
+              description: updated.description,
+              type: updated.type,
               status: updated.status,
               updatedAt: updated.updatedAt,
               resolvedAt: updated.resolvedAt,
@@ -460,11 +512,249 @@ export function AdminBugReportsDashboard({
     }
   };
 
+  const handleStartEditDetails = () => {
+    if (!focusedReport) {
+      return;
+    }
+    setIsEditingDetails(true);
+    setDetailFormError(null);
+    setEditTitle(focusedReport.title);
+    setEditDescription(focusedReport.description);
+    setEditType(focusedReport.type);
+  };
+
+  const handleCancelEditDetails = () => {
+    if (!focusedReport) {
+      return;
+    }
+    setIsEditingDetails(false);
+    setDetailFormError(null);
+    setEditTitle(focusedReport.title);
+    setEditDescription(focusedReport.description);
+    setEditType(focusedReport.type);
+  };
+
+  const handleDetailsSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!focusedReport) {
+      return;
+    }
+
+    const trimmedTitle = editTitle.trim();
+    const trimmedDescription = editDescription.trim();
+
+    if (trimmedTitle.length === 0) {
+      setDetailFormError("Le titre ne peut pas être vide.");
+      return;
+    }
+
+    if (trimmedDescription.length === 0) {
+      setDetailFormError("La description ne peut pas être vide.");
+      return;
+    }
+
+    setDetailFormError(null);
+    setPendingUpdates((previous) => ({
+      ...previous,
+      [focusedReport.id]: true,
+    }));
+    setFeedback({ status: "idle" });
+
+    try {
+      const response = await fetch(`/api/admin/bug-reports/${focusedReport.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          title: trimmedTitle,
+          description: trimmedDescription,
+          type: editType,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        const message =
+          payload?.error ?? "Impossible de mettre à jour le signalement.";
+        throw new Error(message);
+      }
+
+      const payload = await response.json().catch(() => null);
+      const updated = payload?.bugReport as
+        | BugReportUpdatePayload
+        | undefined;
+
+      if (!updated) {
+        throw new Error("Réponse inattendue du serveur.");
+      }
+
+      setBugReports((previous) =>
+        previous.map((report) =>
+          report.id === focusedReport.id
+            ? {
+                ...report,
+                title: updated.title,
+                description: updated.description,
+                type: updated.type,
+                updatedAt: updated.updatedAt,
+              }
+            : report,
+        ),
+      );
+
+      setFocusedReport((previous) =>
+        previous && previous.id === focusedReport.id
+          ? {
+              ...previous,
+              title: updated.title,
+              description: updated.description,
+              type: updated.type,
+              updatedAt: updated.updatedAt,
+            }
+          : previous,
+      );
+
+      setDetailFormError(null);
+      setIsEditingDetails(false);
+      setFeedback({
+        status: "success",
+        message: "Le signalement a été mis à jour.",
+      });
+    } catch (error) {
+      console.error("Bug report detail update failed", error);
+      setFeedback({
+        status: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Mise à jour du signalement impossible.",
+      });
+    } finally {
+      setPendingUpdates((previous) => {
+        const { [focusedReport.id]: _omit, ...rest } = previous;
+        return rest;
+      });
+    }
+  };
+
+  const handleCommentSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!focusedReport) {
+      return;
+    }
+
+    const trimmed = commentDraft.trim();
+
+    if (trimmed.length === 0) {
+      setCommentError("Le commentaire ne peut pas être vide.");
+      return;
+    }
+
+    setCommentError(null);
+    setPendingCommentIds((previous) => ({
+      ...previous,
+      [focusedReport.id]: true,
+    }));
+
+    try {
+      const response = await fetch(
+        `/api/admin/bug-reports/${focusedReport.id}/comments`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ message: trimmed }),
+        },
+      );
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        const message =
+          payload?.error ?? "Impossible d'ajouter le commentaire.";
+        throw new Error(message);
+      }
+
+      const payload = await response.json().catch(() => null);
+      const created = payload?.comment as BugReportCommentRow | undefined;
+
+      if (!created) {
+        throw new Error("Réponse inattendue du serveur.");
+      }
+
+      setBugReports((previous) =>
+        previous.map((report) =>
+          report.id === focusedReport.id
+            ? {
+                ...report,
+                comments: [...report.comments, created],
+              }
+            : report,
+        ),
+      );
+
+      setFocusedReport((previous) =>
+        previous && previous.id === focusedReport.id
+          ? {
+              ...previous,
+              comments: [...previous.comments, created],
+            }
+          : previous,
+      );
+
+      setCommentDraft("");
+      setFeedback({
+        status: "success",
+        message: "Commentaire ajouté.",
+      });
+    } catch (error) {
+      console.error("Bug report comment creation failed", error);
+      setCommentError(
+        error instanceof Error
+          ? error.message
+          : "Impossible d'ajouter le commentaire.",
+      );
+    } finally {
+      setPendingCommentIds((previous) => {
+        const { [focusedReport.id]: _omit, ...rest } = previous;
+        return rest;
+      });
+    }
+  };
   const showReset =
     statusFilters.size > 0 ||
     typeFilters.size > 0 ||
     filteredReports.length === 0;
   const isModalOpen = focusedReport !== null;
+  const detailsSubmitting = focusedReport
+    ? Boolean(pendingUpdates[focusedReport.id])
+    : false;
+  const isCommentSubmitting = focusedReport
+    ? Boolean(pendingCommentIds[focusedReport.id])
+    : false;
+
+  const getCommentAuthorLabel = (comment: BugReportCommentRow) => {
+    if (!comment.author) {
+      return "Auteur supprimé";
+    }
+
+    const { firstName, lastName, email } = comment.author;
+    const parts = [firstName, lastName].filter(
+      (value): value is string => Boolean(value && value.trim().length > 0),
+    );
+    if (parts.length > 0) {
+      return parts.join(" ");
+    }
+    if (email && email.trim().length > 0) {
+      return email;
+    }
+    return "Auteur inconnu";
+  };
 
   return (
     <section>
@@ -528,14 +818,14 @@ export function AdminBugReportsDashboard({
 
       {feedback.status === "success" ? (
         <div className="fr-alert fr-alert--success fr-mt-3w" role="status">
-          <p className="fr-alert__title">Statut mis à jour</p>
+          <p className="fr-alert__title">Action réussie</p>
           <p className="fr-alert__desc">{feedback.message}</p>
         </div>
       ) : null}
 
       {feedback.status === "error" ? (
         <div className="fr-alert fr-alert--error fr-mt-3w" role="alert">
-          <p className="fr-alert__title">Mise à jour impossible</p>
+          <p className="fr-alert__title">Erreur</p>
           <p className="fr-alert__desc">{feedback.message}</p>
         </div>
       ) : null}
@@ -712,32 +1002,128 @@ export function AdminBugReportsDashboard({
                         className="fr-h4 fr-mb-0"
                         id="bug-report-detail-modal-title"
                       >
-                        {focusedReport.title}
+                        {isEditingDetails ? editTitle : focusedReport.title}
                       </h1>
                     </div>
-                    <div
-                      className={`fr-badges-group fr-badges-group--sm ${styles.badgeGroup}`}
-                    >
-                      <span
-                        className={`fr-badge ${
-                          BUG_REPORT_TYPE_BADGES[focusedReport.type]
-                        }`}
+                    <div className={styles.detailHeaderRight}>
+                      <div
+                        className={`fr-badges-group fr-badges-group--sm ${styles.badgeGroup}`}
                       >
-                        {BUG_REPORT_TYPE_LABELS[focusedReport.type]}
-                      </span>
-                      <span
-                        className={`fr-badge ${
-                          BUG_REPORT_STATUS_BADGES[focusedReport.status]
-                        }`}
-                      >
-                        {BUG_REPORT_STATUS_LABELS[focusedReport.status]}
-                      </span>
+                        <span
+                          className={`fr-badge ${
+                            BUG_REPORT_TYPE_BADGES[focusedReport.type]
+                          }`}
+                        >
+                          {BUG_REPORT_TYPE_LABELS[focusedReport.type]}
+                        </span>
+                        <span
+                          className={`fr-badge ${
+                            BUG_REPORT_STATUS_BADGES[focusedReport.status]
+                          }`}
+                        >
+                          {BUG_REPORT_STATUS_LABELS[focusedReport.status]}
+                        </span>
+                      </div>
+                      <div className={styles.detailActions}>
+                        {!isEditingDetails ? (
+                          <button
+                            type="button"
+                            className="fr-btn fr-btn--secondary fr-btn--sm"
+                            onClick={handleStartEditDetails}
+                            disabled={detailsSubmitting}
+                          >
+                            Modifier
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
                   </header>
 
-                  <p className={`fr-text--md ${styles.detailDescription}`}>
-                    {focusedReport.description}
-                  </p>
+                  {isEditingDetails ? (
+                    <form
+                      className={`fr-flow ${styles.detailForm}`}
+                      onSubmit={handleDetailsSubmit}
+                    >
+                      <div className="fr-input-group">
+                        <label className="fr-label" htmlFor="bug-report-title-input">
+                          Titre
+                        </label>
+                        <input
+                          className="fr-input"
+                          id="bug-report-title-input"
+                          value={editTitle}
+                          onChange={(event) => setEditTitle(event.target.value)}
+                          maxLength={200}
+                          disabled={detailsSubmitting}
+                        />
+                      </div>
+                      <div className="fr-select-group">
+                        <label className="fr-label" htmlFor="bug-report-type-select">
+                          Type
+                        </label>
+                        <select
+                          className="fr-select"
+                          id="bug-report-type-select"
+                          value={editType}
+                          onChange={(event) =>
+                            setEditType(event.target.value as BugReportTypeValue)
+                          }
+                          disabled={detailsSubmitting}
+                        >
+                          {typeOptions.map((option) => (
+                            <option key={option} value={option}>
+                              {BUG_REPORT_TYPE_LABELS[option]}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="fr-input-group">
+                        <label
+                          className="fr-label"
+                          htmlFor="bug-report-description-input"
+                        >
+                          Description
+                        </label>
+                        <textarea
+                          className="fr-input"
+                          id="bug-report-description-input"
+                          value={editDescription}
+                          onChange={(event) =>
+                            setEditDescription(event.target.value)
+                          }
+                          rows={8}
+                          maxLength={5000}
+                          disabled={detailsSubmitting}
+                        />
+                      </div>
+                      {detailFormError ? (
+                        <p className="fr-error-text" role="alert">
+                          {detailFormError}
+                        </p>
+                      ) : null}
+                      <div className={styles.detailFormButtons}>
+                        <button
+                          type="button"
+                          className="fr-btn fr-btn--secondary"
+                          onClick={handleCancelEditDetails}
+                          disabled={detailsSubmitting}
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          type="submit"
+                          className="fr-btn"
+                          disabled={detailsSubmitting}
+                        >
+                          Enregistrer
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <p className={`fr-text--md ${styles.detailDescription}`}>
+                      {focusedReport.description}
+                    </p>
+                  )}
 
                   <div className={styles.metaGrid}>
                     <div className={styles.metaItem}>
@@ -826,6 +1212,69 @@ export function AdminBugReportsDashboard({
                       </p>
                     </div>
                   )}
+
+                  <section className={styles.commentSection}>
+                    <h2 className="fr-h6 fr-mb-0">Commentaires internes</h2>
+                    {focusedReport.comments.length === 0 ? (
+                      <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
+                        Aucun commentaire pour le moment.
+                      </p>
+                    ) : (
+                      <ul className={styles.commentList}>
+                        {focusedReport.comments.map((comment) => (
+                          <li key={comment.id} className={styles.commentItem}>
+                            <div className={styles.commentItemHeader}>
+                              <span className={styles.commentAuthor}>
+                                {getCommentAuthorLabel(comment)}
+                              </span>
+                              <span className="fr-text--xs fr-text-mention--grey">
+                                {dateFormatter.format(new Date(comment.createdAt))}
+                              </span>
+                            </div>
+                            <p className={`fr-text--sm ${styles.commentMessage}`}>
+                              {comment.message}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <form
+                      className={`fr-flow ${styles.commentForm}`}
+                      onSubmit={handleCommentSubmit}
+                    >
+                      <div className="fr-input-group">
+                        <label className="fr-label" htmlFor="bug-report-comment-input">
+                          Nouveau commentaire
+                        </label>
+                        <textarea
+                          className="fr-input"
+                          id="bug-report-comment-input"
+                          value={commentDraft}
+                          onChange={(event) => setCommentDraft(event.target.value)}
+                          rows={4}
+                          maxLength={2000}
+                          disabled={isCommentSubmitting}
+                        />
+                      </div>
+                      {commentError ? (
+                        <p className="fr-error-text" role="alert">
+                          {commentError}
+                        </p>
+                      ) : null}
+                      <div className={styles.commentFormButtons}>
+                        <button
+                          type="submit"
+                          className="fr-btn fr-btn--sm"
+                          disabled={
+                            isCommentSubmitting || commentDraft.trim().length === 0
+                          }
+                        >
+                          Publier
+                        </button>
+                      </div>
+                    </form>
+                  </section>
                 </article>
               ) : null}
             </div>
