@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Header, type HeaderProps } from "@codegouvfr/react-dsfr/Header";
+import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { useTheme } from "@/components/ThemeProviderClient";
 
 type QuickAccessItems = NonNullable<HeaderProps["quickAccessItems"]>;
@@ -520,7 +521,26 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           title: "Accueil - Contribcit",
         }}
         serviceTitle="Contribcit"
-        serviceTagline="La parole aux citoyens des territoires"
+        serviceTagline={
+          <>
+            La parole aux citoyens des territoires
+            <br />
+            <Badge
+              as="span"
+              severity="info"
+              small
+              noIcon
+              style={{
+                display: "inline-block",
+                marginTop: "0.25rem",
+                backgroundColor: "var(--background-action-low-blue-france)",
+                color: "var(--text-title-blue-france)",
+              }}
+            >
+              Version bêta
+            </Badge>
+          </>
+        }
         navigation={navigation}
         quickAccessItems={quickAccessItems}
       />

@@ -40,6 +40,7 @@ enum BugReportStatus {
 enum ContactTicketType {
   COMMUNE
   ORGANISME_FINANCIER
+  MINISTERE_PUBLIC
 }
 
 enum ContactTicketStatus {

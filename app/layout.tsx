@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -72,6 +73,19 @@ export default async function RootLayout({
                     Contribcit - La parole aux citoyens des territoires
                     <br />
                     La contribution citoyenne, simple et sécurisée
+                    <br />
+                    <span className="fr-text--sm">
+                      Projet d'initiative citoyenne d'utilité publique, sans
+                      soutien officiel de l'État.
+                    </span>
+                    <br />
+                    <span className="fr-text--sm">
+                      Pour toute réclamation, vous pouvez remplir le{" "}
+                      <Link href="/#contact" className="fr-link">
+                        formulaire de contact
+                      </Link>
+                      .
+                    </span>
                   </>
                 }
                 bottomItems={[

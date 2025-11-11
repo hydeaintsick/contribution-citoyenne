@@ -370,6 +370,29 @@ export function ContactCta() {
                         Un organisme financier qui souhaite financer le projet
                       </label>
                     </div>
+                    <div className="fr-radio-group">
+                      <input
+                        type="radio"
+                        id="contact-type-ministere"
+                        name="contactType"
+                        value="ministere_public"
+                        disabled={isFormLocked}
+                        checked={formData.contactType === "ministere_public"}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            contactType: e.target.value as ContactType,
+                            commune: "",
+                          })
+                        }
+                      />
+                      <label
+                        className="fr-label"
+                        htmlFor="contact-type-ministere"
+                      >
+                        Un ministère public
+                      </label>
+                    </div>
                   </div>
                   {errors.contactType && (
                     <p
@@ -441,9 +464,23 @@ export function ContactCta() {
                     state={errors.commune ? "error" : "default"}
                     stateRelatedMessage={errors.commune}
                   />
-                ) : (
+                ) : formData.contactType === "organisme_financier" ? (
                   <Input
                     label="Nom de l'organisme"
+                    nativeInputProps={{
+                      type: "text",
+                      value: formData.organisme || "",
+                      onChange: (e) =>
+                        setFormData({ ...formData, organisme: e.target.value }),
+                      required: true,
+                      disabled: isFormLocked,
+                    }}
+                    state={errors.organisme ? "error" : "default"}
+                    stateRelatedMessage={errors.organisme}
+                  />
+                ) : (
+                  <Input
+                    label="Nom du ministère public"
                     nativeInputProps={{
                       type: "text",
                       value: formData.organisme || "",

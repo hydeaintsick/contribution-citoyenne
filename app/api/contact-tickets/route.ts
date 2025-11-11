@@ -9,10 +9,17 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
-function mapContactType(value: ContactSubmissionData["contactType"]): ContactTicketType {
-  return value === "organisme_financier"
-    ? ContactTicketType.ORGANISME_FINANCIER
-    : ContactTicketType.COMMUNE;
+function mapContactType(
+  value: ContactSubmissionData["contactType"],
+): ContactTicketType {
+  switch (value) {
+    case "organisme_financier":
+      return ContactTicketType.ORGANISME_FINANCIER;
+    case "ministere_public":
+      return ContactTicketType.MINISTERE_PUBLIC;
+    default:
+      return ContactTicketType.COMMUNE;
+  }
 }
 
 export async function POST(request: NextRequest) {

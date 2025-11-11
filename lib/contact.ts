@@ -1,15 +1,22 @@
 import { z } from "zod";
 
-export type ContactType = "commune" | "organisme_financier";
+const contactTypeValues = ["commune", "organisme_financier", "ministere_public"] as const;
+
+export type ContactType = (typeof contactTypeValues)[number];
 
 export const contactSchema = z
   .object({
-    contactType: z.enum(["commune", "organisme_financier"]).refine(
-      (val) => val === "commune" || val === "organisme_financier",
-      {
-        message: "Veuillez sélectionner un type de contact",
-      }
-    ),
+    contactType: z
+      .enum(contactTypeValues)
+      .refine(
+        (val) =>
+          val === "commune" ||
+          val === "organisme_financier" ||
+          val === "ministere_public",
+        {
+          message: "Veuillez sélectionner un type de contact",
+        }
+      ),
     name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
     email: z.string().email("Email invalide"),
     function: z.string().min(2, "La fonction doit contenir au moins 2 caractères"),
@@ -34,13 +41,17 @@ export const contactSchema = z
   )
   .refine(
     (data) => {
-      if (data.contactType === "organisme_financier") {
+      if (
+        data.contactType === "organisme_financier" ||
+        data.contactType === "ministere_public"
+      ) {
         return data.organisme && data.organisme.length >= 2;
       }
       return true;
     },
     {
-      message: "Le nom de l'organisme doit contenir au moins 2 caractères",
+      message:
+        "Le nom de l'organisme ou du ministère doit contenir au moins 2 caractères",
       path: ["organisme"],
     }
   );
@@ -71,10 +82,15 @@ export const CONTACT_TICKET_STATUS_BADGES: Record<ContactTicketStatusValue, "war
   RESOLVED: "success",
 };
 
-export const CONTACT_TICKET_TYPE_ORDER = ["COMMUNE", "ORGANISME_FINANCIER"] as const;
+export const CONTACT_TICKET_TYPE_ORDER = [
+  "COMMUNE",
+  "ORGANISME_FINANCIER",
+  "MINISTERE_PUBLIC",
+] as const;
 export type ContactTicketTypeValue = (typeof CONTACT_TICKET_TYPE_ORDER)[number];
 
 export const CONTACT_TICKET_TYPE_LABELS: Record<ContactTicketTypeValue, string> = {
   COMMUNE: "Commune",
   ORGANISME_FINANCIER: "Organisme financier",
+  MINISTERE_PUBLIC: "Ministère public",
 };
