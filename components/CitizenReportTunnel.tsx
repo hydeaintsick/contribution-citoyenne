@@ -12,7 +12,6 @@ import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Alert } from "@codegouvfr/react-dsfr/Alert";
 import { Select } from "@codegouvfr/react-dsfr/Select";
 import { Input } from "@codegouvfr/react-dsfr/Input";
-import { Upload } from "@codegouvfr/react-dsfr/Upload";
 import { Tag } from "@codegouvfr/react-dsfr/Tag";
 
 type ReportType = "alert" | "suggestion";
@@ -321,6 +320,7 @@ export function CitizenReportTunnel({
   );
   const addressDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const addressAbortControllerRef = useRef<AbortController | null>(null);
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
 
   const resetAutoAdvance = useCallback(() => {
     if (autoAdvanceTimeoutRef.current) {
@@ -573,6 +573,14 @@ export function CitizenReportTunnel({
     },
     []
   );
+
+  const handlePhotoButtonClick = useCallback(() => {
+    if (isFormLocked || photoUploadState === "uploading") {
+      return;
+    }
+
+    photoInputRef.current?.click();
+  }, [isFormLocked, photoUploadState]);
 
   const handlePhotoChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -886,7 +894,7 @@ export function CitizenReportTunnel({
                     href={trimmedCommuneWebsite}
                     target="_blank"
                     rel="noreferrer"
-                    className="fr-link fr-link--md"
+                    className="fr-link contribcit-callout-city"
                   >
                     {communeName}
                   </a>
@@ -901,29 +909,25 @@ export function CitizenReportTunnel({
               </p>
             </div>
 
-            <div className="fr-grid-row fr-grid-row--gutters fr-grid-row--center fr-mt-4w">
-              <div className="fr-col-12 fr-col-sm-8 fr-col-md-5 fr-col-lg-4">
-                <Button
-                  priority="primary"
-                  size="large"
-                  className="fr-width-full contribcit-alert-button"
-                  onClick={() => handleSelectType("alert")}
-                  iconId="fr-icon-flashlight-line"
-                >
-                  Alerter
-                </Button>
-              </div>
-              <div className="fr-col-12 fr-col-sm-8 fr-col-md-5 fr-col-lg-4">
-                <Button
-                  priority="secondary"
-                  size="large"
-                  className="fr-width-full"
-                  onClick={() => handleSelectType("suggestion")}
-                  iconId="fr-icon-sparkling-2-line"
-                >
-                  Suggérer
-                </Button>
-              </div>
+            <div className="contribcit-type-actions fr-mt-4w">
+              <Button
+                priority="primary"
+                size="large"
+                className="fr-width-full contribcit-alert-button"
+                onClick={() => handleSelectType("alert")}
+                iconId="fr-icon-flashlight-line"
+              >
+                Alerter
+              </Button>
+              <Button
+                priority="secondary"
+                size="large"
+                className="fr-width-full contribcit-type-actions__secondary"
+                onClick={() => handleSelectType("suggestion")}
+                iconId="fr-icon-sparkling-2-line"
+              >
+                Suggérer
+              </Button>
             </div>
 
             <AnimatePresence>
@@ -1066,6 +1070,7 @@ export function CitizenReportTunnel({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 6 }}
                   transition={STEP_TRANSITION}
+                  className="fr-mt-3w"
                 >
                   <Alert
                     severity="success"
@@ -1089,25 +1094,22 @@ export function CitizenReportTunnel({
             className="fr-flow fr-pb-4w"
             aria-labelledby="citizen-report-step-3"
           >
-            <div className="fr-grid-row fr-grid-row--gutters fr-grid-row--middle fr-mb-3w">
-              <div className="fr-col-auto">
-                <Button
-                  priority="tertiary"
-                  iconId="fr-icon-arrow-left-line"
-                  onClick={handleBackToCategory}
-                  disabled={submissionState === "loading"}
-                >
-                  Modifier la catégorisation
-                </Button>
-              </div>
-              <div className="fr-col">
-                <h2
-                  id="citizen-report-step-3"
-                  className="fr-h4 fr-mt-0 fr-mb-0"
-                >
-                  Vous y êtes presque
-                </h2>
-              </div>
+            <div className="fr-flow fr-mb-3w contribcit-step-3-header">
+              <Button
+                priority="tertiary"
+                iconId="fr-icon-arrow-left-line"
+                onClick={handleBackToCategory}
+                disabled={submissionState === "loading"}
+                className="contribcit-step-3-back"
+              >
+                Modifier la catégorisation
+              </Button>
+              <h2
+                id="citizen-report-step-3"
+                className="fr-h4 fr-mt-0 fr-mb-0 contribcit-step-3-title"
+              >
+                Vous y êtes presque
+              </h2>
             </div>
 
             <form className="fr-flow" onSubmit={handleSubmit} noValidate>
@@ -1127,11 +1129,11 @@ export function CitizenReportTunnel({
                 />
               )}
 
-              <div className="fr-box fr-box--grey fr-p-3w">
+              <div className="contribcit-summary">
                 <p className="fr-text--sm fr-mb-2w">
                   <strong>Récapitulatif</strong>
                 </p>
-                <div className="fr-tags-group">
+                <div className="fr-tags-group contribcit-tags-left">
                   {reportType && (
                     <Tag small>
                       {reportType === "alert" ? "Alerte" : "Suggestion"}
@@ -1151,6 +1153,9 @@ export function CitizenReportTunnel({
                 hintText={`Quelques lignes suffisent pour comprendre le contexte (minimum ${MIN_DETAILS_LENGTH} caractères).`}
                 textArea
                 disabled={isFormLocked}
+                classes={{
+                  root: "contribcit-section-spacing",
+                }}
                 nativeTextAreaProps={{
                   value: details,
                   onChange: (event) => setDetails(event.target.value),
@@ -1325,30 +1330,54 @@ export function CitizenReportTunnel({
                 />
               )}
 
-              <div className="fr-flow">
-                <Upload
-                  label="Ajouter une photo (optionnel)"
-                  hint="Formats JPEG, PNG ou WebP, taille maximale 5 Mo (compression automatique)."
-                  nativeInputProps={{
-                    accept: "image/*",
-                    onChange: handlePhotoChange,
-                  }}
+              <div className="fr-flow contribcit-upload">
+                <div className="contribcit-upload__header">
+                  <p className="fr-text--md fr-mb-0 contribcit-upload__title">
+                    Ajouter une photo (optionnel)
+                  </p>
+                  <p className="fr-text--sm fr-text-mention--grey fr-mb-0 contribcit-upload__hint">
+                    Formats JPEG, PNG ou WebP, taille maximale 5 Mo (compression
+                    automatique).
+                  </p>
+                </div>
+
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
                   disabled={isFormLocked || photoUploadState === "uploading"}
-                  state={
-                    photoUploadState === "error"
-                      ? "error"
-                      : photoUploadState === "success"
-                      ? "success"
-                      : "default"
-                  }
-                  stateRelatedMessage={
-                    photoUploadState === "error"
-                      ? photoUploadError ?? "Le téléversement a échoué."
-                      : photoUploadState === "success"
-                      ? "Photo importée avec succès."
-                      : undefined
-                  }
+                  className="contribcit-upload__input"
+                  hidden
                 />
+
+                <Button
+                  type="button"
+                  priority="secondary"
+                  iconId={
+                    photoUploadState === "uploading"
+                      ? "fr-icon-refresh-line"
+                      : "fr-icon-upload-line"
+                  }
+                  onClick={handlePhotoButtonClick}
+                  disabled={isFormLocked || photoUploadState === "uploading"}
+                  className="fr-width-full contribcit-upload__button"
+                >
+                  {photoUploadState === "uploading"
+                    ? "Téléversement en cours…"
+                    : "Choisir une image"}
+                </Button>
+
+                {photoUploadState === "error" && photoUploadError && (
+                  <p className="fr-text--sm fr-text-mention--error contribcit-upload__message">
+                    {photoUploadError}
+                  </p>
+                )}
+                {photoUploadState === "success" && (
+                  <p className="fr-text--sm fr-text-mention--success contribcit-upload__message">
+                    Photo importée avec succès.
+                  </p>
+                )}
 
                 {photoUploadInfo && (
                   <div className="fr-card fr-card--sm fr-card--horizontal fr-card--shadow fr-mt-2w">
@@ -1384,36 +1413,34 @@ export function CitizenReportTunnel({
                 )}
               </div>
 
-              <div className="fr-grid-row fr-grid-row--gutters fr-grid-row--right fr-mt-4w">
-                <div className="fr-col-auto">
-                  {submissionState === "success" ? (
-                    <Button
-                      type="button"
-                      priority="primary"
-                      iconId="fr-icon-add-line"
-                      className="fr-width-full"
-                      onClick={resetWizard}
-                    >
-                      Faire une nouvelle remontée
-                    </Button>
-                  ) : (
-                    <Button
-                      type="submit"
-                      priority="primary"
-                      iconId={
-                        submissionState === "loading"
-                          ? "fr-icon-refresh-line"
-                          : "fr-icon-send-plane-fill"
-                      }
-                      className="fr-width-full"
-                      disabled={isSubmitDisabled}
-                    >
-                      {submissionState === "loading"
-                        ? "Envoi en cours…"
-                        : "Envoyer"}
-                    </Button>
-                  )}
-                </div>
+              <div className="fr-flow fr-mt-4w contribcit-submit">
+                {submissionState === "success" ? (
+                  <Button
+                    type="button"
+                    priority="primary"
+                    iconId="fr-icon-add-line"
+                    className="fr-width-full"
+                    onClick={resetWizard}
+                  >
+                    Faire une nouvelle remontée
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    priority="primary"
+                    iconId={
+                      submissionState === "loading"
+                        ? "fr-icon-refresh-line"
+                        : "fr-icon-send-plane-fill"
+                    }
+                    className="fr-width-full"
+                    disabled={isSubmitDisabled}
+                  >
+                    {submissionState === "loading"
+                      ? "Envoi en cours…"
+                      : "Envoyer"}
+                  </Button>
+                )}
               </div>
             </form>
           </motion.section>

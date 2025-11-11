@@ -44,6 +44,111 @@ body {
   background-color: var(--active);
 }
 
+.contribcit-callout-city {
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: inherit;
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.28em;
+}
+
+.contribcit-callout-city:focus-visible {
+  outline: 2px solid var(--border-plain-blue-france, #000091);
+  outline-offset: 0.25rem;
+}
+
+.contribcit-type-actions {
+  display: grid;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.contribcit-type-actions .fr-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.contribcit-step-3-header {
+  gap: 1.5rem;
+}
+
+.contribcit-step-3-back.fr-btn {
+  align-self: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.contribcit-step-3-title {
+  margin-top: 0;
+}
+
+.contribcit-tags-left {
+  justify-content: flex-start;
+}
+
+.contribcit-section-spacing.fr-input-group {
+  margin-top: 2rem;
+}
+
+.contribcit-summary {
+  border: 1px solid var(--border-default-grey, rgba(0, 0, 0, 0.12));
+  background: var(--background-raised-grey, rgba(0, 0, 0, 0.04));
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.contribcit-submit .fr-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.contribcit-upload {
+  display: grid;
+  border: 1px dashed var(--border-default-grey, rgba(0, 0, 0, 0.2));
+  border-radius: 0.75rem;
+  background: var(--background-default-grey, #fff);
+  padding: 1.5rem;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.contribcit-upload__title {
+  font-weight: 600;
+}
+
+.contribcit-upload__hint {
+  line-height: 1.45;
+}
+
+.contribcit-upload__input {
+  display: none;
+}
+
+.contribcit-upload__button.fr-btn {
+  justify-content: center;
+}
+
+.contribcit-upload__message {
+  margin: 0;
+}
+
+.contribcit-upload .fr-card__body .fr-tags-group {
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 36rem) {
+  .contribcit-type-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 32rem;
+    margin-inline: auto;
+  }
+}
+
+@media (min-width: 62rem) {
+  .contribcit-type-actions {
+    max-width: 36rem;
+  }
+}
+
 .contribcit-location-group.fr-input-group {
   margin-bottom: 0;
   gap: 0.5rem;
