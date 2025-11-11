@@ -4,7 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Header, type HeaderProps } from "@codegouvfr/react-dsfr/Header";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
+import { prDsfrLoaded } from "@codegouvfr/react-dsfr/start";
 import { useTheme } from "@/components/ThemeProviderClient";
+import { headerMenuModalIdPrefix } from "@codegouvfr/react-dsfr/Header/Header";
 
 type QuickAccessItems = NonNullable<HeaderProps["quickAccessItems"]>;
 type QuickAccessIconId = HeaderProps.QuickAccessItem["iconId"];
@@ -24,6 +26,77 @@ type SessionUser = {
 type HeaderClientProps = {
   initialSessionUser: SessionUser | null;
 };
+
+const HEADER_ID = "contribcit-header";
+const MENU_MODAL_ID = `${headerMenuModalIdPrefix}-${HEADER_ID}`;
+
+type DsfrGlobal = {
+  dsfr?: {
+    internals?: {
+      state?: {
+        isActive?: boolean;
+      };
+    };
+  };
+};
+
+function hasDsfrStarted() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const { dsfr } = window as Window & DsfrGlobal;
+  return Boolean(dsfr?.internals?.state?.isActive);
+}
+
+function waitForDsfrStartSignal() {
+  if (typeof window === "undefined") {
+    return Promise.resolve();
+  }
+  if (hasDsfrStarted()) {
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve) => {
+    const html = document.documentElement;
+    let timeoutId: number | undefined;
+
+    const cleanup = () => {
+      html.removeEventListener("dsfr.start", handleStart);
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+
+    const handleStart = () => {
+      cleanup();
+      resolve();
+    };
+
+    html.addEventListener("dsfr.start", handleStart, { once: true });
+
+    timeoutId = window.setTimeout(() => {
+      cleanup();
+      resolve();
+    }, 2000);
+  });
+}
+
+let dsfrReadyPromise: Promise<void> | null = null;
+
+function getDsfrReadyPromise() {
+  if (dsfrReadyPromise) {
+    return dsfrReadyPromise;
+  }
+  dsfrReadyPromise = (async () => {
+    try {
+      await prDsfrLoaded;
+    } catch {
+      return;
+    }
+
+    await waitForDsfrStartSignal();
+  })();
+  return dsfrReadyPromise;
+}
 
 function areSessionUsersEqual(a: SessionUser | null, b: SessionUser | null) {
   if (a === b) {
@@ -55,8 +128,134 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(
     () => initialSessionUser
   );
+  const [isDsfrReady, setIsDsfrReady] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const isDarkTheme = theme === "dark";
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    let isCancelled = false;
+    const fallbackId = window.setTimeout(() => {
+      if (isCancelled) {
+        return;
+      }
+      setIsDsfrReady(true);
+    }, 3000);
+
+    getDsfrReadyPromise()
+      .catch(() => {
+        // Ignore errors, we use the fallback timeout to unlock the menu.
+      })
+      .finally(() => {
+        if (isCancelled) {
+          return;
+        }
+        window.clearTimeout(fallbackId);
+        setIsDsfrReady(true);
+      });
+    return () => {
+      isCancelled = true;
+      window.clearTimeout(fallbackId);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || isDsfrReady) {
+      return;
+    }
+    const menuButton = document.getElementById(`${HEADER_ID}-menu-button`);
+    if (!menuButton) {
+      return;
+    }
+
+    let hasPendingOpen = false;
+
+    const handleClick = (event: MouseEvent) => {
+      if (!event.isTrusted) {
+        return;
+      }
+      if (isDsfrReady) {
+        return;
+      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const triggerOpen = () => {
+        hasPendingOpen = false;
+        if (!menuButton.isConnected) {
+          return;
+        }
+        window.requestAnimationFrame(() => {
+          menuButton.click();
+        });
+      };
+
+      if (hasPendingOpen) {
+        return;
+      }
+      hasPendingOpen = true;
+
+      getDsfrReadyPromise().finally(triggerOpen);
+    };
+
+    menuButton.addEventListener("click", handleClick, true);
+
+    return () => {
+      menuButton.removeEventListener("click", handleClick, true);
+    };
+  }, [isDsfrReady]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !isDsfrReady) {
+      return;
+    }
+    const menuButton = document.getElementById(`${HEADER_ID}-menu-button`);
+    const menuModal = document.getElementById(MENU_MODAL_ID);
+
+    if (!menuButton || !menuModal) {
+      return;
+    }
+
+    let isReplayInProgress = false;
+
+    const handleClick = (event: MouseEvent) => {
+      if (!event.isTrusted || isReplayInProgress) {
+        return;
+      }
+
+      const wasOpen = menuButton.getAttribute("data-fr-opened") === "true";
+      const expectedOpen = !wasOpen;
+
+      window.requestAnimationFrame(() => {
+        const isOpenNow = menuButton.getAttribute("data-fr-opened") === "true";
+        const modalIsOpen = menuModal.getAttribute("open") === "true";
+
+        if (isOpenNow === expectedOpen && modalIsOpen === expectedOpen) {
+          return;
+        }
+
+        isReplayInProgress = true;
+
+        window.requestAnimationFrame(() => {
+          if (!menuButton.isConnected) {
+            isReplayInProgress = false;
+            return;
+          }
+          menuButton.click();
+          window.setTimeout(() => {
+            isReplayInProgress = false;
+          }, 0);
+        });
+      });
+    };
+
+    menuButton.addEventListener("click", handleClick, true);
+
+    return () => {
+      menuButton.removeEventListener("click", handleClick, true);
+    };
+  }, [isDsfrReady]);
 
   const updateSessionState = useCallback((nextUser: SessionUser | null) => {
     setSessionUser((currentUser) => {
@@ -509,6 +708,7 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
   return (
     <div suppressHydrationWarning>
       <Header
+        id={HEADER_ID}
         brandTop={
           <>
             RÉPUBLIQUE
