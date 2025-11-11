@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 const siteName = "Contribcit";
 const siteDescription =
-  "Offrez à vos habitants un canal simple pour alerter et suggérer. Avec Contribcit, un QR code suffit pour remonter les informations de terrain, cartographier les besoins et accélérer le traitement.";
+  "Offrez à vos habitants un canal simple pour alerter et suggérer. Avec Contribcit, un QR code suffit pour faire remonter les informations de terrain, cartographier les besoins et accélérer le traitement.";
 const siteUrl = process.env.BASE_URL || "https://contribcit.org";
 const previewImagePath = "/marianne.png";
 const previewImageAlt =
@@ -84,4 +84,3 @@ export function createJsonLd() {
     ],
   };
 }
-
