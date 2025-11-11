@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { cookies } from "next/headers";
 import { Footer } from "@codegouvfr/react-dsfr/Footer";
 import { HeaderClient } from "@/components/HeaderClient";
@@ -36,11 +37,7 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <script
-          type="module"
-          src="/dsfr/dsfr/dsfr.module.js"
-          defer
-        />
+        <script type="module" src="/dsfr/dsfr/dsfr.module.js" defer />
         <script
           type="text/javascript"
           noModule
@@ -117,6 +114,7 @@ export default async function RootLayout({
             />
           </ThemeProviderClient>
         </DsfrProviderClient>
+        <Analytics />
       </body>
     </html>
   );
