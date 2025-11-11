@@ -81,7 +81,7 @@ export default async function RootLayout({
                     <br />
                     <span className="fr-text--sm">
                       Pour toute réclamation, vous pouvez remplir le{" "}
-                      <Link href="/#contact" className="fr-link">
+                      <Link href="/#contact" className="fr-link fr-link--sm">
                         formulaire de contact
                       </Link>
                       .

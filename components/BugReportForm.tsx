@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { Button } from "@codegouvfr/react-dsfr/Button";
+import { Tag } from "@codegouvfr/react-dsfr/Tag";
 
 type BugReportTypeOption = "BUG" | "FONCTIONNALITE";
 
@@ -36,6 +38,7 @@ export function BugReportForm() {
   const [screenshot, setScreenshot] = useState<ScreenshotInfo | null>(null);
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const screenshotInputRef = useRef<HTMLInputElement | null>(null);
 
   const resetForm = useCallback(() => {
     setSelectedType("BUG");
@@ -45,6 +48,16 @@ export function BugReportForm() {
     setUploadState("idle");
     setUploadError(null);
   }, []);
+
+  const handleScreenshotButtonClick = () => {
+    const isBusy = formState.status === "loading" || isSubmitting;
+
+    if (isBusy || uploadState === "uploading") {
+      return;
+    }
+
+    screenshotInputRef.current?.click();
+  };
 
   const handleScreenshotChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -125,6 +138,9 @@ export function BugReportForm() {
       setScreenshot(null);
       setUploadState("idle");
       setUploadError(null);
+      if (screenshotInputRef.current) {
+        screenshotInputRef.current.value = "";
+      }
     }
   };
 
@@ -260,64 +276,101 @@ export function BugReportForm() {
         />
       </div>
 
-      <div className="fr-mt-4w">
-        <label className="fr-label" htmlFor="bug-screenshot">
-          Capture d’écran (optionnel)
-          <span className="fr-hint-text">
+      <div className="fr-mt-4w fr-flow contribcit-upload">
+        <div className="contribcit-upload__header">
+          <p className="fr-text--md fr-mb-0 contribcit-upload__title">
+            Capture d’écran (optionnel)
+          </p>
+          <p className="fr-text--sm fr-text-mention--grey fr-mb-0 contribcit-upload__hint">
             Formats acceptés : JPG, PNG, WebP. Taille maximale 5 Mo (compression
             automatique).
-          </span>
-        </label>
+          </p>
+        </div>
+
+        <input
+          ref={screenshotInputRef}
+          className="contribcit-upload__input"
+          type="file"
+          id="bug-screenshot"
+          name="bug-screenshot"
+          accept="image/*"
+          onChange={handleScreenshotChange}
+          disabled={isLoading || uploadState === "uploading"}
+          hidden
+        />
+
+        <Button
+          type="button"
+          priority="secondary"
+          iconId={
+            uploadState === "uploading"
+              ? "fr-icon-refresh-line"
+              : "fr-icon-upload-line"
+          }
+          onClick={handleScreenshotButtonClick}
+          disabled={isLoading || uploadState === "uploading"}
+          className="fr-width-full contribcit-upload__button"
+        >
+          {uploadState === "uploading"
+            ? "Téléversement en cours…"
+            : screenshot
+              ? "Remplacer l’image"
+              : "Choisir une image"}
+        </Button>
+
+        {uploadState === "error" && uploadError ? (
+          <p className="fr-text--sm fr-text-mention--error contribcit-upload__message">
+            {uploadError}
+          </p>
+        ) : null}
+        {uploadState === "success" && screenshot ? (
+          <p className="fr-text--sm fr-text-mention--success contribcit-upload__message">
+            Image importée avec succès.
+          </p>
+        ) : null}
+
         {screenshot ? (
-          <div className="fr-callout fr-callout--green-emeraude fr-mt-2w">
-            <h3 className="fr-callout__title">Capture enregistrée</h3>
-            <p className="fr-callout__text fr-text--sm">
-              {Math.round(screenshot.bytes / 1024)} Ko — {screenshot.width}×
-              {screenshot.height}px — {screenshot.format.toUpperCase()}
-            </p>
-            <div className="fr-callout__actions">
-              <a
-                className="fr-link"
-                href={screenshot.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Ouvrir dans un nouvel onglet
-              </a>
-              <button
-                className="fr-btn fr-btn--secondary fr-btn--sm"
-                type="button"
-                onClick={handleRemoveScreenshot}
-                disabled={isLoading}
-              >
-                Supprimer la capture
-              </button>
+          <div className="fr-card fr-card--sm fr-card--horizontal fr-card--shadow fr-mt-2w">
+            <div className="fr-card__img">
+              <img
+                src={screenshot.url}
+                alt="Aperçu de la capture importée"
+                className="fr-responsive-img"
+                loading="lazy"
+              />
+            </div>
+            <div className="fr-card__body">
+              <h3 className="fr-card__title fr-h6">Capture enregistrée</h3>
+              <p className="fr-card__desc fr-text--sm fr-mb-2w">
+                {screenshot.format.toUpperCase()} —{" "}
+                {(screenshot.bytes / 1024).toFixed(0)} ko
+              </p>
+              <div className="fr-tags-group fr-mb-2w">
+                <Tag small>{screenshot.width} px</Tag>
+                <Tag small>{screenshot.height} px</Tag>
+              </div>
+              <div className="fr-btns-group fr-btns-group--inline-sm">
+                <a
+                  className="fr-link"
+                  href={screenshot.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ouvrir dans un nouvel onglet
+                </a>
+                <Button
+                  type="button"
+                  priority="secondary"
+                  iconId="fr-icon-delete-line"
+                  onClick={handleRemoveScreenshot}
+                  disabled={isLoading}
+                >
+                  Supprimer la capture
+                </Button>
+              </div>
             </div>
           </div>
-        ) : (
-          <div className="fr-upload-group fr-mt-2w">
-            <input
-              className="fr-upload"
-              type="file"
-              id="bug-screenshot"
-              name="bug-screenshot"
-              accept="image/*"
-              onChange={handleScreenshotChange}
-              disabled={isLoading || uploadState === "uploading"}
-            />
-            <label className="fr-label" htmlFor="bug-screenshot">
-              Ajouter une image
-            </label>
-            <p className="fr-hint-text">
-              {uploadState === "uploading"
-                ? "Téléversement en cours…"
-                : "Joignez une capture pour faciliter la compréhension de votre demande."}
-            </p>
-            {uploadState === "error" && uploadError ? (
-              <p className="fr-error-text">{uploadError}</p>
-            ) : null}
-          </div>
-        )}
+        ) : null}
       </div>
 
       {hasErrors && formState.status === "error" ? (
