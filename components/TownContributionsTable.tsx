@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { Button } from "@codegouvfr/react-dsfr/Button";
+import styles from "./TownContributionsTable.module.css";
 
 type ContributionListItem = {
   id: string;
@@ -10,11 +11,25 @@ type ContributionListItem = {
   status: "OPEN" | "CLOSED";
   title: string;
   categoryLabel: string;
+  categoryColor?: string | null;
+  categoryTextColor?: string | null;
   createdAt: string;
   locationLabel?: string | null;
 };
 
 type Filter = "open" | "alert" | "suggestion";
+
+type CategoryFilterOption = {
+  value: string;
+  label: string;
+  badgeColor: string;
+  badgeTextColor: string;
+  count: number;
+};
+
+const DEFAULT_CATEGORY_BADGE_COLOR = "#E5E5F4";
+const DEFAULT_CATEGORY_BADGE_TEXT_COLOR = "#161616";
+const UNCATEGORIZED_FILTER = "__uncategorized__";
 
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "medium",
@@ -27,6 +42,44 @@ export function TownContributionsTable({
   items: ContributionListItem[];
 }) {
   const [filters, setFilters] = useState<Filter[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const { categoryOptions, uncategorizedCount } = useMemo(() => {
+    const map = new Map<string, CategoryFilterOption>();
+    let uncategorized = 0;
+
+    items.forEach((item) => {
+      const label = (item.categoryLabel ?? "").trim();
+
+      if (label.length === 0) {
+        uncategorized += 1;
+        return;
+      }
+
+      const normalized = label.toLowerCase();
+      const existing = map.get(normalized);
+
+      if (existing) {
+        existing.count += 1;
+        return;
+      }
+
+      map.set(normalized, {
+        value: normalized,
+        label,
+        badgeColor: item.categoryColor ?? DEFAULT_CATEGORY_BADGE_COLOR,
+        badgeTextColor:
+          item.categoryTextColor ?? DEFAULT_CATEGORY_BADGE_TEXT_COLOR,
+        count: 1,
+      });
+    });
+
+    const categoryOptions = Array.from(map.values()).sort((a, b) =>
+      a.label.localeCompare(b.label, "fr"),
+    );
+
+    return { categoryOptions, uncategorizedCount: uncategorized };
+  }, [items]);
 
   const toggleFilter = (filter: Filter) => {
     setFilters((current) =>
@@ -40,6 +93,7 @@ export function TownContributionsTable({
     const hasOpenFilter = filters.includes("open");
     const hasAlertFilter = filters.includes("alert");
     const hasSuggestionFilter = filters.includes("suggestion");
+    const normalizedCategoryFilter = selectedCategory;
 
     return items.filter((item) => {
       if (hasOpenFilter && item.status !== "OPEN") {
@@ -54,61 +108,148 @@ export function TownContributionsTable({
         return item.type === "SUGGESTION";
       }
 
+      if (normalizedCategoryFilter) {
+        const label = (item.categoryLabel ?? "").trim();
+        const normalizedLabel = label.toLowerCase();
+
+        if (normalizedCategoryFilter === UNCATEGORIZED_FILTER) {
+          if (normalizedLabel.length > 0) {
+            return false;
+          }
+        } else if (normalizedLabel !== normalizedCategoryFilter) {
+          return false;
+        }
+      }
+
       return true;
     });
-  }, [filters, items]);
+  }, [filters, items, selectedCategory]);
+
+  const hasCategoryFilters =
+    categoryOptions.length > 0 || uncategorizedCount > 0;
 
   return (
     <div className="fr-flow">
-      <div className="fr-btns-group fr-btns-group--inline fr-btns-group--sm">
-        <Button
-          priority={filters.length === 0 ? "primary" : "secondary"}
-          onClick={() => setFilters([])}
-        >
-          {filters.length === 0 && (
-            <span
-              className="fr-icon-check-line fr-mr-1w"
-              aria-hidden="true"
-            ></span>
-          )}
-          <span>Tous</span>
-        </Button>
-        <Button
-          priority={filters.includes("open") ? "primary" : "secondary"}
-          onClick={() => toggleFilter("open")}
-        >
-          {filters.includes("open") && (
-            <span
-              className="fr-icon-check-line fr-mr-1w"
-              aria-hidden="true"
-            ></span>
-          )}
-          <span>Non traité</span>
-        </Button>
-        <Button
-          priority={filters.includes("alert") ? "primary" : "secondary"}
-          onClick={() => toggleFilter("alert")}
-        >
-          {filters.includes("alert") && (
-            <span
-              className="fr-icon-check-line fr-mr-1w"
-              aria-hidden="true"
-            ></span>
-          )}
-          <span>Alertes</span>
-        </Button>
-        <Button
-          priority={filters.includes("suggestion") ? "primary" : "secondary"}
-          onClick={() => toggleFilter("suggestion")}
-        >
-          {filters.includes("suggestion") && (
-            <span
-              className="fr-icon-check-line fr-mr-1w"
-              aria-hidden="true"
-            ></span>
-          )}
-          <span>Suggestions</span>
-        </Button>
+      <div className={styles.filtersRow}>
+        <div className="fr-btns-group fr-btns-group--inline fr-btns-group--sm">
+          <Button
+            priority={
+              filters.length === 0 && selectedCategory === null
+                ? "primary"
+                : "secondary"
+            }
+            onClick={() => {
+              setFilters([]);
+              setSelectedCategory(null);
+            }}
+          >
+            {filters.length === 0 && selectedCategory === null && (
+              <span
+                className="fr-icon-check-line fr-mr-1w"
+                aria-hidden="true"
+              ></span>
+            )}
+            <span>Tous</span>
+          </Button>
+          <Button
+            priority={filters.includes("open") ? "primary" : "secondary"}
+            onClick={() => toggleFilter("open")}
+          >
+            {filters.includes("open") && (
+              <span
+                className="fr-icon-check-line fr-mr-1w"
+                aria-hidden="true"
+              ></span>
+            )}
+            <span>Non traité</span>
+          </Button>
+          <Button
+            priority={filters.includes("alert") ? "primary" : "secondary"}
+            onClick={() => toggleFilter("alert")}
+          >
+            {filters.includes("alert") && (
+              <span
+                className="fr-icon-check-line fr-mr-1w"
+                aria-hidden="true"
+              ></span>
+            )}
+            <span>Alertes</span>
+          </Button>
+          <Button
+            priority={
+              filters.includes("suggestion") ? "primary" : "secondary"
+            }
+            onClick={() => toggleFilter("suggestion")}
+          >
+            {filters.includes("suggestion") && (
+              <span
+                className="fr-icon-check-line fr-mr-1w"
+                aria-hidden="true"
+              ></span>
+            )}
+            <span>Suggestions</span>
+          </Button>
+        </div>
+
+        {hasCategoryFilters ? (
+          <div>
+            <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
+              Catégories
+            </p>
+            <div className={styles.categoryFilters}>
+              <Button
+                priority={selectedCategory === null ? "primary" : "secondary"}
+                size="small"
+                onClick={() => setSelectedCategory(null)}
+              >
+                <span>Tout afficher</span>
+              </Button>
+              {categoryOptions.map((option) => (
+                <Button
+                  key={option.value}
+                  priority={
+                    selectedCategory === option.value ? "primary" : "secondary"
+                  }
+                  size="small"
+                  className={styles.categoryFilterButton}
+                  onClick={() => setSelectedCategory(option.value)}
+                >
+                  <span
+                    className={styles.categoryFilterDot}
+                    style={{ backgroundColor: option.badgeColor }}
+                    aria-hidden="true"
+                  />
+                  <span>{option.label}</span>
+                  <span className={styles.categoryFilterCount}>
+                    ({option.count})
+                  </span>
+                </Button>
+              ))}
+              {uncategorizedCount > 0 ? (
+                <Button
+                  priority={
+                    selectedCategory === UNCATEGORIZED_FILTER
+                      ? "primary"
+                      : "secondary"
+                  }
+                  size="small"
+                  className={styles.categoryFilterButton}
+                  onClick={() => setSelectedCategory(UNCATEGORIZED_FILTER)}
+                >
+                  <span
+                    className={styles.categoryFilterDot}
+                    style={{ backgroundColor: "#f5f5f5" }}
+                    aria-hidden="true"
+                  />
+                  <span>Non catégorisé</span>
+                  <span className={styles.categoryFilterCount}>
+                    ({uncategorizedCount})
+                  </span>
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {filteredItems.length === 0 ? (
@@ -139,55 +280,76 @@ export function TownContributionsTable({
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredItems.map((item) => (
-                      <tr key={item.id}>
-                        <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
-                          <Badge small severity={item.type === "ALERT" ? "error" : "info"}>
-                            {item.type === "ALERT" ? "Alerte" : "Suggestion"}
-                          </Badge>
-                        </td>
-                        <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
-                          <p className="fr-text--md fr-text--bold fr-mb-0">
-                            {item.title || "Sans titre"}
-                          </p>
-                          <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
-                            {item.categoryLabel}
-                          </p>
-                        </td>
-                        <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
-                          <p className="fr-text--sm fr-mb-0">
-                            {dateFormatter.format(new Date(item.createdAt))}
-                          </p>
-                        </td>
-                        <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
-                          <p className="fr-text--sm fr-mb-0">
-                            {item.locationLabel ?? (
-                              <span className="fr-text-mention--grey">Non précisé</span>
-                            )}
-                          </p>
-                        </td>
-                        <td className="fr-py-2w fr-text--right" style={{ verticalAlign: "top" }}>
-                          <Badge
-                            small
-                            severity={item.status === "OPEN" ? "warning" : "success"}
-                          >
-                            {item.status === "OPEN" ? "À traiter" : "Clôturé"}
-                          </Badge>
-                        </td>
-                        <td className="fr-py-2w fr-text--right" style={{ verticalAlign: "top" }}>
-                          <Button
-                            priority="secondary"
-                            size="small"
-                            iconId="fr-icon-arrow-right-line"
-                            linkProps={{
-                              href: `/admin/retours/${item.id}`,
-                            }}
-                          >
-                            Voir le détail
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredItems.map((item) => {
+                      const label = (item.categoryLabel ?? "").trim();
+                      const hasCategory = label.length > 0;
+                      const badgeBackground = hasCategory
+                        ? item.categoryColor ?? DEFAULT_CATEGORY_BADGE_COLOR
+                        : "#f5f5f5";
+                      const badgeTextColor = hasCategory
+                        ? item.categoryTextColor ??
+                          DEFAULT_CATEGORY_BADGE_TEXT_COLOR
+                        : "#161616";
+
+                      return (
+                        <tr key={item.id}>
+                          <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
+                            <Badge small severity={item.type === "ALERT" ? "error" : "info"}>
+                              {item.type === "ALERT" ? "Alerte" : "Suggestion"}
+                            </Badge>
+                          </td>
+                          <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
+                            <p className="fr-text--md fr-text--bold fr-mb-0">
+                              {item.title || "Sans titre"}
+                            </p>
+                            <div className={styles.categoryBadgeWrapper}>
+                              <Badge
+                                small
+                                className={styles.categoryBadge}
+                                style={{
+                                  backgroundColor: badgeBackground,
+                                  color: badgeTextColor,
+                                }}
+                              >
+                                {hasCategory ? label : "Non catégorisé"}
+                              </Badge>
+                            </div>
+                          </td>
+                          <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
+                            <p className="fr-text--sm fr-mb-0">
+                              {dateFormatter.format(new Date(item.createdAt))}
+                            </p>
+                          </td>
+                          <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
+                            <p className="fr-text--sm fr-mb-0">
+                              {item.locationLabel ?? (
+                                <span className="fr-text-mention--grey">Non précisé</span>
+                              )}
+                            </p>
+                          </td>
+                          <td className="fr-py-2w fr-text--right" style={{ verticalAlign: "top" }}>
+                            <Badge
+                              small
+                              severity={item.status === "OPEN" ? "warning" : "success"}
+                            >
+                              {item.status === "OPEN" ? "À traiter" : "Clôturé"}
+                            </Badge>
+                          </td>
+                          <td className="fr-py-2w fr-text--right" style={{ verticalAlign: "top" }}>
+                            <Button
+                              priority="secondary"
+                              size="small"
+                              iconId="fr-icon-arrow-right-line"
+                              linkProps={{
+                                href: `/admin/retours/${item.id}`,
+                              }}
+                            >
+                              Voir le détail
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

@@ -105,6 +105,8 @@ model Category {
   name        String
   description String?
   isActive    Boolean   @default(true)
+  badgeColor        String   @default("#000091")
+  badgeTextColor    String   @default("#ffffff")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

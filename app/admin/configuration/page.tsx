@@ -35,6 +35,8 @@ export default async function AdminConfigurationPage() {
       name: true,
       description: true,
       isActive: true,
+      badgeColor: true,
+      badgeTextColor: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -47,6 +49,8 @@ export default async function AdminConfigurationPage() {
         name: category.name,
         description: category.description,
         isActive: category.isActive,
+        badgeColor: category.badgeColor,
+        badgeTextColor: category.badgeTextColor,
         createdAt: category.createdAt.toISOString(),
         updatedAt: category.updatedAt.toISOString(),
       }))}

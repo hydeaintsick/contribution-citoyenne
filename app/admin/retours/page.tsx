@@ -4,6 +4,9 @@ import { getSessionCookieName, parseSessionCookie } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { TownContributionsTable } from "@/components/TownContributionsTable";
 
+const DEFAULT_CATEGORY_BADGE_COLOR = "#000091";
+const DEFAULT_CATEGORY_BADGE_TEXT_COLOR = "#FFFFFF";
+
 export default async function TownReturnsPage() {
   const cookieHeader = (await headers()).get("cookie") ?? "";
   const cookieName = `${getSessionCookieName()}=`;
@@ -36,6 +39,12 @@ export default async function TownReturnsPage() {
       status: true,
       title: true,
       categoryLabel: true,
+      category: {
+        select: {
+          badgeColor: true,
+          badgeTextColor: true,
+        },
+      },
       createdAt: true,
       locationLabel: true,
     },
@@ -58,8 +67,10 @@ export default async function TownReturnsPage() {
           id: contribution.id,
           type: contribution.type,
           status: contribution.status,
-        title: contribution.title,
+          title: contribution.title,
           categoryLabel: contribution.categoryLabel,
+          categoryColor: contribution.category?.badgeColor ?? null,
+          categoryTextColor: contribution.category?.badgeTextColor ?? null,
           createdAt: contribution.createdAt.toISOString(),
           locationLabel: contribution.locationLabel,
         }))}

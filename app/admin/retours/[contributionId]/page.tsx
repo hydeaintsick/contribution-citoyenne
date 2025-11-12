@@ -50,6 +50,12 @@ export default async function TownReturnDetailPage({ params }: RouteParams) {
       status: true,
       title: true,
       categoryLabel: true,
+      category: {
+        select: {
+          badgeColor: true,
+          badgeTextColor: true,
+        },
+      },
       details: true,
       locationLabel: true,
       latitude: true,
@@ -82,6 +88,8 @@ export default async function TownReturnDetailPage({ params }: RouteParams) {
           status: contribution.status,
           title: contribution.title,
           categoryLabel: contribution.categoryLabel,
+          categoryColor: contribution.category?.badgeColor ?? null,
+          categoryTextColor: contribution.category?.badgeTextColor ?? null,
           details: contribution.details,
           locationLabel: contribution.locationLabel,
           latitude: contribution.latitude,

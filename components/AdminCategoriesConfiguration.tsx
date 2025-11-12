@@ -7,11 +7,16 @@ import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Input } from "@codegouvfr/react-dsfr/Input";
 
+const DEFAULT_BADGE_COLOR = "#000091";
+const DEFAULT_BADGE_TEXT_COLOR = "#FFFFFF";
+
 type CategoryResource = {
   id: string;
   name: string;
   description: string | null;
   isActive: boolean;
+  badgeColor: string;
+  badgeTextColor: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -25,11 +30,78 @@ type EditableCategory = {
   id: string;
   name: string;
   description: string;
+  badgeColor: string;
+  badgeTextColor: string;
 };
 
 type Props = {
   initialCategories: CategoryResource[];
 };
+
+type ColorPickerFieldProps = {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  hint?: string;
+  disabled?: boolean;
+};
+
+function ColorPickerField({
+  id,
+  label,
+  value,
+  onChange,
+  hint,
+  disabled = false,
+}: ColorPickerFieldProps) {
+  return (
+    <div className="fr-input-group">
+      <label className="fr-label" htmlFor={`${id}-color`}>
+        {label}
+      </label>
+      {hint ? <span className="fr-hint-text">{hint}</span> : null}
+      <div className="fr-grid-row fr-grid-row--middle fr-grid-row--gutters">
+        <div className="fr-col-auto">
+          <input
+            id={`${id}-color`}
+            type="color"
+            value={value}
+            onChange={(event) => onChange(event.target.value.toUpperCase())}
+            className="fr-input"
+            disabled={disabled}
+            style={{
+              width: "3rem",
+              height: "3rem",
+              padding: 0,
+              border: "none",
+              background: "transparent",
+              cursor: disabled ? "not-allowed" : "pointer",
+            }}
+            aria-describedby={`${id}-value`}
+          />
+        </div>
+        <div className="fr-col">
+          <code
+            id={`${id}-value`}
+            className="fr-text--sm fr-text-mention--grey-625"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "0.75rem 1rem",
+              borderRadius: "0.5rem",
+              backgroundColor: "var(--background-alt-grey)",
+              minWidth: "6.5rem",
+              opacity: disabled ? 0.6 : 1,
+            }}
+          >
+            {value}
+          </code>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function sortCategories(categories: CategoryResource[]) {
   return [...categories].sort((a, b) => a.name.localeCompare(b.name, "fr"));
@@ -42,6 +114,10 @@ export function AdminCategoriesConfiguration({ initialCategories }: Props) {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [createName, setCreateName] = useState("");
   const [createDescription, setCreateDescription] = useState("");
+  const [createBadgeColor, setCreateBadgeColor] = useState(DEFAULT_BADGE_COLOR);
+  const [createBadgeTextColor, setCreateBadgeTextColor] = useState(
+    DEFAULT_BADGE_TEXT_COLOR,
+  );
   const [isCreating, setIsCreating] = useState(false);
   const [pendingCategoryId, setPendingCategoryId] = useState<string | null>(
     null,
@@ -89,6 +165,8 @@ export function AdminCategoriesConfiguration({ initialCategories }: Props) {
           body: JSON.stringify({
             name: trimmedName,
             description: createDescription.trim() || undefined,
+            badgeColor: createBadgeColor,
+            badgeTextColor: createBadgeTextColor,
           }),
         });
 
@@ -108,6 +186,8 @@ export function AdminCategoriesConfiguration({ initialCategories }: Props) {
         setCategoriesSorted([...categories, payload.category]);
         setCreateName("");
         setCreateDescription("");
+        setCreateBadgeColor(DEFAULT_BADGE_COLOR);
+        setCreateBadgeTextColor(DEFAULT_BADGE_TEXT_COLOR);
         setFeedback({
           type: "success",
           message: "Catégorie créée avec succès.",
@@ -125,7 +205,15 @@ export function AdminCategoriesConfiguration({ initialCategories }: Props) {
         setIsCreating(false);
       }
     },
-    [categories, createDescription, createName, resetFeedback, setCategoriesSorted],
+    [
+      categories,
+      createBadgeColor,
+      createBadgeTextColor,
+      createDescription,
+      createName,
+      resetFeedback,
+      setCategoriesSorted,
+    ],
   );
 
   const handleEditClick = useCallback(
@@ -134,6 +222,8 @@ export function AdminCategoriesConfiguration({ initialCategories }: Props) {
         id: category.id,
         name: category.name,
         description: category.description ?? "",
+        badgeColor: category.badgeColor,
+        badgeTextColor: category.badgeTextColor,
       });
       resetFeedback();
     },
@@ -174,6 +264,8 @@ export function AdminCategoriesConfiguration({ initialCategories }: Props) {
           body: JSON.stringify({
             name: trimmedName,
             description: editableCategory.description.trim() || null,
+            badgeColor: editableCategory.badgeColor,
+            badgeTextColor: editableCategory.badgeTextColor,
           }),
         },
       );
@@ -466,6 +558,71 @@ export function AdminCategoriesConfiguration({ initialCategories }: Props) {
             )}
           </td>
           <td>
+            {isEditing ? (
+              <div className="fr-flow">
+                <ColorPickerField
+                  id={`category-${category.id}-badge-color`}
+                  label="Fond du badge"
+                  value={editableCategory?.badgeColor ?? category.badgeColor}
+                  onChange={(value) =>
+                    setEditableCategory((prev) =>
+                      prev && prev.id === category.id
+                        ? { ...prev, badgeColor: value }
+                        : prev,
+                    )
+                  }
+                  hint="Couleur principale affichée sur la liste et la fiche."
+                  disabled={isPending}
+                />
+                <ColorPickerField
+                  id={`category-${category.id}-badge-text-color`}
+                  label="Texte du badge"
+                  value={
+                    editableCategory?.badgeTextColor ?? category.badgeTextColor
+                  }
+                  onChange={(value) =>
+                    setEditableCategory((prev) =>
+                      prev && prev.id === category.id
+                        ? { ...prev, badgeTextColor: value }
+                        : prev,
+                    )
+                  }
+                  hint="Optimisez la lisibilité en choisissant un bon contraste."
+                  disabled={isPending}
+                />
+                <div>
+                  <Badge
+                    small
+                    style={{
+                      backgroundColor:
+                        editableCategory?.badgeColor ?? category.badgeColor,
+                      color:
+                        editableCategory?.badgeTextColor ??
+                        category.badgeTextColor,
+                    }}
+                  >
+                    Aperçu badge
+                  </Badge>
+                </div>
+              </div>
+            ) : (
+              <div className="fr-flow">
+                <Badge
+                  small
+                  style={{
+                    backgroundColor: category.badgeColor,
+                    color: category.badgeTextColor,
+                  }}
+                >
+                  {category.name}
+                </Badge>
+                <p className="fr-text--xs fr-text-mention--grey fr-mb-0">
+                  Fond {category.badgeColor} · Texte {category.badgeTextColor}
+                </p>
+              </div>
+            )}
+          </td>
+          <td>
             <Badge small severity={category.isActive ? "success" : "warning"}>
               {category.isActive ? "Active" : "Inactive"}
             </Badge>
@@ -513,6 +670,7 @@ export function AdminCategoriesConfiguration({ initialCategories }: Props) {
                 <tr>
                   <th scope="col">Nom</th>
                   <th scope="col">Description</th>
+                  <th scope="col">Badge</th>
                   <th scope="col">Statut</th>
                   <th scope="col" className="fr-text--right">
                     Actions
@@ -550,6 +708,39 @@ export function AdminCategoriesConfiguration({ initialCategories }: Props) {
               maxLength: 280,
             }}
           />
+          <div className="fr-grid-row fr-grid-row--gutters">
+            <div className="fr-col-12 fr-col-md-6">
+              <ColorPickerField
+                id="create-category-badge-color"
+                label="Fond du badge"
+                value={createBadgeColor}
+                onChange={setCreateBadgeColor}
+                hint="Couleur principale utilisée sur les badges catégorie."
+                disabled={isCreating}
+              />
+            </div>
+            <div className="fr-col-12 fr-col-md-6">
+              <ColorPickerField
+                id="create-category-badge-text-color"
+                label="Texte du badge"
+                value={createBadgeTextColor}
+                onChange={setCreateBadgeTextColor}
+                hint="Choisissez une couleur lisible sur le fond sélectionné."
+                disabled={isCreating}
+              />
+            </div>
+          </div>
+          <div>
+            <Badge
+              small
+              style={{
+                backgroundColor: createBadgeColor,
+                color: createBadgeTextColor,
+              }}
+            >
+              Aperçu badge
+            </Badge>
+          </div>
           <Button
             type="submit"
             priority="primary"

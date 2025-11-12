@@ -84,6 +84,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         status: true,
         title: true,
         categoryLabel: true,
+        category: {
+          select: {
+            badgeColor: true,
+            badgeTextColor: true,
+          },
+        },
         details: true,
         locationLabel: true,
         latitude: true,
@@ -105,12 +111,25 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({
       contribution: {
-        ...updatedContribution,
+        id: updatedContribution.id,
+        type: updatedContribution.type,
+        status: updatedContribution.status,
+        title: updatedContribution.title,
+        categoryLabel: updatedContribution.categoryLabel,
+        categoryColor: updatedContribution.category?.badgeColor ?? null,
+        categoryTextColor: updatedContribution.category?.badgeTextColor ?? null,
+        details: updatedContribution.details,
+        locationLabel: updatedContribution.locationLabel,
+        latitude: updatedContribution.latitude,
+        longitude: updatedContribution.longitude,
+        photoUrl: updatedContribution.photoUrl,
         createdAt: updatedContribution.createdAt.toISOString(),
         updatedAt: updatedContribution.updatedAt.toISOString(),
         closedAt: updatedContribution.closedAt
           ? updatedContribution.closedAt.toISOString()
           : null,
+        closureNote: updatedContribution.closureNote,
+        closedBy: updatedContribution.closedBy,
       },
     });
   } catch (error) {

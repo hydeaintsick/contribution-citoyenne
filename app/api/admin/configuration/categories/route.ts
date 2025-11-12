@@ -3,6 +3,12 @@ import { z } from "zod";
 import { getSessionFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+const hexColorSchema = z
+  .string()
+  .trim()
+  .regex(/^#(?:[0-9a-fA-F]{6})$/, "La couleur doit être un hexadécimal #RRGGBB.")
+  .transform((value) => value.toUpperCase());
+
 const createSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères."),
   description: z
@@ -12,6 +18,8 @@ const createSchema = z.object({
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined)),
   isActive: z.boolean().optional(),
+  badgeColor: hexColorSchema.optional(),
+  badgeTextColor: hexColorSchema.optional(),
 });
 
 function canManageConfiguration(role: string) {
@@ -23,6 +31,8 @@ function serializeCategory(category: {
   name: string;
   description: string | null;
   isActive: boolean;
+  badgeColor: string;
+  badgeTextColor: string;
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -31,6 +41,8 @@ function serializeCategory(category: {
     name: category.name,
     description: category.description,
     isActive: category.isActive,
+    badgeColor: category.badgeColor,
+    badgeTextColor: category.badgeTextColor,
     createdAt: category.createdAt.toISOString(),
     updatedAt: category.updatedAt.toISOString(),
   };
@@ -78,7 +90,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const { name, description, isActive } = parseResult.data;
+  const { name, description, isActive, badgeColor, badgeTextColor } =
+    parseResult.data;
 
   try {
     const created = await prisma.category.create({
@@ -86,6 +99,8 @@ export async function POST(request: NextRequest) {
         name,
         description: description ?? null,
         isActive: isActive ?? true,
+        badgeColor: badgeColor ?? "#000091",
+        badgeTextColor: badgeTextColor ?? "#FFFFFF",
       },
     });
 

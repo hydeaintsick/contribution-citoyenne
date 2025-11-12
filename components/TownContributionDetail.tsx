@@ -16,6 +16,8 @@ type ContributionDetail = {
   status: "OPEN" | "CLOSED";
   title: string;
   categoryLabel: string;
+  categoryColor?: string | null;
+  categoryTextColor?: string | null;
   details: string;
   locationLabel?: string | null;
   latitude?: number | null;
@@ -41,6 +43,9 @@ const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "medium",
   timeStyle: "short",
 });
+
+const DEFAULT_CATEGORY_BADGE_COLOR = "#E5E5F4";
+const DEFAULT_CATEGORY_BADGE_TEXT_COLOR = "#161616";
 
 function formatUserName(user?: ContributionDetail["closedBy"]) {
   if (!user) {
@@ -94,6 +99,33 @@ export function TownContributionDetail({
     ),
     [currentContribution.status]
   );
+
+  const categoryTag = useMemo(() => {
+    const label = (currentContribution.categoryLabel ?? "").trim();
+    const hasCategory = label.length > 0;
+    const backgroundColor = hasCategory
+      ? currentContribution.categoryColor ?? DEFAULT_CATEGORY_BADGE_COLOR
+      : "#f5f5f5";
+    const textColor = hasCategory
+      ? currentContribution.categoryTextColor ?? DEFAULT_CATEGORY_BADGE_TEXT_COLOR
+      : "#161616";
+
+    return (
+      <Badge
+        small
+        style={{
+          backgroundColor,
+          color: textColor,
+        }}
+      >
+        {hasCategory ? label : "Non catégorisé"}
+      </Badge>
+    );
+  }, [
+    currentContribution.categoryColor,
+    currentContribution.categoryLabel,
+    currentContribution.categoryTextColor,
+  ]);
 
   const handleClosure = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -187,20 +219,16 @@ export function TownContributionDetail({
           <div className="fr-grid-row fr-grid-row--gutters fr-grid-row--middle">
             <div className="fr-col-auto">{typeTag}</div>
             <div className="fr-col-auto">{statusTag}</div>
+            <div className="fr-col-auto">{categoryTag}</div>
           </div>
           <h1 className="fr-h3 fr-mb-0">
             {currentContribution.title || "Sans titre"}
           </h1>
           <p className="fr-text--sm fr-text-mention--grey fr-mb-1w">
-            {currentContribution.categoryLabel}
+            Créé le {dateFormatter.format(new Date(currentContribution.createdAt))}
           </p>
           <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
-            Créé le{" "}
-            {dateFormatter.format(new Date(currentContribution.createdAt))}
-          </p>
-          <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
-            Dernière mise à jour le{" "}
-            {dateFormatter.format(new Date(currentContribution.updatedAt))}
+            Dernière mise à jour le {dateFormatter.format(new Date(currentContribution.updatedAt))}
           </p>
         </div>
       </header>

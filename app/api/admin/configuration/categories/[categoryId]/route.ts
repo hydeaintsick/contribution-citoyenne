@@ -3,6 +3,12 @@ import { z } from "zod";
 import { getSessionFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+const hexColorSchema = z
+  .string()
+  .trim()
+  .regex(/^#(?:[0-9a-fA-F]{6})$/, "La couleur doit être un hexadécimal #RRGGBB.")
+  .transform((value) => value.toUpperCase());
+
 const updateSchema = z
   .object({
     name: z
@@ -17,12 +23,16 @@ const updateSchema = z
       .optional()
       .transform((value) => (value && value.length > 0 ? value : undefined)),
     isActive: z.boolean().optional(),
+    badgeColor: hexColorSchema.optional(),
+    badgeTextColor: hexColorSchema.optional(),
   })
   .refine(
     (data) =>
       data.name !== undefined ||
       data.description !== undefined ||
-      data.isActive !== undefined,
+      data.isActive !== undefined ||
+      data.badgeColor !== undefined ||
+      data.badgeTextColor !== undefined,
     {
       message: "Aucune modification à appliquer.",
     },
@@ -37,6 +47,8 @@ function serializeCategory(category: {
   name: string;
   description: string | null;
   isActive: boolean;
+  badgeColor: string;
+  badgeTextColor: string;
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -45,6 +57,8 @@ function serializeCategory(category: {
     name: category.name,
     description: category.description,
     isActive: category.isActive,
+    badgeColor: category.badgeColor,
+    badgeTextColor: category.badgeTextColor,
     createdAt: category.createdAt.toISOString(),
     updatedAt: category.updatedAt.toISOString(),
   };
@@ -97,6 +111,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
             ? parseResult.data.description ?? null
             : undefined,
         isActive: parseResult.data.isActive ?? undefined,
+        badgeColor: parseResult.data.badgeColor ?? undefined,
+        badgeTextColor: parseResult.data.badgeTextColor ?? undefined,
       },
     });
 

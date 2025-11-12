@@ -1,0 +1,78 @@
+.filtersRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.categoryFilters {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.categoryFilters::-webkit-scrollbar {
+  height: 0.35rem;
+}
+
+.categoryFilters::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 999px;
+}
+
+.categoryFilterButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.categoryFilterDot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.categoryFilterCount {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+}
+
+.categoryBadgeWrapper {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 48rem) {
+  .filtersRow {
+    gap: 0.5rem;
+  }
+
+  .categoryFilters {
+    margin-top: 0;
+  }
+}
+
+@media (min-width: 62rem) {
+  .filtersRow {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .categoryFilters {
+    justify-content: flex-end;
+  }
+}
+
