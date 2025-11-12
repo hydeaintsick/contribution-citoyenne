@@ -10,7 +10,8 @@
     "lint": "eslint",
     "commit": "cz",
     "prepare": "husky",
-    "admin:create": "tsx scripts/create-admin.ts"
+    "admin:create": "tsx scripts/create-admin.ts",
+    "requalify:contributions": "tsx scripts/requalify-contributions.ts"
   },
   "config": {
     "commitizen": {

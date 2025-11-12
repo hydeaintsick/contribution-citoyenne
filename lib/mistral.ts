@@ -18,7 +18,12 @@ const categoryPredictionSchema = z.object({
   rationale: z.string().optional(),
 });
 
+const categoryWithTitleSchema = categoryPredictionSchema.extend({
+  title: z.string().trim().min(3).max(160),
+});
+
 type CategoryPrediction = z.infer<typeof categoryPredictionSchema>;
+type CategoryWithTitlePrediction = z.infer<typeof categoryWithTitleSchema>;
 
 type MistralChoice = {
   message?: {
@@ -30,7 +35,7 @@ type MistralResponse = {
   choices?: MistralChoice[];
 };
 
-function parseCategoryPrediction(raw: string): CategoryPrediction | null {
+function parseJsonWithSchema<T>(raw: string, schema: z.ZodSchema<T>): T | null {
   if (!raw) {
     return null;
   }
@@ -50,7 +55,7 @@ function parseCategoryPrediction(raw: string): CategoryPrediction | null {
 
     try {
       const parsed = JSON.parse(candidate);
-      return categoryPredictionSchema.parse(parsed);
+      return schema.parse(parsed);
     } catch (error) {
       // Keep iterating: we might still find a valid JSON payload.
       if (attempts.size === 1) {
@@ -156,7 +161,7 @@ export async function predictCategory({
   const rawContent =
     payload?.choices?.[0]?.message?.content?.trim() ?? JSON.stringify({});
 
-  const parsed = parseCategoryPrediction(rawContent);
+  const parsed = parseJsonWithSchema(rawContent, categoryPredictionSchema);
 
   if (!parsed) {
     return null;
@@ -179,4 +184,107 @@ export async function predictCategory({
     confidence: parsed.confidence,
     rationale: parsed.rationale,
   };
+}
+
+function buildClassificationWithTitlePrompt({
+  categories,
+  existingTitle,
+  existingCategory,
+  details,
+}: {
+  categories: string[];
+  existingTitle?: string | null;
+  existingCategory?: string | null;
+  details: string;
+}): string {
+  const available = categories.map((category) => `- ${category}`).join("\n");
+
+  return [
+    "Tu es un agent qui qualifie des signalements citoyens pour une collectivité française.",
+    "Analyse les informations fournies et sélectionne exactement UNE catégorie parmi la liste autorisée.",
+    "Génère également un titre court (max. 80 caractères) et explicite en français pour faciliter la lecture par les agents.",
+    'Réponds uniquement en JSON avec la forme {"category": "...", "title": "..."} et optionnellement "confidence" (entre 0 et 1) et "rationale".',
+    "",
+    "Liste des catégories autorisées :",
+    available,
+    existingCategory
+      ? `Catégorie actuelle (peut être incorrecte) : ${existingCategory}`
+      : null,
+    existingTitle ? `Titre actuel : ${existingTitle}` : null,
+    "",
+    `Description : ${details}`,
+  ]
+    .filter((line): line is string => Boolean(line))
+    .join("\n");
+}
+
+export async function classifyContributionWithTitle({
+  categories,
+  details,
+  existingTitle,
+  existingCategory,
+  signal,
+}: {
+  categories: string[];
+  details: string;
+  existingTitle?: string | null;
+  existingCategory?: string | null;
+  signal?: AbortSignal;
+}): Promise<CategoryWithTitlePrediction | null> {
+  if (!isMistralConfigured) {
+    return null;
+  }
+
+  if (categories.length === 0) {
+    throw new Error("No categories configured for this commune.");
+  }
+
+  const response = await fetch(MISTRAL_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${MISTRAL_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: MISTRAL_MODEL,
+      temperature: 0,
+      response_format: {
+        type: "json_object",
+      },
+      messages: [
+        {
+          role: "system",
+          content:
+            "Tu es un assistant qui aide à qualifier et résumer des remontées citoyennes pour une collectivité française.",
+        },
+        {
+          role: "user",
+          content: buildClassificationWithTitlePrompt({
+            categories,
+            existingTitle,
+            existingCategory,
+            details,
+          }),
+        },
+      ],
+    }),
+    signal,
+  });
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => "Unknown error");
+    throw new Error(
+      `Mistral classification failed (${response.status}): ${message}`
+    );
+  }
+
+  const payload = (await response
+    .json()
+    .catch(() => null)) as MistralResponse | null;
+
+  const rawContent =
+    payload?.choices?.[0]?.message?.content?.trim() ?? JSON.stringify({});
+
+  return parseJsonWithSchema(rawContent, categoryWithTitleSchema);
 }
