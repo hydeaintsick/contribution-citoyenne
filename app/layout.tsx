@@ -11,6 +11,7 @@ import { ThemeProviderClient } from "@/components/ThemeProviderClient";
 import { PosthogProviderClient } from "@/components/PosthogProviderClient";
 import { createMetadata, createJsonLd } from "@/lib/seo";
 import { getSessionCookieName, parseSessionCookie } from "@/lib/session";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import "./globals.css";
 
 export const metadata: Metadata = createMetadata();
@@ -55,6 +56,7 @@ export default async function RootLayout({
               <HeaderClient initialSessionUser={initialSessionUser} />
               <ConsentBannerClient />
               {children}
+              <GoogleAnalytics />
               <Footer
                 accessibility="non compliant"
                 brandTop={
