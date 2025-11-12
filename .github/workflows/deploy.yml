@@ -33,6 +33,9 @@ jobs:
           CAPTCHA_SECRET: ${{ secrets.CAPTCHA_SECRET }}
           NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
           NEXT_PUBLIC_POSTHOG_HOST: ${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          MISTRAL_API_URL: ${{ secrets.MISTRAL_API_URL }}
+          MISTRAL_CLASSIFICATION_MODEL: ${{ secrets.MISTRAL_CLASSIFICATION_MODEL }}
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25

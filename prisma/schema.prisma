@@ -100,6 +100,20 @@ model Commune {
   reports   Contribution[]
 }
 
+model Category {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  contributions Contribution[]
+
+  @@index([isActive])
+  @@unique([name])
+}
+
 model CityAuditLog {
   id        String          @id @default(auto()) @map("_id") @db.ObjectId
   communeId String          @db.ObjectId
@@ -126,9 +140,10 @@ model Contribution {
   commune       Commune            @relation(fields: [communeId], references: [id], onDelete: Cascade)
   type          ContributionType
   status        ContributionStatus @default(OPEN)
-  categoryValue String
+  categoryId    String?            @db.ObjectId
+  category      Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   categoryLabel String
-  subcategory   String
+  title         String             @default("")
   details       String
   locationLabel String?
   latitude      Float?

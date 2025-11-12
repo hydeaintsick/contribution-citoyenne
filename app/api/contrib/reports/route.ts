@@ -2,17 +2,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { ContributionStatus, ContributionType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { predictCategory } from "@/lib/mistral";
 
 export const runtime = "nodejs";
 
 const reportSchema = z.object({
   communeId: z.string().min(1),
   type: z.enum(["alert", "suggestion"]),
-  category: z.object({
-    value: z.string().min(1),
-    label: z.string().min(1),
-  }),
-  subcategory: z.string().min(1),
+  title: z.string().trim().min(3),
   details: z.string().min(12),
   location: z
     .string()
@@ -79,6 +76,65 @@ export async function POST(request: Request) {
       );
     }
 
+    const categories = await prisma.category.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    if (categories.length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Aucune catégorie n’est disponible pour le moment. Contactez un administrateur.",
+        },
+        { status: 422 },
+      );
+    }
+
+    const mistralResult = await predictCategory({
+      categories: categories.map((category) => category.name),
+      title: payload.title,
+      details: payload.details,
+    }).catch((error) => {
+      console.error("Mistral classification failed", error);
+      return null;
+    });
+
+    const normalizedCategoryName =
+      mistralResult?.category ?? categories[0]?.name ?? null;
+
+    if (!normalizedCategoryName) {
+      return NextResponse.json(
+        {
+          error:
+            "Impossible de déterminer une catégorie pour cette remontée. Merci de réessayer plus tard.",
+        },
+        { status: 503 },
+      );
+    }
+
+    const matchedCategory = categories.find(
+      (category) =>
+        category.name.localeCompare(normalizedCategoryName, "fr", {
+          sensitivity: "accent",
+          usage: "search",
+        }) === 0,
+    );
+
+    if (!matchedCategory) {
+      return NextResponse.json(
+        {
+          error:
+            "La catégorie déterminée n’est pas reconnue. Merci de réessayer ultérieurement.",
+        },
+        { status: 502 },
+      );
+    }
+
     const contribution = await prisma.contribution.create({
       data: {
         communeId: commune.id,
@@ -87,9 +143,9 @@ export async function POST(request: Request) {
             ? ContributionType.ALERT
             : ContributionType.SUGGESTION,
         status: ContributionStatus.OPEN,
-        categoryValue: payload.category.value,
-        categoryLabel: payload.category.label,
-        subcategory: payload.subcategory,
+        categoryId: matchedCategory.id,
+        categoryLabel: matchedCategory.name,
+        title: payload.title.trim(),
         details: payload.details.trim(),
         locationLabel: payload.location ?? null,
         latitude: payload.coordinates?.latitude ?? null,
@@ -103,6 +159,8 @@ export async function POST(request: Request) {
       contributionId: contribution.id,
       communeId: commune.id,
       type: contribution.type,
+      category: matchedCategory.name,
+      classificationConfidence: mistralResult?.confidence,
     });
 
     return NextResponse.json(
@@ -114,9 +172,9 @@ export async function POST(request: Request) {
           communeId: contribution.communeId,
           type: contribution.type,
           status: contribution.status,
-          categoryValue: contribution.categoryValue,
           categoryLabel: contribution.categoryLabel,
-          subcategory: contribution.subcategory,
+          categoryId: contribution.categoryId,
+          title: contribution.title,
           locationLabel: contribution.locationLabel,
           latitude: contribution.latitude,
           longitude: contribution.longitude,

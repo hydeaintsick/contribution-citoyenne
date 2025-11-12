@@ -16,44 +16,75 @@ export default function ConfidentialitePage() {
           <section className="fr-mt-6w">
             <h2 className="fr-h2">1. Collecte des données</h2>
             <p className="fr-text">
-              Contribcit collecte les données personnelles suivantes lorsque vous utilisez notre
-              formulaire de contact :
+              Contribcit collecte des données personnelles dans deux situations principales :
             </p>
             <ul className="fr-text">
-              <li>Nom</li>
-              <li>Adresse email professionnelle</li>
-              <li>Fonction</li>
-              <li>Commune</li>
-              <li>Message</li>
+              <li>
+                <strong>Formulaire de contact</strong> : nom, adresse email professionnelle,
+                fonction, commune et message transmis via notre site.
+              </li>
+              <li>
+                <strong>Retours citoyens</strong> : contenu du message, type de retour (alerte ou
+                suggestion), photo ou document transmis, géolocalisation, catégorie choisie, QR
+                code ou lien utilisé (annuaire Contribcit, lien partagé par la commune ou QR code
+                affiché sur le terrain) et, le cas échéant, coordonnées facultatives laissées par
+                le citoyen.
+              </li>
             </ul>
           </section>
 
           <section className="fr-mt-6w">
             <h2 className="fr-h2">2. Finalité du traitement</h2>
-            <p className="fr-text">
-              Les données collectées sont utilisées uniquement pour répondre à votre demande de
-              contact et vous proposer une démonstration de Contribcit.
-            </p>
+            <ul className="fr-text">
+              <li>
+                Traiter votre demande d&apos;information ou de démonstration et vous recontacter.
+              </li>
+              <li>
+                Permettre aux communes clientes de recueillir, traiter et suivre les retours de
+                leurs citoyens. Chaque retour est analysé automatiquement afin de proposer une
+                thématique et une priorité de traitement.
+              </li>
+            </ul>
           </section>
 
           <section className="fr-mt-6w">
             <h2 className="fr-h2">3. Base légale</h2>
             <p className="fr-text">
-              Le traitement de vos données personnelles est basé sur votre consentement explicite,
-              donné lors de la soumission du formulaire de contact.
+              Le traitement des données issues du formulaire de contact repose sur votre
+              consentement explicite (article 6.1.a du RGPD). Les retours citoyens sont traités
+              pour l&apos;exécution des missions de service public confiées aux communes (article
+              6.1.e du RGPD) et dans l&apos;intérêt légitime des collectivités à organiser leurs
+              services.
             </p>
           </section>
 
           <section className="fr-mt-6w">
-            <h2 className="fr-h2">4. Conservation des données</h2>
+            <h2 className="fr-h2">4. Sous-traitants et classification automatisée</h2>
             <p className="fr-text">
-              Vos données sont conservées pendant une durée maximale de 3 ans à compter de votre
-              dernier contact, sauf obligation légale contraire.
+              Contribcit fait appel à la société{" "}
+              <Link href="https://mistral.ai" target="_blank" rel="noopener noreferrer">
+                Mistral AI
+              </Link>{" "}
+              pour proposer une classification automatique des retours citoyens. Les informations
+              partagées se limitent au contenu utile à l&apos;analyse (texte libre, pièces
+              jointes et localisation). Aucune donnée n&apos;est utilisée par Mistral AI pour
+              d&apos;autres finalités. Les communes conservent en permanence la main sur la
+              catégorisation (validation, modification ou suppression des propositions).
             </p>
           </section>
 
           <section className="fr-mt-6w">
-            <h2 className="fr-h2">5. Vos droits</h2>
+            <h2 className="fr-h2">5. Conservation des données</h2>
+            <p className="fr-text">
+              Les données de contact sont conservées pendant 3 ans à compter de votre dernier
+              échange, sauf obligation légale contraire. Les retours citoyens sont mis à
+              disposition des communes pendant la durée du service, puis supprimés ou anonymisés
+              selon leurs instructions dans un délai maximal de 24 mois.
+            </p>
+          </section>
+
+          <section className="fr-mt-6w">
+            <h2 className="fr-h2">6. Vos droits</h2>
             <p className="fr-text">
               Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez
               des droits suivants :
@@ -73,7 +104,7 @@ export default function ConfidentialitePage() {
           </section>
 
           <section className="fr-mt-6w">
-            <h2 className="fr-h2">6. Cookies</h2>
+            <h2 className="fr-h2">7. Cookies</h2>
             <p className="fr-text">
               Ce site utilise des cookies d'analyse (Matomo) uniquement après votre consentement.
               Vous pouvez modifier vos préférences à tout moment via la bannière de cookies.
@@ -81,7 +112,7 @@ export default function ConfidentialitePage() {
           </section>
 
           <section className="fr-mt-6w">
-            <h2 className="fr-h2">7. Contact</h2>
+            <h2 className="fr-h2">8. Contact</h2>
             <p className="fr-text">
               Pour toute question concernant cette politique de confidentialité, vous pouvez nous
               contacter à : <a href="mailto:contact@contribcit.fr">contact@contribcit.fr</a>

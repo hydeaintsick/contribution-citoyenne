@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useId } from "react";
+import { useCallback, useEffect, useRef, useState, useId } from "react";
 import {
   AnimatePresence,
   motion,
@@ -10,17 +10,10 @@ import {
 import { Stepper } from "@codegouvfr/react-dsfr/Stepper";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Alert } from "@codegouvfr/react-dsfr/Alert";
-import { Select } from "@codegouvfr/react-dsfr/Select";
 import { Input } from "@codegouvfr/react-dsfr/Input";
 import { Tag } from "@codegouvfr/react-dsfr/Tag";
 
 type ReportType = "alert" | "suggestion";
-
-type Category = {
-  value: string;
-  label: string;
-  subcategories: string[];
-};
 
 type PhotoUploadInfo = {
   url: string;
@@ -186,10 +179,6 @@ async function compressPhotoFile(file: File): Promise<File> {
 const REPORT_STEPS = [
   {
     title: "Type de remontée",
-    next: "Catégorisation",
-  },
-  {
-    title: "Catégorisation",
     next: "Détails",
   },
   {
@@ -209,59 +198,6 @@ const STEP_TRANSITION: Transition = {
   ease: STEP_EASING,
 };
 
-const categories: Category[] = [
-  {
-    value: "espaces-publics",
-    label: "Espaces publics",
-    subcategories: [
-      "Éclairage défectueux",
-      "Parcs et jardins",
-      "Aires de jeux",
-      "Équipements sportifs",
-    ],
-  },
-  {
-    value: "proprete",
-    label: "Propreté",
-    subcategories: [
-      "Déchets et dépôts sauvages",
-      "Graffitis",
-      "Nuisances animales",
-      "Poubelles débordantes",
-    ],
-  },
-  {
-    value: "securite",
-    label: "Sécurité",
-    subcategories: [
-      "Incivilités",
-      "Éclairage public",
-      "Trafic suspect",
-      "Signalisation dangereuse",
-    ],
-  },
-  {
-    value: "transports",
-    label: "Transports",
-    subcategories: [
-      "Arrêts de bus",
-      "Pistes cyclables",
-      "Stationnement",
-      "Horaires et fréquence",
-    ],
-  },
-  {
-    value: "voirie",
-    label: "Voirie",
-    subcategories: [
-      "Nid-de-poule",
-      "Trottoirs",
-      "Signalisation routière",
-      "Chantiers",
-    ],
-  },
-].sort((a, b) => a.label.localeCompare(b.label, "fr"));
-
 const MIN_DETAILS_LENGTH = 12;
 const MIN_ADDRESS_QUERY_LENGTH = 4;
 
@@ -279,10 +215,9 @@ export function CitizenReportTunnel({
   const locationInputId = useId();
   const locationSuggestionsId = `${locationInputId}-suggestions`;
 
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [reportType, setReportType] = useState<ReportType | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
   const [details, setDetails] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [coordinates, setCoordinates] = useState<{
@@ -333,8 +268,7 @@ export function CitizenReportTunnel({
     resetAutoAdvance();
     setCurrentStep(1);
     setReportType(null);
-    setSelectedCategory("");
-    setSelectedSubcategory("");
+    setTitle("");
     setDetails("");
     setLocation("");
     setCoordinates(null);
@@ -376,61 +310,14 @@ export function CitizenReportTunnel({
     setCurrentStep(2);
   }, []);
 
-  const handleCategoryChange = useCallback(
-    (value: string) => {
-      setSelectedCategory(value);
-      setSelectedSubcategory("");
-      resetAutoAdvance();
-      setAutoAdvanceMessage(null);
-    },
-    [resetAutoAdvance]
-  );
-
-  const handleSubcategoryChange = useCallback(
-    (value: string) => {
-      setSelectedSubcategory(value);
-
-      if (!value) {
-        resetAutoAdvance();
-        setAutoAdvanceMessage(null);
-        return;
-      }
-
-      setAutoAdvanceMessage("Catégorisation enregistrée.");
-      resetAutoAdvance();
-      autoAdvanceTimeoutRef.current = setTimeout(() => {
-        setAutoAdvanceMessage(null);
-        setCurrentStep(3);
-      }, 800);
-    },
-    [resetAutoAdvance]
-  );
-
   const handleBackToType = useCallback(() => {
     resetAutoAdvance();
     setAutoAdvanceMessage(null);
     setCurrentStep(1);
   }, [resetAutoAdvance]);
 
-  const handleBackToCategory = useCallback(() => {
-    resetAutoAdvance();
-    setAutoAdvanceMessage(null);
-    setCurrentStep(2);
-  }, [resetAutoAdvance]);
-
-  const selectedCategoryLabel = useMemo(
-    () =>
-      categories.find((category) => category.value === selectedCategory)
-        ?.label ?? "",
-    [selectedCategory]
-  );
-
-  const selectedSubcategoryOptions = useMemo(() => {
-    const category = categories.find(({ value }) => value === selectedCategory);
-    return category?.subcategories ?? [];
-  }, [selectedCategory]);
-
   const trimmedDetails = details.trim();
+  const trimmedTitle = title.trim();
   const trimmedLocation = location.trim();
   const hasCoordinates = !!coordinates;
   const isManualLocationSufficient =
@@ -442,8 +329,7 @@ export function CitizenReportTunnel({
   const isSubmitDisabled =
     submissionState === "loading" ||
     !reportType ||
-    !selectedCategory ||
-    !selectedSubcategory ||
+    trimmedTitle.length < 3 ||
     trimmedDetails.length < MIN_DETAILS_LENGTH ||
     !isLocationValid;
   const isFormLocked =
@@ -773,15 +659,24 @@ export function CitizenReportTunnel({
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
 
-      if (!reportType || !selectedCategory || !selectedSubcategory) {
+      if (!reportType) {
         setSubmissionState("error");
         setSubmissionError(
-          "Merci de sélectionner un type de remontée ainsi qu’une catégorie et une sous-catégorie."
+          "Merci de sélectionner un type de remontée avant de continuer.",
         );
         return;
       }
 
+      const cleanedTitle = title.trim();
       const cleanedDetails = details.trim();
+
+      if (cleanedTitle.length < 3) {
+        setSubmissionState("error");
+        setSubmissionError(
+          "Merci de donner un titre (au moins 3 caractères) à votre remontée.",
+        );
+        return;
+      }
 
       if (cleanedDetails.length < MIN_DETAILS_LENGTH) {
         setSubmissionState("error");
@@ -803,11 +698,7 @@ export function CitizenReportTunnel({
           body: JSON.stringify({
             communeId,
             type: reportType,
-            category: {
-              value: selectedCategory,
-              label: selectedCategoryLabel,
-            },
-            subcategory: selectedSubcategory,
+            title: cleanedTitle,
             details: cleanedDetails,
             location: location.trim() || null,
             coordinates: coordinates
@@ -837,7 +728,7 @@ export function CitizenReportTunnel({
         setSubmissionState("success");
         resetAutoAdvance();
         setAutoAdvanceMessage(null);
-        setCurrentStep(4);
+        setCurrentStep(3);
       } catch (error) {
         console.error("Report submission failed", error);
         setSubmissionState("error");
@@ -855,9 +746,7 @@ export function CitizenReportTunnel({
       photoUploadInfo,
       coordinates,
       reportType,
-      selectedCategory,
-      selectedCategoryLabel,
-      selectedSubcategory,
+      title,
       resetAutoAdvance,
     ]
   );
@@ -997,118 +886,21 @@ export function CitizenReportTunnel({
             className="fr-flow fr-pb-4w"
             aria-labelledby="citizen-report-step-2"
           >
-            <div className="fr-grid-row fr-grid-row--gutters fr-grid-row--middle fr-mb-3w">
-              <div className="fr-col-auto">
-                <Button
-                  priority="tertiary"
-                  iconId="fr-icon-arrow-left-line"
-                  onClick={handleBackToType}
-                >
-                  Revenir à l’étape précédente
-                </Button>
-              </div>
-              <div className="fr-col">
-                <h2
-                  id="citizen-report-step-2"
-                  className="fr-h4 fr-mt-0 fr-mb-0"
-                >
-                  Précisez la catégorie concernée
-                </h2>
-              </div>
-            </div>
-
-            <Select
-              label="Catégorie"
-              nativeSelectProps={{
-                value: selectedCategory,
-                onChange: (event) => handleCategoryChange(event.target.value),
-                required: true,
-              }}
-            >
-              <option value="">Sélectionnez une catégorie</option>
-              {categories.map((category) => (
-                <option key={category.value} value={category.value}>
-                  {category.label}
-                </option>
-              ))}
-            </Select>
-
-            <AnimatePresence>
-              {selectedCategory && (
-                <motion.div
-                  key="subcategory"
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 8 }}
-                  transition={STEP_TRANSITION}
-                >
-                  <Select
-                    label="Sous-catégorie"
-                    nativeSelectProps={{
-                      value: selectedSubcategory,
-                      onChange: (event) =>
-                        handleSubcategoryChange(event.target.value),
-                      required: true,
-                    }}
-                  >
-                    <option value="">Choisissez une précision</option>
-                    {selectedSubcategoryOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </Select>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {autoAdvanceMessage && selectedSubcategory && (
-                <motion.div
-                  key="category-confirm"
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 6 }}
-                  transition={STEP_TRANSITION}
-                  className="fr-mt-3w"
-                >
-                  <Alert
-                    severity="success"
-                    small
-                    title="Merci"
-                    description={autoAdvanceMessage}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.section>
-        )}
-
-        {currentStep === 3 && (
-          <motion.section
-            key="step-3"
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={STEP_TRANSITION}
-            className="fr-flow fr-pb-4w"
-            aria-labelledby="citizen-report-step-3"
-          >
             <div className="fr-flow fr-mb-3w contribcit-step-3-header">
               <Button
                 priority="tertiary"
                 iconId="fr-icon-arrow-left-line"
-                onClick={handleBackToCategory}
+                onClick={handleBackToType}
                 disabled={submissionState === "loading"}
                 className="contribcit-step-3-back"
               >
-                Modifier la catégorisation
+                Changer le type
               </Button>
               <h2
-                id="citizen-report-step-3"
+                id="citizen-report-step-2"
                 className="fr-h4 fr-mt-0 fr-mb-0 contribcit-step-3-title"
               >
-                Vous y êtes presque
+                Décrivez votre remontée
               </h2>
             </div>
 
@@ -1139,14 +931,26 @@ export function CitizenReportTunnel({
                       {reportType === "alert" ? "Alerte" : "Suggestion"}
                     </Tag>
                   )}
-                  {selectedCategoryLabel && (
-                    <Tag small>{selectedCategoryLabel}</Tag>
-                  )}
-                  {selectedSubcategory && (
-                    <Tag small>{selectedSubcategory}</Tag>
-                  )}
                 </div>
               </div>
+
+              <Input
+                label="Titre de votre remontée"
+                hintText="Quelques mots pour résumer le problème ou l’idée."
+                disabled={isFormLocked}
+                classes={{
+                  root: "contribcit-section-spacing",
+                }}
+                nativeInputProps={{
+                  value: title,
+                  onChange: (event) => setTitle(event.target.value),
+                  required: true,
+                  placeholder: "Ex. Feu tricolore en panne",
+                  minLength: 3,
+                  maxLength: 140,
+                  disabled: isFormLocked,
+                }}
+              />
 
               <Input
                 label="Décrivez la situation"
@@ -1446,25 +1250,25 @@ export function CitizenReportTunnel({
           </motion.section>
         )}
 
-        {currentStep === 4 && (
+        {currentStep === 3 && (
           <motion.section
-            key="step-4"
+            key="step-3"
             initial={{ opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -24 }}
             transition={STEP_TRANSITION}
             className="fr-flow fr-pb-4w"
-            aria-labelledby="citizen-report-step-4"
+            aria-labelledby="citizen-report-step-3"
           >
             <div className="fr-callout">
               <h2
-                id="citizen-report-step-4"
+                id="citizen-report-step-3"
                 className="fr-callout__title fr-h4"
               >
                 Merci pour votre remontée
               </h2>
               <p className="fr-text--sm">
-                Votre contribution a bien été transmise à la mairie de{" "}
+                Votre contribution « {trimmedTitle || "Sans titre"} » a bien été transmise à la mairie de{" "}
                 {communeName}. Elle sera analysée dans les meilleurs délais.
               </p>
               <p className="fr-text--sm fr-mb-0">

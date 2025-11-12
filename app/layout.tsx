@@ -129,6 +129,15 @@ export default async function RootLayout({
                       rel: "noopener noreferrer",
                     },
                   },
+                  {
+                    text: "Mistral AI",
+                    linkProps: {
+                      href: "https://mistral.ai",
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                      title: "Visiter le site de Mistral AI (nouvelle fenêtre)",
+                    },
+                  },
                 ]}
               />
             </ThemeProviderClient>

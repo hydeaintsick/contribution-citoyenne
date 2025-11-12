@@ -2,27 +2,54 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
+import type { ReactNode } from "react";
 
-const steps = [
+type Step = {
+  number: number;
+  title: string;
+  description: ReactNode;
+  visual?: ReactNode;
+};
+
+const steps: Step[] = [
   {
     number: 1,
-    title: "Le citoyen scanne",
-    description: "Un QR code",
-    icon: "/illustrations/qr.svg",
+    title: "Le citoyen accède à Contribcit",
+    description: (
+      <>
+        Depuis <Link href="/annuaire">l&apos;annuaire Contribcit</Link>, un lien
+        partagé par la commune ou un QR code affiché sur le terrain.
+      </>
+    ),
   },
   {
     number: 2,
-    title: "Il choisit",
-    description:
-      "Alerter ou Suggérer, précise la catégorie et ajoute une description (photo/localisation possibles)",
-    icon: "/illustrations/citoyens.svg",
+    title: "Mistral AI classe le retour",
+    description: (
+      <>
+        Les messages, photos et localisations sont analysés et catégorisés
+        automatiquement par{" "}
+        <Link
+          href="https://mistral.ai"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Mistral AI
+        </Link>
+        , pour accélérer l'orientation des services municipaux.
+      </>
+    ),
   },
   {
     number: 3,
-    title: "La mairie reçoit",
-    description:
-      "Et traite : suivi, cartographie, réponse par email, clôture avec motif",
-    icon: "/illustrations/ville.svg",
+    title: "La commune suit par thématique",
+    description: (
+      <>
+        Les équipes municipales consultent le tableau de bord et accèdent aux
+        retours classés par thématique pour prioriser et informer les citoyens.
+      </>
+    ),
   },
 ];
 
@@ -67,15 +94,9 @@ export function HowItWorks() {
               </div>
               <h3 className="fr-h4 fr-text--center fr-mt-2w">{step.title}</h3>
               <p className="fr-text--center fr-mt-2w">{step.description}</p>
-              <div className="fr-text--center fr-mt-4w">
-                <Image
-                  src={step.icon}
-                  alt={`Étape ${step.number}: ${step.title}`}
-                  width={120}
-                  height={120}
-                  className="fr-responsive-img"
-                />
-              </div>
+              {step?.visual && (
+                <div className="fr-text--center fr-mt-4w">{step.visual}</div>
+              )}
             </div>
           </motion.div>
         ))}

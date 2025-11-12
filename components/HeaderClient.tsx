@@ -492,6 +492,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
             href: "/admin/profile",
           },
         },
+        {
+          text: "Configuration",
+          linkProps: {
+            href: "/admin/configuration",
+          },
+        },
       ]);
     }
 
@@ -525,6 +531,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           text: "Mon profil",
           linkProps: {
             href: "/admin/profile",
+          },
+        },
+        {
+          text: "Configuration",
+          linkProps: {
+            href: "/admin/configuration",
           },
         },
       ]);

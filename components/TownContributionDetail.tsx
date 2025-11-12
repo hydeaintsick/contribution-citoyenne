@@ -14,8 +14,8 @@ type ContributionDetail = {
   id: string;
   type: "ALERT" | "SUGGESTION";
   status: "OPEN" | "CLOSED";
+  title: string;
   categoryLabel: string;
-  subcategory: string;
   details: string;
   locationLabel?: string | null;
   latitude?: number | null;
@@ -188,9 +188,11 @@ export function TownContributionDetail({
             <div className="fr-col-auto">{typeTag}</div>
             <div className="fr-col-auto">{statusTag}</div>
           </div>
-          <h1 className="fr-h3 fr-mb-0">{currentContribution.categoryLabel}</h1>
-          <p className="fr-text--lead fr-mb-0">
-            {currentContribution.subcategory}
+          <h1 className="fr-h3 fr-mb-0">
+            {currentContribution.title || "Sans titre"}
+          </h1>
+          <p className="fr-text--sm fr-text-mention--grey fr-mb-1w">
+            {currentContribution.categoryLabel}
           </p>
           <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
             Créé le{" "}

@@ -8,8 +8,8 @@ type ContributionListItem = {
   id: string;
   type: "ALERT" | "SUGGESTION";
   status: "OPEN" | "CLOSED";
+  title: string;
   categoryLabel: string;
-  subcategory: string;
   createdAt: string;
   locationLabel?: string | null;
 };
@@ -127,7 +127,7 @@ export function TownContributionsTable({
                   <thead>
                     <tr>
                       <th scope="col">Type</th>
-                      <th scope="col">Catégorie</th>
+                      <th scope="col">Titre & catégorie</th>
                       <th scope="col">Date</th>
                       <th scope="col">Lieu</th>
                       <th scope="col" className="fr-text--right">
@@ -147,9 +147,11 @@ export function TownContributionsTable({
                           </Badge>
                         </td>
                         <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
-                          <p className="fr-text--md fr-text--bold fr-mb-0">{item.categoryLabel}</p>
+                          <p className="fr-text--md fr-text--bold fr-mb-0">
+                            {item.title || "Sans titre"}
+                          </p>
                           <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
-                            {item.subcategory}
+                            {item.categoryLabel}
                           </p>
                         </td>
                         <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
