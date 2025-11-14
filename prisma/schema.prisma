@@ -60,6 +60,7 @@ model User {
   firstName         String?
   lastName          String?
   phone             String?
+  title             String?
   role              Role               @default(ADMIN)
   commune           Commune?           @relation(fields: [communeId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   communeId         String?            @db.ObjectId
@@ -101,19 +102,19 @@ model Commune {
 }
 
 model Category {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  description String?
-  isActive    Boolean   @default(true)
-  badgeColor        String   @default("#000091")
-  badgeTextColor    String   @default("#ffffff")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  description    String?
+  isActive       Boolean  @default(true)
+  badgeColor     String   @default("#000091")
+  badgeTextColor String   @default("#ffffff")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   contributions Contribution[]
 
-  @@index([isActive])
   @@unique([name])
+  @@index([isActive])
 }
 
 model CityAuditLog {

@@ -38,6 +38,8 @@ export default async function AdminProfilePage() {
       email: true,
       firstName: true,
       lastName: true,
+      title: true,
+      phone: true,
     },
   });
 
@@ -62,6 +64,8 @@ export default async function AdminProfilePage() {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          title: user.title,
+          phone: user.phone,
         }}
         role={session.user.role}
         communeName={communeName}

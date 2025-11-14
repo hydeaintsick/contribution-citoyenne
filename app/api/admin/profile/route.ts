@@ -7,6 +7,8 @@ import { hashPassword } from "@/lib/auth";
 const updateProfileSchema = z.object({
   firstName: z.string().trim().max(100).optional(),
   lastName: z.string().trim().max(100).optional(),
+  title: z.string().trim().max(100).optional(),
+  phone: z.string().trim().max(20).optional(),
   password: z
     .string()
     .min(8, "Le mot de passe doit contenir au moins 8 caractères.")
@@ -42,6 +44,8 @@ export async function GET(request: NextRequest) {
       email: true,
       firstName: true,
       lastName: true,
+      title: true,
+      phone: true,
       role: true,
     },
   });
@@ -80,11 +84,13 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  const { firstName, lastName, password } = parseResult.data;
+  const { firstName, lastName, title, phone, password } = parseResult.data;
 
   const updateData: {
     firstName?: string | null;
     lastName?: string | null;
+    title?: string | null;
+    phone?: string | null;
     password?: string;
   } = {};
 
@@ -94,6 +100,14 @@ export async function PUT(request: NextRequest) {
 
   if (lastName !== undefined) {
     updateData.lastName = lastName || null;
+  }
+
+  if (title !== undefined) {
+    updateData.title = title || null;
+  }
+
+  if (phone !== undefined) {
+    updateData.phone = phone || null;
   }
 
   if (password && password.length >= 8) {
@@ -108,6 +122,8 @@ export async function PUT(request: NextRequest) {
       email: true,
       firstName: true,
       lastName: true,
+      title: true,
+      phone: true,
       role: true,
     },
   });
