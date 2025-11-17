@@ -79,6 +79,22 @@ export default async function TownReturnDetailPage({ params }: RouteParams) {
     redirect("/admin/retours");
   }
 
+  // Récupérer les catégories actives pour le reclassement
+  const categories = await prisma.category.findMany({
+    where: {
+      isActive: true,
+    },
+    select: {
+      id: true,
+      name: true,
+      badgeColor: true,
+      badgeTextColor: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+
   return (
     <div className="fr-container fr-container--fluid fr-px-3w fr-py-6w">
       <TownContributionDetail
@@ -107,6 +123,12 @@ export default async function TownReturnDetailPage({ params }: RouteParams) {
               }
             : null,
         }}
+        categories={categories.map((category) => ({
+          id: category.id,
+          name: category.name,
+          badgeColor: category.badgeColor,
+          badgeTextColor: category.badgeTextColor,
+        }))}
       />
     </div>
   );

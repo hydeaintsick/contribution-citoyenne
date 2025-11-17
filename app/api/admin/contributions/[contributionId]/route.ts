@@ -6,15 +6,25 @@ import { prisma } from "@/lib/prisma";
 import { sendTicketResponseEmail } from "@/lib/email";
 import { sanitizeHtml } from "@/lib/sanitize";
 
-const updateSchema = z.object({
-  action: z.literal("close"),
-  closureNote: z
-    .string()
-    .trim()
-    .max(5000, "Le message de clôture ne doit pas dépasser 5000 caractères.")
-    .optional()
-    .transform((value) => (value && value.length > 0 ? value : null)),
-});
+const updateSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("close"),
+    closureNote: z
+      .string()
+      .trim()
+      .max(5000, "Le message de clôture ne doit pas dépasser 5000 caractères.")
+      .optional()
+      .transform((value) => (value && value.length > 0 ? value : null)),
+  }),
+  z.object({
+    action: z.literal("reclassify"),
+    categoryId: z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => (value && value.length > 0 ? value : null)),
+  }),
+]);
 
 type RouteContext = {
   params: { contributionId: string } | Promise<{ contributionId: string }>;
@@ -71,103 +81,211 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "Contribution introuvable." }, { status: 404 });
     }
 
-    if (contribution.status === ContributionStatus.CLOSED) {
-      return NextResponse.json(
-        { error: "La contribution est déjà clôturée." },
-        { status: 409 },
-      );
+    if (parseResult.data.action === "close") {
+      if (contribution.status === ContributionStatus.CLOSED) {
+        return NextResponse.json(
+          { error: "La contribution est déjà clôturée." },
+          { status: 409 },
+        );
+      }
+
+      const now = new Date();
+
+      // Sanitizer le HTML avant de le stocker pour prévenir les attaques XSS
+      const sanitizedClosureNote = parseResult.data.closureNote
+        ? sanitizeHtml(parseResult.data.closureNote)
+        : null;
+
+      const updatedContribution = await prisma.contribution.update({
+        where: { id: contributionId },
+        data: {
+          status: ContributionStatus.CLOSED,
+          closedAt: now,
+          closureNote: sanitizedClosureNote,
+          closedById: session.user.id,
+        },
+        select: {
+          id: true,
+          type: true,
+          status: true,
+          title: true,
+          categoryLabel: true,
+          category: {
+            select: {
+              badgeColor: true,
+              badgeTextColor: true,
+            },
+          },
+          details: true,
+          locationLabel: true,
+          latitude: true,
+          longitude: true,
+          photoUrl: true,
+          createdAt: true,
+          updatedAt: true,
+          closedAt: true,
+          closureNote: true,
+          closedBy: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      // Envoyer un email de notification si l'email est présent, qu'il y a un message de clôture et un numéro de ticket
+      if (
+        contribution.email &&
+        contribution.ticketNumber &&
+        parseResult.data.closureNote &&
+        updatedContribution.closureNote
+      ) {
+        try {
+          await sendTicketResponseEmail({
+            to: contribution.email,
+            ticketNumber: contribution.ticketNumber,
+            ticketTitle: contribution.title,
+            communeName: contribution.commune.name,
+            responseContent: updatedContribution.closureNote,
+          });
+        } catch (emailError) {
+          // On log l'erreur mais on ne bloque pas la réponse
+          console.error("Failed to send notification email", emailError);
+        }
+      }
+
+      return NextResponse.json({
+        contribution: {
+          id: updatedContribution.id,
+          type: updatedContribution.type,
+          status: updatedContribution.status,
+          title: updatedContribution.title,
+          categoryLabel: updatedContribution.categoryLabel,
+          categoryColor: updatedContribution.category?.badgeColor ?? null,
+          categoryTextColor: updatedContribution.category?.badgeTextColor ?? null,
+          details: updatedContribution.details,
+          locationLabel: updatedContribution.locationLabel,
+          latitude: updatedContribution.latitude,
+          longitude: updatedContribution.longitude,
+          photoUrl: updatedContribution.photoUrl,
+          createdAt: updatedContribution.createdAt.toISOString(),
+          updatedAt: updatedContribution.updatedAt.toISOString(),
+          closedAt: updatedContribution.closedAt
+            ? updatedContribution.closedAt.toISOString()
+            : null,
+          closureNote: updatedContribution.closureNote,
+          closedBy: updatedContribution.closedBy,
+        },
+      });
     }
 
-    const now = new Date();
+    // Action "reclassify"
+    if (parseResult.data.action === "reclassify") {
+      const { categoryId } = parseResult.data;
 
-    // Sanitizer le HTML avant de le stocker pour prévenir les attaques XSS
-    const sanitizedClosureNote = parseResult.data.closureNote
-      ? sanitizeHtml(parseResult.data.closureNote)
-      : null;
+      let categoryName = "";
+      let category: { badgeColor: string; badgeTextColor: string } | null = null;
 
-    const updatedContribution = await prisma.contribution.update({
-      where: { id: contributionId },
-      data: {
-        status: ContributionStatus.CLOSED,
-        closedAt: now,
-        closureNote: sanitizedClosureNote,
-        closedById: session.user.id,
-      },
-      select: {
-        id: true,
-        type: true,
-        status: true,
-        title: true,
-        categoryLabel: true,
-        category: {
+      if (categoryId) {
+        // Vérifier que la catégorie existe et est active
+        const foundCategory = await prisma.category.findUnique({
+          where: { id: categoryId },
           select: {
+            id: true,
+            name: true,
+            isActive: true,
             badgeColor: true,
             badgeTextColor: true,
           },
+        });
+
+        if (!foundCategory) {
+          return NextResponse.json(
+            { error: "Catégorie introuvable." },
+            { status: 404 },
+          );
+        }
+
+        if (!foundCategory.isActive) {
+          return NextResponse.json(
+            { error: "Cette catégorie n'est plus active." },
+            { status: 400 },
+          );
+        }
+
+        categoryName = foundCategory.name;
+        category = {
+          badgeColor: foundCategory.badgeColor,
+          badgeTextColor: foundCategory.badgeTextColor,
+        };
+      }
+
+      const updatedContribution = await prisma.contribution.update({
+        where: { id: contributionId },
+        data: {
+          categoryId: categoryId ?? null,
+          categoryLabel: categoryName,
         },
-        details: true,
-        locationLabel: true,
-        latitude: true,
-        longitude: true,
-        photoUrl: true,
-        createdAt: true,
-        updatedAt: true,
-        closedAt: true,
-        closureNote: true,
-        closedBy: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true,
+        select: {
+          id: true,
+          type: true,
+          status: true,
+          title: true,
+          categoryLabel: true,
+          category: {
+            select: {
+              badgeColor: true,
+              badgeTextColor: true,
+            },
+          },
+          details: true,
+          locationLabel: true,
+          latitude: true,
+          longitude: true,
+          photoUrl: true,
+          createdAt: true,
+          updatedAt: true,
+          closedAt: true,
+          closureNote: true,
+          closedBy: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    // Envoyer un email de notification si l'email est présent, qu'il y a un message de clôture et un numéro de ticket
-    if (
-      contribution.email &&
-      contribution.ticketNumber &&
-      parseResult.data.closureNote &&
-      updatedContribution.closureNote
-    ) {
-      try {
-        await sendTicketResponseEmail({
-          to: contribution.email,
-          ticketNumber: contribution.ticketNumber,
-          ticketTitle: contribution.title,
-          communeName: contribution.commune.name,
-          responseContent: updatedContribution.closureNote,
-        });
-      } catch (emailError) {
-        // On log l'erreur mais on ne bloque pas la réponse
-        console.error("Failed to send notification email", emailError);
-      }
+      return NextResponse.json({
+        contribution: {
+          id: updatedContribution.id,
+          type: updatedContribution.type,
+          status: updatedContribution.status,
+          title: updatedContribution.title,
+          categoryLabel: updatedContribution.categoryLabel,
+          categoryColor: updatedContribution.category?.badgeColor ?? null,
+          categoryTextColor: updatedContribution.category?.badgeTextColor ?? null,
+          details: updatedContribution.details,
+          locationLabel: updatedContribution.locationLabel,
+          latitude: updatedContribution.latitude,
+          longitude: updatedContribution.longitude,
+          photoUrl: updatedContribution.photoUrl,
+          createdAt: updatedContribution.createdAt.toISOString(),
+          updatedAt: updatedContribution.updatedAt.toISOString(),
+          closedAt: updatedContribution.closedAt
+            ? updatedContribution.closedAt.toISOString()
+            : null,
+          closureNote: updatedContribution.closureNote,
+          closedBy: updatedContribution.closedBy,
+        },
+      });
     }
 
-    return NextResponse.json({
-      contribution: {
-        id: updatedContribution.id,
-        type: updatedContribution.type,
-        status: updatedContribution.status,
-        title: updatedContribution.title,
-        categoryLabel: updatedContribution.categoryLabel,
-        categoryColor: updatedContribution.category?.badgeColor ?? null,
-        categoryTextColor: updatedContribution.category?.badgeTextColor ?? null,
-        details: updatedContribution.details,
-        locationLabel: updatedContribution.locationLabel,
-        latitude: updatedContribution.latitude,
-        longitude: updatedContribution.longitude,
-        photoUrl: updatedContribution.photoUrl,
-        createdAt: updatedContribution.createdAt.toISOString(),
-        updatedAt: updatedContribution.updatedAt.toISOString(),
-        closedAt: updatedContribution.closedAt
-          ? updatedContribution.closedAt.toISOString()
-          : null,
-        closureNote: updatedContribution.closureNote,
-        closedBy: updatedContribution.closedBy,
-      },
-    });
+    // Ce cas ne devrait jamais être atteint grâce au discriminatedUnion
+    return NextResponse.json({ error: "Action non supportée." }, { status: 400 });
   } catch (error) {
     console.error("Failed to update contribution", error);
     return NextResponse.json(

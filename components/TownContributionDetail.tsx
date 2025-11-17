@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, useEffect } from "react";
 import { MapContainer, TileLayer, CircleMarker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useRouter } from "next/navigation";
@@ -8,6 +8,7 @@ import { Alert } from "@codegouvfr/react-dsfr/Alert";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Input } from "@codegouvfr/react-dsfr/Input";
+import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
 import { createModal } from "@codegouvfr/react-dsfr/Modal";
 import { RichTextEditor } from "./RichTextEditor";
 import { sanitizeHtml } from "@/lib/sanitize";
@@ -41,6 +42,18 @@ type ClosureState =
   | { status: "success" }
   | { status: "error"; message: string };
 
+type ReclassifyState =
+  | { status: "idle" }
+  | { status: "success" }
+  | { status: "error"; message: string };
+
+type CategoryOption = {
+  id: string;
+  name: string;
+  badgeColor: string;
+  badgeTextColor: string;
+};
+
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "medium",
   timeStyle: "short",
@@ -59,15 +72,22 @@ function formatUserName(user?: ContributionDetail["closedBy"]) {
 
 export function TownContributionDetail({
   contribution,
+  categories = [],
 }: {
   contribution: ContributionDetail;
+  categories?: CategoryOption[];
 }) {
   const [closureMessage, setClosureMessage] = useState("");
   const [closureState, setClosureState] = useState<ClosureState>({
     status: "idle",
   });
+  const [reclassifyState, setReclassifyState] = useState<ReclassifyState>({
+    status: "idle",
+  });
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [currentContribution, setCurrentContribution] = useState(contribution);
   const [isPending, startTransition] = useTransition();
+  const [isReclassifying, startReclassifyTransition] = useTransition();
   const router = useRouter();
   const {
     buttonProps: attachmentButtonProps,
@@ -128,6 +148,70 @@ export function TownContributionDetail({
     currentContribution.categoryLabel,
     currentContribution.categoryTextColor,
   ]);
+
+  // Initialiser selectedCategoryId avec la catégorie actuelle si disponible
+  useEffect(() => {
+    if (currentContribution.categoryLabel && categories.length > 0) {
+      const currentCategory = categories.find(
+        (cat) => cat.name === currentContribution.categoryLabel
+      );
+      if (currentCategory) {
+        setSelectedCategoryId(currentCategory.id);
+      } else {
+        setSelectedCategoryId("");
+      }
+    } else {
+      setSelectedCategoryId("");
+    }
+  }, [currentContribution.categoryLabel, categories]);
+
+  const handleReclassify = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setReclassifyState({ status: "idle" });
+
+    startReclassifyTransition(async () => {
+      try {
+        const response = await fetch(
+          `/api/admin/contributions/${currentContribution.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              action: "reclassify",
+              categoryId: selectedCategoryId || null,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          throw new Error(
+            payload?.error ?? "Reclassement impossible pour le moment."
+          );
+        }
+
+        const payload = (await response.json()) as {
+          contribution: ContributionDetail;
+        };
+
+        setCurrentContribution(payload.contribution);
+        setReclassifyState({ status: "success" });
+        router.refresh();
+      } catch (error) {
+        setReclassifyState({
+          status: "error",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Une erreur est survenue pendant le reclassement.",
+        });
+      }
+    });
+  };
 
   const handleClosure = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -352,6 +436,61 @@ export function TownContributionDetail({
           </AttachmentModal>
         </section>
       ) : null}
+
+      <section className="contribution-detail__section">
+        <Accordion label="Reclasser la catégorie">
+          <div className="fr-flow">
+            <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
+              Modifiez la catégorie de ce ticket si le classement automatique n&apos;est pas correct.
+            </p>
+
+            {reclassifyState.status === "error" ? (
+              <Alert
+                severity="error"
+                title="Reclassement impossible"
+                description={reclassifyState.message}
+              />
+            ) : null}
+            {reclassifyState.status === "success" ? (
+              <Alert
+                severity="success"
+                title="Catégorie mise à jour"
+                description="La catégorie a été modifiée avec succès."
+              />
+            ) : null}
+
+            <form className="fr-flow" onSubmit={handleReclassify}>
+              <div className="fr-select-group">
+                <label className="fr-label" htmlFor="category-select">
+                  Catégorie
+                </label>
+                <select
+                  className="fr-select"
+                  id="category-select"
+                  value={selectedCategoryId}
+                  onChange={(event) => setSelectedCategoryId(event.target.value)}
+                  disabled={isReclassifying}
+                >
+                  <option value="">Aucune catégorie</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <Button
+                type="submit"
+                priority="secondary"
+                iconId={isReclassifying ? "fr-icon-refresh-line" : "fr-icon-check-line"}
+                disabled={isReclassifying}
+              >
+                {isReclassifying ? "Reclassement en cours…" : "Reclasser"}
+              </Button>
+            </form>
+          </div>
+        </Accordion>
+      </section>
 
       {currentContribution.status === "CLOSED" ? (
         <section className="contribution-detail__section fr-flow">
