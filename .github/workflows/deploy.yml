@@ -36,6 +36,8 @@ jobs:
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           MISTRAL_API_URL: ${{ secrets.MISTRAL_API_URL }}
           MISTRAL_CLASSIFICATION_MODEL: ${{ secrets.MISTRAL_CLASSIFICATION_MODEL }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ContributionStatus, ContributionType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { predictCategory } from "@/lib/mistral";
+import { generateUniqueTicketNumber } from "@/lib/ticket";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,12 @@ const reportSchema = z.object({
   type: z.enum(["alert", "suggestion"]),
   title: z.string().trim().min(3),
   details: z.string().min(12),
+  email: z
+    .string()
+    .email("Email invalide")
+    .optional()
+    .nullable()
+    .transform((value) => (value && value.trim().length > 0 ? value.trim() : null)),
   location: z
     .string()
     .trim()
@@ -129,11 +136,22 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "La catégorie déterminée n’est pas reconnue. Merci de réessayer ultérieurement.",
+            "La catégorie déterminée n'est pas reconnue. Merci de réessayer ultérieurement.",
         },
         { status: 502 },
       );
     }
+
+    // Générer un numéro de ticket unique
+    const ticketNumber = await generateUniqueTicketNumber(async (tn) => {
+      const existing = await prisma.contribution.findUnique({
+        where: { ticketNumber: tn },
+        select: { id: true },
+      });
+      return !!existing;
+    });
+
+    console.info("Generated ticket number:", ticketNumber);
 
     const contribution = await prisma.contribution.create({
       data: {
@@ -147,6 +165,8 @@ export async function POST(request: Request) {
         categoryLabel: matchedCategory.name,
         title: payload.title.trim(),
         details: payload.details.trim(),
+        email: payload.email ?? null,
+        ticketNumber,
         locationLabel: payload.location ?? null,
         latitude: payload.coordinates?.latitude ?? null,
         longitude: payload.coordinates?.longitude ?? null,
@@ -160,8 +180,15 @@ export async function POST(request: Request) {
       communeId: commune.id,
       type: contribution.type,
       category: matchedCategory.name,
+      ticketNumber: contribution.ticketNumber,
       classificationConfidence: mistralResult?.confidence,
     });
+
+    if (!contribution.ticketNumber) {
+      console.error("WARNING: Contribution created without ticketNumber!", {
+        contributionId: contribution.id,
+      });
+    }
 
     return NextResponse.json(
       {
@@ -175,6 +202,7 @@ export async function POST(request: Request) {
           categoryLabel: contribution.categoryLabel,
           categoryId: contribution.categoryId,
           title: contribution.title,
+          ticketNumber: contribution.ticketNumber ?? null,
           locationLabel: contribution.locationLabel,
           latitude: contribution.latitude,
           longitude: contribution.longitude,

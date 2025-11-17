@@ -3,13 +3,15 @@ import { z } from "zod";
 import { ContributionStatus } from "@prisma/client";
 import { getSessionFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendTicketResponseEmail } from "@/lib/email";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 const updateSchema = z.object({
   action: z.literal("close"),
   closureNote: z
     .string()
     .trim()
-    .max(500, "Le message de clôture ne doit pas dépasser 500 caractères.")
+    .max(5000, "Le message de clôture ne doit pas dépasser 5000 caractères.")
     .optional()
     .transform((value) => (value && value.length > 0 ? value : null)),
 });
@@ -54,6 +56,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         id: true,
         communeId: true,
         status: true,
+        email: true,
+        ticketNumber: true,
+        title: true,
+        commune: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
 
@@ -70,12 +80,17 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const now = new Date();
 
+    // Sanitizer le HTML avant de le stocker pour prévenir les attaques XSS
+    const sanitizedClosureNote = parseResult.data.closureNote
+      ? sanitizeHtml(parseResult.data.closureNote)
+      : null;
+
     const updatedContribution = await prisma.contribution.update({
       where: { id: contributionId },
       data: {
         status: ContributionStatus.CLOSED,
         closedAt: now,
-        closureNote: parseResult.data.closureNote,
+        closureNote: sanitizedClosureNote,
         closedById: session.user.id,
       },
       select: {
@@ -108,6 +123,27 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         },
       },
     });
+
+    // Envoyer un email de notification si l'email est présent, qu'il y a un message de clôture et un numéro de ticket
+    if (
+      contribution.email &&
+      contribution.ticketNumber &&
+      parseResult.data.closureNote &&
+      updatedContribution.closureNote
+    ) {
+      try {
+        await sendTicketResponseEmail({
+          to: contribution.email,
+          ticketNumber: contribution.ticketNumber,
+          ticketTitle: contribution.title,
+          communeName: contribution.commune.name,
+          responseContent: updatedContribution.closureNote,
+        });
+      } catch (emailError) {
+        // On log l'erreur mais on ne bloque pas la réponse
+        console.error("Failed to send notification email", emailError);
+      }
+    }
 
     return NextResponse.json({
       contribution: {

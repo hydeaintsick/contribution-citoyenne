@@ -153,6 +153,8 @@ model Contribution {
   longitude     Float?
   photoUrl      String?
   photoPublicId String?
+  email         String?
+  ticketNumber  String?            @unique
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   closedAt      DateTime?

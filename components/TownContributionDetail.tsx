@@ -9,6 +9,8 @@ import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Input } from "@codegouvfr/react-dsfr/Input";
 import { createModal } from "@codegouvfr/react-dsfr/Modal";
+import { RichTextEditor } from "./RichTextEditor";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 type ContributionDetail = {
   id: string;
@@ -368,11 +370,12 @@ export function TownContributionDetail({
                   par {formatUserName(currentContribution.closedBy)}.
                 </p>
                 {currentContribution.closureNote ? (
-                  <blockquote className="fr-quote fr-mb-0">
-                    <p className="fr-quote__text">
-                      {currentContribution.closureNote}
-                    </p>
-                  </blockquote>
+                  <div
+                    className="fr-text--md"
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizeHtml(currentContribution.closureNote),
+                    }}
+                  />
                 ) : null}
               </div>
             }
@@ -403,17 +406,21 @@ export function TownContributionDetail({
           ) : null}
 
           <form className="fr-flow" onSubmit={handleClosure}>
-            <Input
-              label="Message de clôture"
-              textArea
-              hintText="500 caractères maximum. Ex: Intervention planifiée, travaux réalisés, etc."
-              nativeTextAreaProps={{
-                value: closureMessage,
-                onChange: (event) =>
-                  setClosureMessage(event.target.value.slice(0, 500)),
-                rows: 4,
-              }}
-            />
+            <div className="fr-input-group">
+              <label className="fr-label" htmlFor="closure-message">
+                Message de clôture
+                <span className="fr-hint-text">
+                  Formatage disponible. Ex: Intervention planifiée, travaux réalisés, etc.
+                </span>
+              </label>
+              <RichTextEditor
+                value={closureMessage}
+                onChange={setClosureMessage}
+                placeholder="Saisissez votre message de clôture..."
+                maxLength={5000}
+                disabled={isPending}
+              />
+            </div>
             <Button
               type="submit"
               priority="primary"

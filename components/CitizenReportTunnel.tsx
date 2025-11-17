@@ -12,6 +12,7 @@ import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Alert } from "@codegouvfr/react-dsfr/Alert";
 import { Input } from "@codegouvfr/react-dsfr/Input";
 import { Tag } from "@codegouvfr/react-dsfr/Tag";
+import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
 
 type ReportType = "alert" | "suggestion";
 
@@ -219,6 +220,8 @@ export function CitizenReportTunnel({
   const [reportType, setReportType] = useState<ReportType | null>(null);
   const [title, setTitle] = useState<string>("");
   const [details, setDetails] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const emailInputRef = useRef<HTMLInputElement>(null);
   const [location, setLocation] = useState<string>("");
   const [coordinates, setCoordinates] = useState<{
     latitude: number;
@@ -249,6 +252,7 @@ export function CitizenReportTunnel({
     "idle" | "loading" | "success" | "error"
   >("idle");
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [ticketNumber, setTicketNumber] = useState<string | null>(null);
 
   const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
@@ -270,6 +274,7 @@ export function CitizenReportTunnel({
     setReportType(null);
     setTitle("");
     setDetails("");
+    setEmail("");
     setLocation("");
     setCoordinates(null);
     setAddressSuggestions([]);
@@ -284,6 +289,7 @@ export function CitizenReportTunnel({
     setGeolocationError(null);
     setSubmissionState("idle");
     setSubmissionError(null);
+    setTicketNumber(null);
   }, [resetAutoAdvance]);
 
   const handleSelectType = useCallback(
@@ -340,7 +346,9 @@ export function CitizenReportTunnel({
 
   const isSuggestionsPanelVisible =
     !isLocationLocked &&
-    (isFetchingAddress || addressSuggestions.length > 0 || Boolean(addressError));
+    (isFetchingAddress ||
+      addressSuggestions.length > 0 ||
+      Boolean(addressError));
 
   useEffect(() => {
     if (isLocationLocked || isFormLocked) {
@@ -662,7 +670,7 @@ export function CitizenReportTunnel({
       if (!reportType) {
         setSubmissionState("error");
         setSubmissionError(
-          "Merci de sélectionner un type de remontée avant de continuer.",
+          "Merci de sélectionner un type de remontée avant de continuer."
         );
         return;
       }
@@ -673,7 +681,7 @@ export function CitizenReportTunnel({
       if (cleanedTitle.length < 3) {
         setSubmissionState("error");
         setSubmissionError(
-          "Merci de donner un titre (au moins 3 caractères) à votre remontée.",
+          "Merci de donner un titre (au moins 3 caractères) à votre remontée."
         );
         return;
       }
@@ -684,6 +692,45 @@ export function CitizenReportTunnel({
           `Le descriptif doit comporter au moins ${MIN_DETAILS_LENGTH} caractères.`
         );
         return;
+      }
+
+      // Validation de l'email si renseigné
+      const trimmedEmail = email.trim();
+      if (trimmedEmail.length > 0) {
+        // Utiliser la validation HTML5 native
+        let emailInput: HTMLInputElement | null = emailInputRef.current;
+
+        // Fallback : chercher l'input dans le DOM si la ref n'est pas disponible
+        if (!emailInput && typeof document !== "undefined") {
+          const inputElement = document.querySelector(
+            'input[type="email"][placeholder="exemple@email.fr"]'
+          ) as HTMLInputElement | null;
+          if (inputElement) {
+            emailInput = inputElement;
+          }
+        }
+
+        if (emailInput) {
+          // Réinitialiser le message d'erreur personnalisé
+          emailInput.setCustomValidity("");
+
+          // Vérifier la validité avec la validation HTML5 native
+          if (!emailInput.checkValidity()) {
+            emailInput.setCustomValidity("L'email fourni est invalide");
+            emailInput.reportValidity();
+            setSubmissionState("error");
+            setSubmissionError("L'email fourni est invalide");
+            return;
+          }
+        } else {
+          // Fallback : validation manuelle avec regex si l'input n'est pas disponible
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(trimmedEmail)) {
+            setSubmissionState("error");
+            setSubmissionError("L'email fourni est invalide");
+            return;
+          }
+        }
       }
 
       setSubmissionState("loading");
@@ -700,6 +747,7 @@ export function CitizenReportTunnel({
             type: reportType,
             title: cleanedTitle,
             details: cleanedDetails,
+            email: email.trim() || null,
             location: location.trim() || null,
             coordinates: coordinates
               ? {
@@ -721,8 +769,22 @@ export function CitizenReportTunnel({
             error?: string;
           } | null;
           throw new Error(
-            payload?.error ?? "L’envoi a échoué. Merci de réessayer."
+            payload?.error ?? "L'envoi a échoué. Merci de réessayer."
           );
+        }
+
+        const payload = (await response.json()) as {
+          contribution?: { ticketNumber?: string | null };
+        };
+
+        const receivedTicketNumber = payload.contribution?.ticketNumber;
+        console.log("Received ticket number:", receivedTicketNumber);
+
+        if (receivedTicketNumber) {
+          setTicketNumber(receivedTicketNumber);
+        } else {
+          console.warn("No ticket number received in response");
+          setTicketNumber(null);
         }
 
         setSubmissionState("success");
@@ -742,6 +804,7 @@ export function CitizenReportTunnel({
     [
       communeId,
       details,
+      email,
       location,
       photoUploadInfo,
       coordinates,
@@ -966,7 +1029,7 @@ export function CitizenReportTunnel({
                   rows: 6,
                   required: true,
                   placeholder:
-                    "Expliquez ce qui se passe ou l’amélioration proposée…",
+                    "Expliquez ce qui se passe ou l'amélioration proposée…",
                   minLength: MIN_DETAILS_LENGTH,
                   disabled: isFormLocked,
                 }}
@@ -1217,6 +1280,55 @@ export function CitizenReportTunnel({
                 )}
               </div>
 
+              <Accordion
+                label={
+                  <>
+                    <span
+                      className="fr-icon-info-fill"
+                      aria-hidden="true"
+                      style={{
+                        fontSize: "0.875rem",
+                        verticalAlign: "middle",
+                        marginRight: "0.25rem",
+                      }}
+                    />
+                    Restez informé - Fournissez votre email (optionnel)
+                  </>
+                }
+                className="fr-mt-4w"
+              >
+                <div className="fr-flow">
+                  <p className="fr-text--sm fr-text-mention--grey fr-mb-2w">
+                    En laissant votre adresse email, vous recevrez une
+                    notification lorsque votre mairie répondra à votre retour.
+                    C'est optionnel et vous pouvez continuer sans.
+                  </p>
+                  <Input
+                    label="Email (optionnel)"
+                    hintText="Nous vous enverrons un email uniquement pour vous informer de la réponse de votre mairie"
+                    disabled={isFormLocked}
+                    classes={{
+                      root: "contribcit-section-spacing",
+                    }}
+                    nativeInputProps={{
+                      ref: emailInputRef,
+                      type: "email",
+                      value: email,
+                      onChange: (event) => {
+                        setEmail(event.target.value);
+                        // Réinitialiser le message d'erreur personnalisé lors de la saisie
+                        if (emailInputRef.current) {
+                          emailInputRef.current.setCustomValidity("");
+                        }
+                      },
+                      placeholder: "exemple@email.fr",
+                      disabled: isFormLocked,
+                      autoComplete: "email",
+                    }}
+                  />
+                </div>
+              </Accordion>
+
               <div className="fr-flow fr-mt-4w contribcit-submit">
                 {submissionState === "success" ? (
                   <Button
@@ -1268,11 +1380,25 @@ export function CitizenReportTunnel({
                 Merci pour votre remontée
               </h2>
               <p className="fr-text--sm">
-                Votre contribution « {trimmedTitle || "Sans titre"} » a bien été transmise à la mairie de{" "}
-                {communeName}. Elle sera analysée dans les meilleurs délais.
+                Votre contribution « {trimmedTitle || "Sans titre"} » a bien été
+                transmise à la mairie de {communeName}. Elle sera analysée dans
+                les meilleurs délais.
               </p>
+              {ticketNumber ? (
+                <p className="fr-text--sm">
+                  Votre numéro de suivi :{" "}
+                  <a
+                    href={`/suivi/${ticketNumber}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="fr-link"
+                  >
+                    {ticketNumber}
+                  </a>
+                </p>
+              ) : null}
               <p className="fr-text--sm fr-mb-0">
-                Pour toute question complémentaire, n’hésitez pas à consulter le
+                Pour toute question complémentaire, n'hésitez pas à consulter le
                 site de votre commune ou à vous rapprocher des services
                 municipaux.
               </p>

@@ -140,6 +140,29 @@ L’admin est accessible via `/admin` (pensez à créer un compte, cf. scripts c
 
 ## 🔐 Variables d'environnement
 
+### Configuration Brevo (emails transactionnels)
+
+Pour activer l'envoi d'emails de notification, vous devez configurer Brevo :
+
+1. **Créer un compte Brevo** : https://www.brevo.com/fr/
+2. **Obtenir votre clé API** :
+   - Connectez-vous à votre compte Brevo
+   - Allez dans **Paramètres** → **Clés API** (https://app.brevo.com/settings/keys/api)
+   - Créez une nouvelle clé API ou utilisez une clé existante
+   - Copiez la clé API (format : `xkeysib-...`)
+3. **Configurer l'expéditeur** :
+   - Allez dans **Paramètres** → **Expéditeurs** (https://app.brevo.com/settings/senders)
+   - Ajoutez et vérifiez votre domaine ou utilisez une adresse email vérifiée
+   - Mettez à jour l'adresse `sender.email` dans `lib/email.ts` si nécessaire
+4. **Ajouter la variable d'environnement** :
+   ```bash
+   BREVO_API_KEY=xkeysib-votre-cle-api-ici
+   ```
+
+**Note** : Sans `BREVO_API_KEY`, l'envoi d'emails sera désactivé mais l'application continuera de fonctionner normalement.
+
+## 🔐 Variables d'environnement
+
 | Variable                         | Obligatoire  | Description                                     | Exemple                          |
 | -------------------------------- | ------------ | ----------------------------------------------- | -------------------------------- |
 | `DATABASE_URL`                   | ✅           | Chaîne de connexion MongoDB pour Prisma         | `mongodb+srv://`…                |
@@ -151,6 +174,8 @@ L’admin est accessible via `/admin` (pensez à créer un compte, cf. scripts c
 | `CLOUDINARY_CLOUD_NAME`          | ✅ si upload | Espace Cloudinary                               | `contribcit`                     |
 | `CLOUDINARY_API_KEY`             | ✅ si upload | Clef API Cloudinary                             | `1234567890`                     |
 | `CLOUDINARY_API_SECRET`          | ✅ si upload | Secret API Cloudinary                           | `abcDEFghiJKL`                   |
+| `BREVO_API_KEY`                  | ➖           | Clé API Brevo pour l'envoi d'emails transactionnels | `xkeysib-...`                    |
+| `NEXT_PUBLIC_BASE_URL`           | ➖           | URL de base pour les liens dans les emails      | `https://contribcit.fr`          |
 
 👉 Créez un fichier `.env.local` à la racine et redémarrez `npm run dev` après toute modification.
 
