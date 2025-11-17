@@ -65,10 +65,17 @@ function getCommuneName(activity: Activity): string | null {
   }
 }
 
+type Commune = {
+  id: string;
+  name: string;
+  postalCode: string;
+};
+
 export function AdminActivityDashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [communes, setCommunes] = useState<Commune[]>([]);
   const [pagination, setPagination] = useState<ActivitiesResponse["pagination"]>({
     total: 0,
     page: 1,
@@ -89,12 +96,14 @@ export function AdminActivityDashboard() {
   }, [typesParam]);
   const startDate = searchParams.get("startDate") || "";
   const endDate = searchParams.get("endDate") || "";
+  const selectedCommuneId = searchParams.get("communeId") || "";
 
   const updateFilters = (
     updates: {
       types?: Set<ActivityType>;
       startDate?: string;
       endDate?: string;
+      communeId?: string;
       page?: number;
     },
   ) => {
@@ -103,6 +112,7 @@ export function AdminActivityDashboard() {
     const finalTypes = updates.types !== undefined ? updates.types : selectedTypes;
     const finalStartDate = updates.startDate !== undefined ? updates.startDate : startDate;
     const finalEndDate = updates.endDate !== undefined ? updates.endDate : endDate;
+    const finalCommuneId = updates.communeId !== undefined ? updates.communeId : selectedCommuneId;
     const finalPage = updates.page !== undefined ? updates.page : currentPage;
 
     if (finalTypes.size > 0) {
@@ -115,6 +125,10 @@ export function AdminActivityDashboard() {
 
     if (finalEndDate) {
       params.set("endDate", finalEndDate);
+    }
+
+    if (finalCommuneId) {
+      params.set("communeId", finalCommuneId);
     }
 
     if (finalPage > 1) {
@@ -143,15 +157,36 @@ export function AdminActivityDashboard() {
     updateFilters({ endDate: value, page: 1 });
   };
 
+  const handleCommuneChange = (value: string) => {
+    updateFilters({ communeId: value, page: 1 });
+  };
+
   const resetFilters = () => {
     router.replace("/admin/activite");
   };
 
-  const hasActiveFilters = selectedTypes.size > 0 || startDate || endDate;
+  const hasActiveFilters = selectedTypes.size > 0 || startDate || endDate || selectedCommuneId;
 
   const goToPage = (page: number) => {
     updateFilters({ page });
   };
+
+  useEffect(() => {
+    // Fetch communes list
+    fetch("/api/admin/communes")
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("Erreur lors du chargement des communes");
+        }
+        return response.json() as Promise<{ communes: Commune[] }>;
+      })
+      .then((data) => {
+        setCommunes(data.communes);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch communes", err);
+      });
+  }, []);
 
   useEffect(() => {
     setIsLoading(true);
@@ -166,6 +201,9 @@ export function AdminActivityDashboard() {
     }
     if (endDate) {
       params.set("endDate", endDate);
+    }
+    if (selectedCommuneId) {
+      params.set("communeId", selectedCommuneId);
     }
     params.set("page", String(currentPage));
     params.set("pageSize", String(PAGE_SIZE));
@@ -187,7 +225,7 @@ export function AdminActivityDashboard() {
         setError(err instanceof Error ? err.message : "Une erreur est survenue");
         setIsLoading(false);
       });
-  }, [currentPage, selectedTypes, startDate, endDate]);
+  }, [currentPage, selectedTypes, startDate, endDate, selectedCommuneId]);
 
   const totalPages = pagination.totalPages;
   const shouldShowPagination = totalPages > 1;
@@ -249,6 +287,27 @@ export function AdminActivityDashboard() {
                 disabled: isLoading,
               }}
             />
+          </div>
+          <div className={styles.dateFilterGroup}>
+            <div className="fr-select-group">
+              <label className="fr-label" htmlFor="commune-select">
+                Commune
+              </label>
+              <select
+                className="fr-select"
+                id="commune-select"
+                value={selectedCommuneId}
+                onChange={(e) => handleCommuneChange(e.target.value)}
+                disabled={isLoading}
+              >
+                <option value="">Toutes les communes</option>
+                {communes.map((commune) => (
+                  <option key={commune.id} value={commune.id}>
+                    {commune.name} ({commune.postalCode})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>

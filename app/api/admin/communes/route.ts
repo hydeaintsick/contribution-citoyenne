@@ -54,6 +54,38 @@ const createCommuneSchema = z.object({
   }),
 });
 
+export async function GET(request: NextRequest) {
+  const session = await getSessionFromRequest(request);
+
+  if (
+    !session ||
+    (session.user.role !== "ADMIN" && session.user.role !== "ACCOUNT_MANAGER")
+  ) {
+    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+  }
+
+  try {
+    const communes = await prisma.commune.findMany({
+      select: {
+        id: true,
+        name: true,
+        postalCode: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return NextResponse.json({ communes });
+  } catch (error) {
+    console.error("Failed to fetch communes", error);
+    return NextResponse.json(
+      { error: "Impossible de récupérer les communes pour le moment." },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   const session = await getSessionFromRequest(request);
 

@@ -36,6 +36,7 @@ async function aggregateActivities(
   types: ActivityType[],
   startDate: Date | null,
   endDate: Date | null,
+  communeId: string | null,
 ): Promise<Activity[]> {
   const activities: Activity[] = [];
   const allowedTypes = new Set<ActivityType>([
@@ -50,6 +51,16 @@ async function aggregateActivities(
   const shouldInclude = (type: ActivityType) =>
     types.length === 0 || types.includes(type);
 
+  // Get commune name if filtering by communeId (needed for ContactTicket filtering)
+  let communeName: string | null = null;
+  if (communeId) {
+    const commune = await prisma.commune.findUnique({
+      where: { id: communeId },
+      select: { name: true },
+    });
+    communeName = commune?.name ?? null;
+  }
+
   // USER_LOGIN activities
   if (shouldInclude("USER_LOGIN")) {
     const loginLogs = await prisma.userLoginLog.findMany({
@@ -59,6 +70,13 @@ async function aggregateActivities(
               createdAt: {
                 ...(startDate ? { gte: startDate } : {}),
                 ...(endDate ? { lte: endDate } : {}),
+              },
+            }
+          : {}),
+        ...(communeId
+          ? {
+              user: {
+                communeId,
               },
             }
           : {}),
@@ -120,6 +138,7 @@ async function aggregateActivities(
   if (needsContributions) {
     const contributions = await prisma.contribution.findMany({
       where: {
+        ...(communeId ? { communeId } : {}),
         ...(startDate || endDate
           ? {
               OR: [
@@ -259,6 +278,7 @@ async function aggregateActivities(
   if (shouldInclude("CITY_AUDIT")) {
     const auditLogs = await prisma.cityAuditLog.findMany({
       where: {
+        ...(communeId ? { communeId } : {}),
         ...(startDate || endDate
           ? {
               createdAt: {
@@ -326,6 +346,11 @@ async function aggregateActivities(
               }
             : {}),
         },
+        ...(communeName
+          ? {
+              commune: communeName,
+            }
+          : {}),
       },
       select: {
         id: true,
@@ -402,6 +427,7 @@ export async function GET(request: NextRequest) {
   const types = parseActivityTypes(searchParams, allowedTypes);
   const startDate = parseDate(searchParams.get("startDate"));
   const endDate = parseDate(searchParams.get("endDate"));
+  const communeId = searchParams.get("communeId") || null;
 
   const page = Math.max(1, Number.parseInt(searchParams.get("page") || "1", 10));
   const pageSize = Math.min(
@@ -410,7 +436,7 @@ export async function GET(request: NextRequest) {
   );
 
   try {
-    const allActivities = await aggregateActivities(types, startDate, endDate);
+    const allActivities = await aggregateActivities(types, startDate, endDate, communeId);
 
     const total = allActivities.length;
     const totalPages = Math.ceil(total / pageSize);
