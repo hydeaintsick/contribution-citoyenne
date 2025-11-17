@@ -481,6 +481,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           },
         },
         {
+          text: "Activité",
+          linkProps: {
+            href: "/admin/activite",
+          },
+        },
+        {
           text: "Chargés de compte",
           linkProps: {
             href: "/admin/account-managers",
@@ -525,6 +531,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           text: "Demandes de contact",
           linkProps: {
             href: "/admin/contact-tickets",
+          },
+        },
+        {
+          text: "Activité",
+          linkProps: {
+            href: "/admin/activite",
           },
         },
         {

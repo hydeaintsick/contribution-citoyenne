@@ -1,0 +1,23 @@
+.filtersRow {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dateFilters {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 48rem) {
+  .dateFilters {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+}
+
+.dateFilterGroup {
+  flex: 1;
+}
+
