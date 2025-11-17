@@ -110,6 +110,9 @@ export default async function TicketStatusPage({ params }: RouteParams) {
 
   const isClosed = ticket.status === "CLOSED";
   const hasResponse = isClosed && ticket.closureNote;
+  const sanitizedClosureNote = ticket.closureNote
+    ? sanitizeHtml(ticket.closureNote)
+    : null;
 
   return (
     <div className="fr-container fr-container--fluid fr-px-2w fr-px-md-4w fr-py-6w">
@@ -211,7 +214,7 @@ export default async function TicketStatusPage({ params }: RouteParams) {
                 <div
                   className="fr-text--md"
                   dangerouslySetInnerHTML={{
-                    __html: sanitizeHtml(ticket.closureNote),
+                    __html: sanitizedClosureNote || "",
                   }}
                 />
               </div>

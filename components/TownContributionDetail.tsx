@@ -13,6 +13,7 @@ import { createModal } from "@codegouvfr/react-dsfr/Modal";
 import { RichTextEditor } from "./RichTextEditor";
 import { sanitizeHtml } from "@/lib/sanitize";
 
+
 type ContributionDetail = {
   id: string;
   type: "ALERT" | "SUGGESTION";
