@@ -141,10 +141,7 @@ export function CityDirectory({ communes }: CityDirectoryProps) {
                         gap: "var(--spacer-2w)",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", flexWrap: "wrap" }}>
-                        <h3 className="fr-card__title fr-h4 fr-mt-0 fr-mb-0">
-                          {city.name}
-                        </h3>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                         {city.isPartner && (
                           <Badge
                             as="span"
@@ -153,6 +150,7 @@ export function CityDirectory({ communes }: CityDirectoryProps) {
                             noIcon
                             style={{
                               display: "inline-block",
+                              alignSelf: "flex-start",
                               backgroundColor: "var(--background-action-low-blue-france)",
                               color: "var(--text-title-blue-france)",
                             }}
@@ -160,6 +158,9 @@ export function CityDirectory({ communes }: CityDirectoryProps) {
                             Commune partenaire
                           </Badge>
                         )}
+                        <h3 className="fr-card__title fr-h4 fr-mt-0 fr-mb-0">
+                          {city.name}
+                        </h3>
                       </div>
                       {city.websiteUrl ? (
                         <a
