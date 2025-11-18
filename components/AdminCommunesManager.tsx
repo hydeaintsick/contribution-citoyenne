@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Tag } from "@codegouvfr/react-dsfr/Tag";
 import { Alert } from "@codegouvfr/react-dsfr/Alert";
+import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import type { CityAuditAction, Commune, User } from "@prisma/client";
 import { AdminCommuneCreateForm } from "@/components/AdminCommuneCreateForm";
 import { AdminCommuneEditForm } from "@/components/AdminCommuneEditForm";
 
-type ManagerPreview = Pick<User, "id" | "email" | "firstName" | "lastName" | "phone">;
+type ManagerPreview = Pick<User, "id" | "email" | "firstName" | "lastName" | "phone" | "lastLoginAt">;
 type AuthorPreview = Pick<User, "id" | "email" | "firstName" | "lastName">;
 
 type AuditLogPreview = {
@@ -25,6 +26,9 @@ type CommuneWithManager = Commune & {
   createdBy: AuthorPreview | null;
   updatedBy: AuthorPreview | null;
   auditLogs: AuditLogPreview[];
+  _count: {
+    reports: number;
+  };
 };
 
 type AdminCommunesManagerProps = {
@@ -83,15 +87,33 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [partnerFilter, setPartnerFilter] = useState<"all" | "partner">("all");
+  const [sortColumn, setSortColumn] = useState<"name" | "manager" | "lastLogin" | "tickets" | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const normalizedSearchTerm = searchTerm.trim().toLowerCase();
 
+  const handleSort = useCallback((column: "name" | "manager" | "lastLogin" | "tickets") => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+    setCurrentPage(1);
+  }, [sortColumn]);
+
   const filteredCommunes = useMemo(() => {
-    if (!normalizedSearchTerm) {
-      return communes;
+    let filtered = communes;
+
+    // Filtre par partenaire
+    if (partnerFilter === "partner") {
+      filtered = filtered.filter((commune) => commune.isPartner === true);
     }
 
-    return communes.filter((commune) => {
+    // Filtre par recherche
+    if (normalizedSearchTerm) {
+      filtered = filtered.filter((commune) => {
       const manager = commune.users[0] ?? null;
       const managerFullName = manager
         ? [manager.firstName, manager.lastName].filter(Boolean).join(" ").trim()
@@ -110,7 +132,46 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
         field.toString().toLowerCase().includes(normalizedSearchTerm),
       );
     });
-  }, [communes, normalizedSearchTerm]);
+    }
+
+    // Tri
+    if (sortColumn) {
+      filtered = [...filtered].sort((a, b) => {
+        let comparison = 0;
+
+        switch (sortColumn) {
+          case "name":
+            comparison = a.name.localeCompare(b.name, "fr");
+            break;
+          case "manager": {
+            const managerA = a.users[0];
+            const managerB = b.users[0];
+            const nameA = managerA
+              ? [managerA.firstName, managerA.lastName].filter(Boolean).join(" ").trim() || managerA.email
+              : "";
+            const nameB = managerB
+              ? [managerB.firstName, managerB.lastName].filter(Boolean).join(" ").trim() || managerB.email
+              : "";
+            comparison = nameA.localeCompare(nameB, "fr");
+            break;
+          }
+          case "lastLogin": {
+            const loginA = a.users[0]?.lastLoginAt?.getTime() ?? 0;
+            const loginB = b.users[0]?.lastLoginAt?.getTime() ?? 0;
+            comparison = loginA - loginB;
+            break;
+          }
+          case "tickets":
+            comparison = a._count.reports - b._count.reports;
+            break;
+        }
+
+        return sortDirection === "asc" ? comparison : -comparison;
+      });
+    }
+
+    return filtered;
+  }, [communes, normalizedSearchTerm, partnerFilter, sortColumn, sortDirection]);
 
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(filteredCommunes.length / PAGE_SIZE));
@@ -252,11 +313,27 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
     () =>
       paginatedCommunes.map((commune) => {
         const manager = commune.users[0] ?? null;
-        const lastAudit = commune.auditLogs[0] ?? null;
 
         return (
           <tr key={commune.id}>
             <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
+              {commune.isPartner && (
+                <div className="fr-mb-1w">
+                  <Badge
+                    as="span"
+                    severity="info"
+                    small
+                    noIcon
+                    style={{
+                      display: "inline-block",
+                      backgroundColor: "var(--background-action-low-blue-france)",
+                      color: "var(--text-title-blue-france)",
+                    }}
+                  >
+                    Commune partenaire
+                  </Badge>
+                </div>
+              )}
               <div className="fr-text--md fr-text--bold">{commune.name}</div>
               <div className="fr-text-mention--grey fr-text--sm">
                 {commune.postalCode} · OSM #{commune.osmId}
@@ -295,26 +372,20 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
               )}
             </td>
             <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
-              <p className="fr-text--sm fr-mb-0">Lat {commune.latitude.toFixed(4)}</p>
-              <p className="fr-text--sm fr-mb-0">Lon {commune.longitude.toFixed(4)}</p>
+              {manager?.lastLoginAt ? (
+                <p className="fr-text--sm fr-mb-0">
+                  {formatDateValue(manager.lastLoginAt)}
+                </p>
+              ) : (
+                <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
+                  Jamais connecté
+                </p>
+              )}
             </td>
             <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
-              <div className="fr-flow fr-text--xs">
-                <p className="fr-mb-0">
-                  Créée le {formatDateValue(commune.createdAt)} par {formatUserName(commune.createdBy)}
-                </p>
-                <p className="fr-mb-0">
-                  Dernière modification le {formatDateValue(commune.updatedAt)} par{" "}
-                  {formatUserName(commune.updatedBy)}
-                </p>
-                {lastAudit && (
-                  <p className="fr-text-mention--grey fr-mb-0">
-                    Dernière action : {formatAuditAction(lastAudit.action)} le{" "}
-                    {formatDateTimeValue(lastAudit.createdAt)}
-                    {lastAudit.user ? ` par ${formatUserName(lastAudit.user)}` : ""}
-                  </p>
-                )}
-              </div>
+              <p className="fr-text--sm fr-mb-0">
+                {commune._count.reports}
+              </p>
             </td>
             <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
               <div className="fr-btns-group fr-btns-group--inline-sm fr-btns-group--right fr-btns-group--icon-left">
@@ -393,8 +464,42 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
                 />
               </div>
             </div>
+            <div className="fr-col-12 fr-col-lg-auto fr-mt-2w fr-mt-lg-0">
+              <div className="fr-btns-group fr-btns-group--inline fr-btns-group--sm">
+                <Button
+                  priority={partnerFilter === "all" ? "primary" : "secondary"}
+                  onClick={() => {
+                    setPartnerFilter("all");
+                    setCurrentPage(1);
+                  }}
+                >
+                  {partnerFilter === "all" && (
+                    <span
+                      className="fr-icon-check-line fr-mr-1w"
+                      aria-hidden="true"
+                    ></span>
+                  )}
+                  <span>Tous</span>
+                </Button>
+                <Button
+                  priority={partnerFilter === "partner" ? "primary" : "secondary"}
+                  onClick={() => {
+                    setPartnerFilter("partner");
+                    setCurrentPage(1);
+                  }}
+                >
+                  {partnerFilter === "partner" && (
+                    <span
+                      className="fr-icon-check-line fr-mr-1w"
+                      aria-hidden="true"
+                    ></span>
+                  )}
+                  <span>Partenaires</span>
+                </Button>
+              </div>
+            </div>
             {searchTerm ? (
-              <div className="fr-col-auto">
+              <div className="fr-col-auto fr-mt-2w fr-mt-lg-0">
                 <button
                   type="button"
                   className="fr-btn fr-btn--sm fr-btn--tertiary-no-outline"
@@ -421,10 +526,110 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
                     <table>
                       <thead>
                         <tr>
-                          <th scope="col">Commune</th>
-                          <th scope="col">Manager</th>
-                          <th scope="col">Coordonnées</th>
-                          <th scope="col">Historique</th>
+                          <th scope="col">
+                            <button
+                              type="button"
+                              className="fr-btn fr-btn--tertiary-no-outline fr-btn--sm"
+                              onClick={() => handleSort("name")}
+                              style={{
+                                padding: 0,
+                                fontWeight: "inherit",
+                                textAlign: "left",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                              }}
+                            >
+                              <span>Commune</span>
+                              {sortColumn === "name" && (
+                                <span
+                                  className={`fr-icon-arrow-${sortDirection === "asc" ? "up" : "down"}-line`}
+                                  aria-hidden="true"
+                                ></span>
+                              )}
+                              {sortColumn !== "name" && (
+                                <span className="fr-icon-arrow-up-down-line" aria-hidden="true" style={{ opacity: 0.3 }}></span>
+                              )}
+                            </button>
+                          </th>
+                          <th scope="col">
+                            <button
+                              type="button"
+                              className="fr-btn fr-btn--tertiary-no-outline fr-btn--sm"
+                              onClick={() => handleSort("manager")}
+                              style={{
+                                padding: 0,
+                                fontWeight: "inherit",
+                                textAlign: "left",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                              }}
+                            >
+                              <span>Manager</span>
+                              {sortColumn === "manager" && (
+                                <span
+                                  className={`fr-icon-arrow-${sortDirection === "asc" ? "up" : "down"}-line`}
+                                  aria-hidden="true"
+                                ></span>
+                              )}
+                              {sortColumn !== "manager" && (
+                                <span className="fr-icon-arrow-up-down-line" aria-hidden="true" style={{ opacity: 0.3 }}></span>
+                              )}
+                            </button>
+                          </th>
+                          <th scope="col">
+                            <button
+                              type="button"
+                              className="fr-btn fr-btn--tertiary-no-outline fr-btn--sm"
+                              onClick={() => handleSort("lastLogin")}
+                              style={{
+                                padding: 0,
+                                fontWeight: "inherit",
+                                textAlign: "left",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                              }}
+                            >
+                              <span>Dernière connexion</span>
+                              {sortColumn === "lastLogin" && (
+                                <span
+                                  className={`fr-icon-arrow-${sortDirection === "asc" ? "up" : "down"}-line`}
+                                  aria-hidden="true"
+                                ></span>
+                              )}
+                              {sortColumn !== "lastLogin" && (
+                                <span className="fr-icon-arrow-up-down-line" aria-hidden="true" style={{ opacity: 0.3 }}></span>
+                              )}
+                            </button>
+                          </th>
+                          <th scope="col">
+                            <button
+                              type="button"
+                              className="fr-btn fr-btn--tertiary-no-outline fr-btn--sm"
+                              onClick={() => handleSort("tickets")}
+                              style={{
+                                padding: 0,
+                                fontWeight: "inherit",
+                                textAlign: "left",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                              }}
+                            >
+                              <span>Nombre de tickets</span>
+                              {sortColumn === "tickets" && (
+                                <span
+                                  className={`fr-icon-arrow-${sortDirection === "asc" ? "up" : "down"}-line`}
+                                  aria-hidden="true"
+                                ></span>
+                              )}
+                              {sortColumn !== "tickets" && (
+                                <span className="fr-icon-arrow-up-down-line" aria-hidden="true" style={{ opacity: 0.3 }}></span>
+                              )}
+                            </button>
+                          </th>
                           <th scope="col" className="fr-text--right">
                             Actions
                           </th>
@@ -558,6 +763,7 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
                     name: editingCommune.name,
                     postalCode: editingCommune.postalCode,
                     websiteUrl: editingCommune.websiteUrl ?? "",
+                    isPartner: editingCommune.isPartner ?? false,
                     manager: editingCommune.users[0]
                       ? {
                           id: editingCommune.users[0].id,

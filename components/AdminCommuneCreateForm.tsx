@@ -36,6 +36,7 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
   const [postalCode, setPostalCode] = useState("");
   const [communeData, setCommuneData] = useState<CommunePayload | null>(null);
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [isPartner, setIsPartner] = useState(false);
   const [verificationState, setVerificationState] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
@@ -101,10 +102,18 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
     [],
   );
 
+  const handleIsPartnerChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setIsPartner(event.target.checked);
+    },
+    [],
+  );
+
   const resetForm = useCallback(() => {
     setPostalCode("");
     setCommuneData(null);
     setWebsiteUrl("");
+    setIsPartner(false);
     setVerificationState("idle");
     setVerificationMessage(null);
     setManager({ ...INITIAL_MANAGER_STATE });
@@ -142,6 +151,7 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
           body: JSON.stringify({
             ...communeData,
             websiteUrl: websiteUrl.trim(),
+            isPartner,
             manager: {
               email: manager.email,
               password: manager.password,
@@ -183,7 +193,7 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
         setIsSubmitting(false);
       }
     },
-    [communeData, manager, onCommuneCreated, resetForm, websiteUrl],
+    [communeData, manager, onCommuneCreated, resetForm, websiteUrl, isPartner],
   );
 
   const bboxDisplayValue = useMemo(() => {
@@ -300,6 +310,20 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
               inputMode: "url",
             }}
           />
+        </div>
+
+        <div className="fr-mt-2w">
+          <div className="fr-checkbox-group">
+            <input
+              type="checkbox"
+              id="is-partner-checkbox"
+              checked={isPartner}
+              onChange={handleIsPartnerChange}
+            />
+            <label className="fr-label" htmlFor="is-partner-checkbox">
+              Commune partenaire
+            </label>
+          </div>
         </div>
 
         <div className="fr-mt-2w">

@@ -42,12 +42,14 @@ const updateSchema = z
   .object({
     websiteUrl: websiteUrlSchema,
     isVisible: z.boolean().optional(),
+    isPartner: z.boolean().optional(),
     manager: managerSchema,
   })
   .refine(
     (value) =>
       typeof value.websiteUrl !== "undefined" ||
       typeof value.isVisible !== "undefined" ||
+      typeof value.isPartner !== "undefined" ||
       typeof value.manager !== "undefined",
     { message: "Aucune modification demandée." }
   );
@@ -93,7 +95,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const { websiteUrl, isVisible, manager } = parseResult.data;
+  const { websiteUrl, isVisible, isPartner, manager } = parseResult.data;
 
   try {
     const updateResult = await prisma.$transaction(async (tx) => {
@@ -105,6 +107,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           slug: true,
           websiteUrl: true,
           isVisible: true,
+          isPartner: true,
           users: {
             where: { role: "TOWN_MANAGER" },
             select: {
@@ -139,6 +142,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         auditDetails.isVisible = {
           before: commune.isVisible,
           after: isVisible,
+        };
+      }
+
+      if (typeof isPartner !== "undefined" && isPartner !== commune.isPartner) {
+        updates.isPartner = isPartner;
+        auditDetails.isPartner = {
+          before: commune.isPartner,
+          after: isPartner,
         };
       }
 
@@ -204,6 +215,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           postalCode: true,
           websiteUrl: true,
           isVisible: true,
+          isPartner: true,
           users: {
             where: { role: "TOWN_MANAGER" },
             select: {

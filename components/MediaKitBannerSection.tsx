@@ -158,7 +158,7 @@ export function MediaKitBannerSection({
                     onChange={() => setSelectedSize(key)}
                   />
                   <label className="fr-label" htmlFor={`banner-size-${key}`}>
-                    {option.label} ({option.width}×{option.height}px)
+                    {option.label} ({option.width}x{option.height}px)
                   </label>
                   <p className="fr-hint-text fr-text--xs">
                     {option.description}

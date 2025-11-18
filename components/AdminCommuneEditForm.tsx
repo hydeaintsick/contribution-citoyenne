@@ -19,6 +19,7 @@ type AdminCommuneEditFormProps = {
     name: string;
     postalCode: string;
     websiteUrl: string;
+    isPartner?: boolean;
     manager: ManagerFormState;
   };
   onClose: () => void;
@@ -27,6 +28,7 @@ type AdminCommuneEditFormProps = {
 
 export function AdminCommuneEditForm({ commune, onClose, onUpdated }: AdminCommuneEditFormProps) {
   const [websiteUrl, setWebsiteUrl] = useState(() => commune.websiteUrl ?? "");
+  const [isPartner, setIsPartner] = useState(() => commune.isPartner ?? false);
   const [managerState, setManagerState] = useState<ManagerFormState>(() => commune.manager);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -42,6 +44,13 @@ export function AdminCommuneEditForm({ commune, onClose, onUpdated }: AdminCommu
           [field]: value,
         };
       });
+    },
+    [],
+  );
+
+  const handleIsPartnerChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setIsPartner(event.target.checked);
     },
     [],
   );
@@ -62,6 +71,7 @@ export function AdminCommuneEditForm({ commune, onClose, onUpdated }: AdminCommu
       try {
         const payload: Record<string, unknown> = {
           websiteUrl: websiteUrl.trim(),
+          isPartner,
         };
 
         if (managerState) {
@@ -97,7 +107,7 @@ export function AdminCommuneEditForm({ commune, onClose, onUpdated }: AdminCommu
         setIsSubmitting(false);
       }
     },
-    [commune.id, managerState, onUpdated, websiteUrl],
+    [commune.id, managerState, onUpdated, websiteUrl, isPartner],
   );
 
   return (
@@ -136,6 +146,20 @@ export function AdminCommuneEditForm({ commune, onClose, onUpdated }: AdminCommu
         }}
         hintText="Laissez vide pour retirer le site internet."
       />
+
+      <div className="fr-mt-2w">
+        <div className="fr-checkbox-group">
+          <input
+            type="checkbox"
+            id="is-partner-checkbox-edit"
+            checked={isPartner}
+            onChange={handleIsPartnerChange}
+          />
+          <label className="fr-label" htmlFor="is-partner-checkbox-edit">
+            Commune partenaire
+          </label>
+        </div>
+      </div>
 
       {managerState ? (
         <section className="fr-flow">

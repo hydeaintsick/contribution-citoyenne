@@ -12,6 +12,7 @@ export default async function AdminCommunesPage() {
           firstName: true,
           lastName: true,
           phone: true,
+          lastLoginAt: true,
         },
       },
       createdBy: {
@@ -48,6 +49,11 @@ export default async function AdminCommunesPage() {
               lastName: true,
             },
           },
+        },
+      },
+      _count: {
+        select: {
+          reports: true,
         },
       },
     },

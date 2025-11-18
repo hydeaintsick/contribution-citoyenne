@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Input } from "@codegouvfr/react-dsfr/Input";
+import { Badge } from "@codegouvfr/react-dsfr/Badge";
 
 type CityDirectoryCommune = {
   id: string;
@@ -10,6 +11,7 @@ type CityDirectoryCommune = {
   postalCode: string;
   websiteUrl: string | null;
   slug: string;
+  isPartner: boolean;
 };
 
 type CityDirectoryProps = {
@@ -139,9 +141,26 @@ export function CityDirectory({ communes }: CityDirectoryProps) {
                         gap: "var(--spacer-2w)",
                       }}
                     >
-                      <h3 className="fr-card__title fr-h4 fr-mt-0 fr-mb-0">
-                        {city.name}
-                      </h3>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", flexWrap: "wrap" }}>
+                        <h3 className="fr-card__title fr-h4 fr-mt-0 fr-mb-0">
+                          {city.name}
+                        </h3>
+                        {city.isPartner && (
+                          <Badge
+                            as="span"
+                            severity="info"
+                            small
+                            noIcon
+                            style={{
+                              display: "inline-block",
+                              backgroundColor: "var(--background-action-low-blue-france)",
+                              color: "var(--text-title-blue-france)",
+                            }}
+                          >
+                            Commune partenaire
+                          </Badge>
+                        )}
+                      </div>
                       {city.websiteUrl ? (
                         <a
                           href={city.websiteUrl}

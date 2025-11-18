@@ -17,6 +17,7 @@ export default async function AnnuairePage() {
       postalCode: true,
       websiteUrl: true,
       slug: true,
+      isPartner: true,
     },
     orderBy: {
       name: "asc",
