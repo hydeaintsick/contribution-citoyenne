@@ -54,6 +54,19 @@ export function TurnstileWidget({
   const widgetIdRef = useRef<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasRenderedRef = useRef(false);
+
+  // Store callbacks in refs to avoid re-renders
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+  const onExpiredRef = useRef(onExpired);
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+    onErrorRef.current = onError;
+    onExpiredRef.current = onExpired;
+  }, [onSuccess, onError, onExpired]);
 
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
@@ -75,17 +88,22 @@ export function TurnstileWidget({
       };
       script.onerror = () => {
         setError("Impossible de charger Turnstile");
-        if (onError) {
-          onError("script-load-error");
+        if (onErrorRef.current) {
+          onErrorRef.current("script-load-error");
         }
       };
       document.head.appendChild(script);
     } else if (window.turnstile) {
       setIsLoaded(true);
     }
-  }, [siteKey, onError]);
+  }, [siteKey]);
 
   useEffect(() => {
+    // Prevent multiple renders
+    if (hasRenderedRef.current) {
+      return;
+    }
+
     if (!isLoaded || !siteKey || !containerRef.current || !window.turnstile) {
       return;
     }
@@ -95,19 +113,19 @@ export function TurnstileWidget({
       const widgetId = window.turnstile.render(containerRef.current, {
         sitekey: siteKey,
         callback: (token: string) => {
-          onSuccess(token);
+          onSuccessRef.current(token);
         },
         "error-callback": (errorCode: string) => {
           console.error("Turnstile error", errorCode);
           setError(`Erreur Turnstile: ${errorCode}`);
-          if (onError) {
-            onError(errorCode);
+          if (onErrorRef.current) {
+            onErrorRef.current(errorCode);
           }
         },
         "expired-callback": () => {
           console.warn("Turnstile token expired");
-          if (onExpired) {
-            onExpired();
+          if (onExpiredRef.current) {
+            onExpiredRef.current();
           }
         },
         theme,
@@ -119,11 +137,12 @@ export function TurnstileWidget({
       });
 
       widgetIdRef.current = widgetId;
+      hasRenderedRef.current = true;
     } catch (err) {
       console.error("Failed to render Turnstile widget", err);
       setError("Erreur lors de l'initialisation");
-      if (onError) {
-        onError("render-error");
+      if (onErrorRef.current) {
+        onErrorRef.current("render-error");
       }
     }
 
@@ -136,9 +155,10 @@ export function TurnstileWidget({
           console.warn("Failed to remove Turnstile widget", err);
         }
         widgetIdRef.current = null;
+        hasRenderedRef.current = false;
       }
     };
-  }, [isLoaded, siteKey, onSuccess, onError, onExpired, theme]);
+  }, [isLoaded, siteKey, theme]);
 
   if (!siteKey) {
     return (

@@ -152,6 +152,17 @@ export function BugReportForm() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    // Validation Turnstile si requis
+    const isTurnstileRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    if (isTurnstileRequired && !turnstileToken) {
+      setFormState({
+        status: "error",
+        message:
+          "Vérification de sécurité en cours. Veuillez patienter quelques instants avant de réessayer.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     setFormState({ status: "loading" });
 
@@ -211,6 +222,11 @@ export function BugReportForm() {
 
   const hasErrors = formState.status === "error";
   const isLoading = formState.status === "loading" || isSubmitting;
+  
+  // Check if Turnstile is required (configured) but token is missing
+  const isTurnstileRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const isTurnstileValid = !isTurnstileRequired || !!turnstileToken;
+  const isSubmitDisabled = isLoading || !isTurnstileValid;
 
   return (
     <form
@@ -432,7 +448,7 @@ export function BugReportForm() {
       </div>
 
       <div className="fr-btns-group fr-btns-group--inline-md fr-mt-4w">
-        <button className="fr-btn" type="submit" disabled={isLoading}>
+        <button className="fr-btn" type="submit" disabled={isSubmitDisabled}>
           {isLoading ? "Envoi en cours…" : "Soumettre"}
         </button>
         <button

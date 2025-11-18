@@ -337,12 +337,17 @@ export function CitizenReportTunnel({
     trimmedLocation.length === 0 ||
     hasCoordinates ||
     isManualLocationSufficient;
+  // Check if Turnstile is required (configured) but token is missing
+  const isTurnstileRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const isTurnstileValid = !isTurnstileRequired || !!turnstileToken;
+
   const isSubmitDisabled =
     submissionState === "loading" ||
     !reportType ||
     trimmedTitle.length < 3 ||
     trimmedDetails.length < MIN_DETAILS_LENGTH ||
-    !isLocationValid;
+    !isLocationValid ||
+    !isTurnstileValid;
   const isFormLocked =
     submissionState === "loading" || submissionState === "success";
 
@@ -695,6 +700,16 @@ export function CitizenReportTunnel({
         setSubmissionState("error");
         setSubmissionError(
           `Le descriptif doit comporter au moins ${MIN_DETAILS_LENGTH} caractères.`
+        );
+        return;
+      }
+
+      // Validation Turnstile si requis
+      const isTurnstileRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+      if (isTurnstileRequired && !turnstileToken) {
+        setSubmissionState("error");
+        setSubmissionError(
+          "Vérification de sécurité en cours. Veuillez patienter quelques instants avant de réessayer."
         );
         return;
       }
