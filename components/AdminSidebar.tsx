@@ -162,6 +162,13 @@ export function AdminSidebar() {
             href: "/admin/retours",
           },
         },
+        {
+          text: "Kit média",
+          isActive: pathname === "/admin/kit-media",
+          linkProps: {
+            href: "/admin/kit-media",
+          },
+        },
       ];
 
       if (isTownManager) {

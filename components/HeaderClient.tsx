@@ -569,9 +569,9 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           },
         },
         {
-          text: "QRCode",
+          text: "Kit média",
           linkProps: {
-            href: "/admin/qr-code",
+            href: "/admin/kit-media",
           },
         },
         {
@@ -604,9 +604,9 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           },
         },
         {
-          text: "QRCode",
+          text: "Kit média",
           linkProps: {
-            href: "/admin/qr-code",
+            href: "/admin/kit-media",
           },
         },
         {

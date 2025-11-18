@@ -5,9 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { TownQrCodeCard } from "@/components/TownQrCodeCard";
 import { QrEmbedTutorial } from "@/components/QrEmbedTutorial";
 import { ContributionDirectLink } from "@/components/ContributionDirectLink";
+import { MediaKitBannerSection } from "@/components/MediaKitBannerSection";
+import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
 import { ensureCommuneSlug } from "@/lib/communes";
 
-export default async function TownQrCodePage() {
+export default async function MediaKitPage() {
   const headerList = await headers();
   const cookieHeader = headerList.get("cookie") ?? "";
   const cookieName = `${getSessionCookieName()}=`;
@@ -88,39 +90,61 @@ export default async function TownQrCodePage() {
     ? `${normalizedBaseUrl}/contrib/${slug}`
     : `/contrib/${slug}`;
 
-  const embedUrl = normalizedBaseUrl
+  const embedQrUrl = normalizedBaseUrl
     ? `${normalizedBaseUrl}/embed/qr/${slug}`
     : `/embed/qr/${slug}`;
+
+  const embedBannerUrl = normalizedBaseUrl
+    ? `${normalizedBaseUrl}/embed/banner/${slug}`
+    : `/embed/banner/${slug}`;
 
   return (
     <main className="fr-pt-6w fr-pb-8w">
       <section className="fr-container fr-container--fluid">
         <div className="fr-grid-row">
           <div className="fr-col-12 fr-col-lg-10">
-            <h1 className="fr-h2">QR Code de la ville</h1>
+            <h1 className="fr-h2">Kit média</h1>
             <p className="fr-text--lg fr-mb-4w">
-              Partagez ce QR Code pour permettre aux citoyennes et citoyens
-              d&apos;accéder directement au tunnel de contribution de votre
-              commune.
+              Utilisez ces outils pour promouvoir votre portail citoyen et
+              faciliter l&apos;accès des citoyennes et citoyens au tunnel de
+              contribution de votre commune. Chaque section peut être intégrée
+              sur votre site web ou partagée sur vos supports de communication.
             </p>
           </div>
         </div>
       </section>
-      <TownQrCodeCard
-        communeName={commune.name}
-        contributionUrl={contributionUrl}
-      />
-      <QrEmbedTutorial embedBaseUrl={embedUrl} />
+
       <section className="fr-container fr-container--fluid fr-mt-4w">
         <div className="fr-grid-row">
           <div className="fr-col-12 fr-col-lg-10">
-            <h2 className="fr-h3 fr-mb-2w">Intégrer le tunnel directement</h2>
-            <p className="fr-text--sm">
-              Vous pouvez aussi partager le lien vers le tunnel ci-dessous pour
-              l&apos;intégrer directement sur vos supports numériques, sans
-              passer par le QR Code.
-            </p>
-            <ContributionDirectLink contributionUrl={contributionUrl} />
+            <Accordion label="QR Code" className="fr-mb-2w">
+              <div className="fr-flow">
+                <TownQrCodeCard
+                  communeName={commune.name}
+                  contributionUrl={contributionUrl}
+                />
+                <QrEmbedTutorial embedBaseUrl={embedQrUrl} />
+              </div>
+            </Accordion>
+
+            <Accordion label="Bannière web" className="fr-mb-2w">
+              <MediaKitBannerSection
+                communeName={commune.name}
+                contributionUrl={contributionUrl}
+                embedBaseUrl={embedBannerUrl}
+              />
+            </Accordion>
+
+            <Accordion label="Lien direct" className="fr-mb-2w">
+              <div className="fr-flow">
+                <p className="fr-text--sm">
+                  Vous pouvez aussi partager le lien vers le tunnel ci-dessous
+                  pour l&apos;intégrer directement sur vos supports numériques,
+                  sans passer par le QR Code ou la bannière.
+                </p>
+                <ContributionDirectLink contributionUrl={contributionUrl} />
+              </div>
+            </Accordion>
           </div>
         </div>
       </section>
