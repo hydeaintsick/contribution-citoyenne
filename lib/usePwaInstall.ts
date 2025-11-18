@@ -12,9 +12,21 @@ type PwaInstallState = {
   isInstalled: boolean;
   isPrompted: boolean;
   deferredPrompt: BeforeInstallPromptEvent | null;
+  isIOS: boolean;
 };
 
 const STORAGE_KEY = "contribcit-pwa-install-dismissed";
+
+// Détecter iOS
+function isIOS(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
 
 export function usePwaInstall() {
   const [state, setState] = useState<PwaInstallState>({
@@ -22,13 +34,16 @@ export function usePwaInstall() {
     isInstalled: false,
     isPrompted: false,
     deferredPrompt: null,
+    isIOS: false,
   });
 
-  // Vérifier si l'app est déjà installée
+  // Détecter iOS et vérifier si l'app est déjà installée
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
+
+    const ios = isIOS();
 
     // Vérifier si l'app est en mode standalone (installée)
     const isStandalone =
@@ -41,8 +56,11 @@ export function usePwaInstall() {
 
     setState((prev) => ({
       ...prev,
+      isIOS: ios,
       isInstalled: isStandalone,
       isPrompted: wasDismissed,
+      // Sur iOS, considérer comme installable si pas déjà installé et pas déjà refusé
+      isInstallable: ios ? !isStandalone && !wasDismissed : prev.isInstallable,
     }));
   }, []);
 
@@ -87,12 +105,25 @@ export function usePwaInstall() {
   }, []);
 
   const promptInstall = useCallback(async (): Promise<boolean> => {
+    // Sur iOS, on ne peut pas déclencher le prompt programmatiquement
+    // On retourne true pour indiquer qu'on a "traité" la demande
+    // mais l'utilisateur devra utiliser le menu partage
+    if (state.isIOS) {
+      // Marquer comme "vu" pour ne pas réafficher immédiatement
+      setState((prev) => ({
+        ...prev,
+        isPrompted: true,
+      }));
+      localStorage.setItem(STORAGE_KEY, "true");
+      return true;
+    }
+
     if (!state.deferredPrompt) {
       return false;
     }
 
     try {
-      // Afficher le prompt d'installation
+      // Afficher le prompt d'installation (Android uniquement)
       await state.deferredPrompt.prompt();
 
       // Attendre la réponse de l'utilisateur
@@ -120,7 +151,7 @@ export function usePwaInstall() {
       console.error("Error prompting for PWA install:", error);
       return false;
     }
-  }, [state.deferredPrompt]);
+  }, [state.deferredPrompt, state.isIOS]);
 
   const dismissPrompt = useCallback(() => {
     setState((prev) => ({

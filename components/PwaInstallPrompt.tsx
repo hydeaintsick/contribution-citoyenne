@@ -13,7 +13,7 @@ export function PwaInstallPrompt({
   communeName,
   delay = 3000,
 }: PwaInstallPromptProps) {
-  const { isInstallable, isInstalled, isPrompted, promptInstall, dismissPrompt } =
+  const { isInstallable, isInstalled, isPrompted, promptInstall, dismissPrompt, isIOS } =
     usePwaInstall();
   const [isVisible, setIsVisible] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -64,11 +64,15 @@ export function PwaInstallPrompt({
 
   // Afficher le prompt après le délai ou après le scroll
   useEffect(() => {
+    // Sur iOS, on affiche même si isInstallable est false (car beforeinstallprompt n'existe pas)
+    // Sur Android, on attend l'événement beforeinstallprompt
+    const shouldShow = isIOS ? !isInstalled && !isPrompted : isInstallable;
+    
     if (
       !isMobile ||
       isInstalled ||
       isPrompted ||
-      !isInstallable ||
+      !shouldShow ||
       isVisible
     ) {
       return;
@@ -87,7 +91,7 @@ export function PwaInstallPrompt({
     return () => {
       clearTimeout(timer);
     };
-  }, [isMobile, isInstalled, isPrompted, isInstallable, delay, hasScrolled, isVisible]);
+  }, [isMobile, isInstalled, isPrompted, isInstallable, isIOS, delay, hasScrolled, isVisible]);
 
   const handleInstall = async () => {
     const installed = await promptInstall();
@@ -105,9 +109,14 @@ export function PwaInstallPrompt({
   // - Pas sur mobile
   // - Déjà installé
   // - Déjà refusé
-  // - Pas installable
   // - Pas encore visible
-  if (!isVisible || !isMobile || isInstalled || isPrompted || !isInstallable) {
+  // Note: Sur iOS, on affiche même si isInstallable est false
+  if (!isVisible || !isMobile || isInstalled || isPrompted) {
+    return null;
+  }
+
+  // Sur Android, vérifier aussi isInstallable
+  if (!isIOS && !isInstallable) {
     return null;
   }
 
@@ -134,11 +143,21 @@ export function PwaInstallPrompt({
             <h2 id="fr-pwa-install-title" className="fr-h6 fr-mb-2w">
               Installer l&apos;application
             </h2>
-            <p className="fr-text--sm">
-              Installez l&apos;application Contribcit pour{" "}
-              <strong>{communeName}</strong> sur votre appareil et accédez-y
-              rapidement depuis votre écran d&apos;accueil.
-            </p>
+            {isIOS ? (
+              <p className="fr-text--sm">
+                Installez l&apos;application Contribcit pour{" "}
+                <strong>{communeName}</strong> sur votre iPhone/iPad :{" "}
+                <strong>Appuyez sur le bouton Partager</strong> (icône carrée avec flèche){" "}
+                puis sélectionnez{" "}
+                <strong>&quot;Sur l&apos;écran d&apos;accueil&quot;</strong>.
+              </p>
+            ) : (
+              <p className="fr-text--sm">
+                Installez l&apos;application Contribcit pour{" "}
+                <strong>{communeName}</strong> sur votre appareil et accédez-y
+                rapidement depuis votre écran d&apos;accueil.
+              </p>
+            )}
           </div>
           <div className="fr-col-12 fr-col-md-4 fr-mt-2w fr-mt-md-0">
             <div className="fr-btns-group fr-btns-group--inline">
@@ -150,10 +169,10 @@ export function PwaInstallPrompt({
                 Plus tard
               </Button>
               <Button
-                onClick={handleInstall}
-                iconId="fr-icon-download-line"
+                onClick={isIOS ? handleDismiss : handleInstall}
+                iconId={isIOS ? "fr-icon-share-line" : "fr-icon-download-line"}
               >
-                Installer
+                {isIOS ? "J'ai compris" : "Installer"}
               </Button>
             </div>
           </div>
