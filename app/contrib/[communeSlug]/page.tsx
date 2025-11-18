@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { CitizenReportTunnel } from "@/components/CitizenReportTunnel";
+import { PwaSetup } from "@/components/PwaSetup";
 import { fetchCommuneBySlugOrId } from "@/lib/communes";
 
 type ContribPageProps =
@@ -44,13 +45,16 @@ export default async function ContribPage(props: ContribPageProps) {
   }
 
   return (
-    <main className="fr-py-6w">
-      <CitizenReportTunnel
-        communeId={commune.id}
-        communeName={commune.name}
-        communeWebsite={commune.websiteUrl ?? undefined}
-      />
-    </main>
+    <>
+      <PwaSetup communeSlug={commune.slug} />
+      <main className="fr-py-6w">
+        <CitizenReportTunnel
+          communeId={commune.id}
+          communeName={commune.name}
+          communeWebsite={commune.websiteUrl ?? undefined}
+        />
+      </main>
+    </>
   );
 }
 

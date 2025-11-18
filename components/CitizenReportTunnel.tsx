@@ -14,6 +14,7 @@ import { Input } from "@codegouvfr/react-dsfr/Input";
 import { Tag } from "@codegouvfr/react-dsfr/Tag";
 import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
 import { TurnstileWidget } from "./TurnstileWidget";
+import { PwaInstallPrompt } from "./PwaInstallPrompt";
 
 type ReportType = "alert" | "suggestion";
 
@@ -1498,6 +1499,7 @@ export function CitizenReportTunnel({
           </motion.section>
         )}
       </AnimatePresence>
+      <PwaInstallPrompt communeName={communeName} />
     </div>
   );
 }
