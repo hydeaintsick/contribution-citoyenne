@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Tag } from "@codegouvfr/react-dsfr/Tag";
+import { TurnstileWidget } from "./TurnstileWidget";
 
 type BugReportTypeOption = "BUG" | "FONCTIONNALITE";
 
@@ -39,6 +40,8 @@ export function BugReportForm() {
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [uploadError, setUploadError] = useState<string | null>(null);
   const screenshotInputRef = useRef<HTMLInputElement | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState<string>("");
 
   const resetForm = useCallback(() => {
     setSelectedType("BUG");
@@ -47,6 +50,8 @@ export function BugReportForm() {
     setScreenshot(null);
     setUploadState("idle");
     setUploadError(null);
+    setTurnstileToken(null);
+    setHoneypot("");
   }, []);
 
   const handleScreenshotButtonClick = () => {
@@ -170,6 +175,8 @@ export function BugReportForm() {
                 bytes: screenshot.bytes,
               }
             : undefined,
+          turnstileToken: turnstileToken || null,
+          honeypot: honeypot || null,
         }),
       });
 
@@ -386,6 +393,43 @@ export function BugReportForm() {
           <p className="fr-alert__desc">{formState.message}</p>
         </div>
       ) : null}
+
+      {/* Honeypot field - invisible to humans, visible to bots */}
+      <input
+        type="text"
+        name="website"
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          width: "1px",
+          height: "1px",
+          opacity: "0",
+          pointerEvents: "none",
+        }}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+      />
+
+      {/* Turnstile widget - invisible, executes automatically */}
+      <div className="fr-mt-2w">
+        <TurnstileWidget
+          onSuccess={(token) => {
+            setTurnstileToken(token);
+          }}
+          onError={(error) => {
+            console.warn("Turnstile error", error);
+            // Don't block submission if Turnstile fails
+            // The server will handle the validation
+          }}
+          onExpired={() => {
+            setTurnstileToken(null);
+          }}
+          theme="auto"
+        />
+      </div>
 
       <div className="fr-btns-group fr-btns-group--inline-md fr-mt-4w">
         <button className="fr-btn" type="submit" disabled={isLoading}>

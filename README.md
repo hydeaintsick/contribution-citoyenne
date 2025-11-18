@@ -176,6 +176,8 @@ Pour activer l'envoi d'emails de notification, vous devez configurer Brevo :
 | `CLOUDINARY_API_SECRET`          | ✅ si upload | Secret API Cloudinary                           | `abcDEFghiJKL`                   |
 | `BREVO_API_KEY`                  | ➖           | Clé API Brevo pour l'envoi d'emails transactionnels | `xkeysib-...`                    |
 | `NEXT_PUBLIC_BASE_URL`           | ➖           | URL de base pour les liens dans les emails      | `https://contribcit.fr`          |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | ➖           | Clé publique Cloudflare Turnstile (protection anti-bot) | `0x4AAAAAA...`                   |
+| `TURNSTILE_SECRET_KEY`           | ➖           | Clé secrète Cloudflare Turnstile (côté serveur uniquement) | `0x4AAAAAA...`                   |
 
 👉 Créez un fichier `.env.local` à la racine et redémarrez `npm run dev` après toute modification.
 

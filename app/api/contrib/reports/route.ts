@@ -4,6 +4,7 @@ import { ContributionStatus, ContributionType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { predictCategory } from "@/lib/mistral";
 import { generateUniqueTicketNumber } from "@/lib/ticket";
+import { verifyTurnstileToken, getClientIp } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 
@@ -40,7 +41,52 @@ const reportSchema = z.object({
     .optional()
     .nullable()
     .transform((value) => (value ? value : null)),
+  turnstileToken: z.string().optional().nullable(),
+  honeypot: z.string().optional().nullable(),
 });
+
+// Simple in-memory rate limiting (for MVP)
+// In production, consider using Redis or a database
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 5; // 5 requests per minute per IP
+
+function checkRateLimit(ip: string | undefined): boolean {
+  if (!ip) {
+    // If we can't determine IP, allow but log
+    console.warn("Could not determine client IP for rate limiting");
+    return true;
+  }
+
+  const now = Date.now();
+  const record = rateLimitStore.get(ip);
+
+  if (!record || record.resetAt < now) {
+    // New IP or window expired, create new record
+    rateLimitStore.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+
+  record.count += 1;
+  rateLimitStore.set(ip, record);
+  return true;
+}
+
+// Cleanup old entries periodically (every 5 minutes)
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [ip, record] of rateLimitStore.entries()) {
+      if (record.resetAt < now) {
+        rateLimitStore.delete(ip);
+      }
+    }
+  }, 5 * 60 * 1000);
+}
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -64,6 +110,67 @@ export async function POST(request: Request) {
   }
 
   const payload = parsed.data;
+
+  // 1. Check honeypot field (bots often fill all fields)
+  if (payload.honeypot && payload.honeypot.trim().length > 0) {
+    console.warn("Bot detected: honeypot field filled", {
+      honeypot: payload.honeypot,
+    });
+    return NextResponse.json(
+      { error: "Requête invalide." },
+      { status: 400 }
+    );
+  }
+
+  // 2. Rate limiting by IP
+  const clientIp = getClientIp(request);
+  if (!checkRateLimit(clientIp)) {
+    console.warn("Rate limit exceeded", { ip: clientIp });
+    return NextResponse.json(
+      {
+        error:
+          "Trop de requêtes. Veuillez patienter quelques instants avant de réessayer.",
+      },
+      { status: 429 }
+    );
+  }
+
+  // 3. Verify Turnstile token
+  if (payload.turnstileToken) {
+    const turnstileResult = await verifyTurnstileToken(
+      payload.turnstileToken,
+      clientIp
+    );
+
+    if (!turnstileResult.success) {
+      console.warn("Turnstile verification failed", {
+        errorCodes: turnstileResult["error-codes"],
+        ip: clientIp,
+      });
+      return NextResponse.json(
+        {
+          error:
+            "Vérification de sécurité échouée. Veuillez réessayer dans quelques instants.",
+        },
+        { status: 400 }
+      );
+    }
+  } else {
+    // If Turnstile is configured but token is missing, reject
+    // (allows graceful degradation if Turnstile is not configured)
+    if (process.env.TURNSTILE_SECRET_KEY) {
+      console.warn("Turnstile token missing but secret key is configured", {
+        ip: clientIp,
+      });
+      return NextResponse.json(
+        {
+          error:
+            "Vérification de sécurité requise. Veuillez actualiser la page et réessayer.",
+        },
+        { status: 400 }
+      );
+    }
+  }
 
   try {
     const commune = await prisma.commune.findUnique({

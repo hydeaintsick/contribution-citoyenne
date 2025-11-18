@@ -13,6 +13,7 @@ import { Alert } from "@codegouvfr/react-dsfr/Alert";
 import { Input } from "@codegouvfr/react-dsfr/Input";
 import { Tag } from "@codegouvfr/react-dsfr/Tag";
 import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
+import { TurnstileWidget } from "./TurnstileWidget";
 
 type ReportType = "alert" | "suggestion";
 
@@ -253,6 +254,8 @@ export function CitizenReportTunnel({
   >("idle");
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [ticketNumber, setTicketNumber] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState<string>("");
 
   const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
@@ -290,6 +293,8 @@ export function CitizenReportTunnel({
     setSubmissionState("idle");
     setSubmissionError(null);
     setTicketNumber(null);
+    setTurnstileToken(null);
+    setHoneypot("");
   }, [resetAutoAdvance]);
 
   const handleSelectType = useCallback(
@@ -761,6 +766,8 @@ export function CitizenReportTunnel({
                   publicId: photoUploadInfo.publicId,
                 }
               : null,
+            turnstileToken: turnstileToken || null,
+            honeypot: honeypot || null,
           }),
         });
 
@@ -811,6 +818,8 @@ export function CitizenReportTunnel({
       reportType,
       title,
       resetAutoAdvance,
+      turnstileToken,
+      honeypot,
     ]
   );
 
@@ -1328,6 +1337,45 @@ export function CitizenReportTunnel({
                   />
                 </div>
               </Accordion>
+
+              {/* Honeypot field - invisible to humans, visible to bots */}
+              <input
+                type="text"
+                name="website"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                style={{
+                  position: "absolute",
+                  left: "-9999px",
+                  width: "1px",
+                  height: "1px",
+                  opacity: "0",
+                  pointerEvents: "none",
+                }}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+              />
+
+              {/* Turnstile widget - invisible, executes automatically */}
+              {currentStep === 2 && (
+                <div className="fr-mt-2w">
+                  <TurnstileWidget
+                    onSuccess={(token) => {
+                      setTurnstileToken(token);
+                    }}
+                    onError={(error) => {
+                      console.warn("Turnstile error", error);
+                      // Don't block submission if Turnstile fails
+                      // The server will handle the validation
+                    }}
+                    onExpired={() => {
+                      setTurnstileToken(null);
+                    }}
+                    theme="auto"
+                  />
+                </div>
+              )}
 
               <div className="fr-flow fr-mt-4w contribcit-submit">
                 {submissionState === "success" ? (

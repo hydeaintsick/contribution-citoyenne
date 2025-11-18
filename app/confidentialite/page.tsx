@@ -61,16 +61,36 @@ export default function ConfidentialitePage() {
           <section className="fr-mt-6w">
             <h2 className="fr-h2">4. Sous-traitants et classification automatisée</h2>
             <p className="fr-text">
-              Contribcit fait appel à la société{" "}
-              <Link href="https://mistral.ai" target="_blank" rel="noopener noreferrer">
-                Mistral AI
-              </Link>{" "}
-              pour proposer une classification automatique des retours citoyens. Les informations
-              partagées se limitent au contenu utile à l&apos;analyse (texte libre, pièces
-              jointes et localisation). Aucune donnée n&apos;est utilisée par Mistral AI pour
-              d&apos;autres finalités. Les communes conservent en permanence la main sur la
-              catégorisation (validation, modification ou suppression des propositions).
+              Contribcit fait appel à plusieurs sous-traitants pour assurer le bon fonctionnement
+              du service :
             </p>
+            <ul className="fr-text">
+              <li>
+                <strong>Mistral AI</strong> (
+                <Link href="https://mistral.ai" target="_blank" rel="noopener noreferrer">
+                  mistral.ai
+                </Link>
+                ) : classification automatique des retours citoyens. Les informations partagées se
+                limitent au contenu utile à l&apos;analyse (texte libre, pièces jointes et
+                localisation). Aucune donnée n&apos;est utilisée par Mistral AI pour d&apos;autres
+                finalités. Les communes conservent en permanence la main sur la catégorisation
+                (validation, modification ou suppression des propositions).
+              </li>
+              <li>
+                <strong>Cloudflare Turnstile</strong> (
+                <Link
+                  href="https://www.cloudflare.com/products/turnstile/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  cloudflare.com
+                </Link>
+                ) : protection anti-bot pour sécuriser les formulaires. Turnstile vérifie
+                automatiquement que les soumissions proviennent d&apos;utilisateurs légitimes sans
+                nécessiter d&apos;interaction (mode invisible). Aucune donnée personnelle n&apos;est
+                collectée par Cloudflare dans le cadre de cette vérification.
+              </li>
+            </ul>
           </section>
 
           <section className="fr-mt-6w">
