@@ -11,6 +11,7 @@ import { QrDemo } from "@/components/QrDemo";
 import { Testimonials } from "@/components/Testimonials";
 import { Faq } from "@/components/Faq";
 import { ContactCta } from "@/components/ContactCta";
+import { DashboardScreenshots } from "@/components/DashboardScreenshots";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 
 const features = [
@@ -441,6 +442,7 @@ export default function Home() {
           ))}
         </div>
       </section>
+      <DashboardScreenshots />
       <Motto />
       <HowItWorks />
       <Kpis kpis={kpis} />
