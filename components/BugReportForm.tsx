@@ -1,6 +1,13 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  cubicBezier,
+  type Transition,
+} from "framer-motion";
+import { Stepper } from "@codegouvfr/react-dsfr/Stepper";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Tag } from "@codegouvfr/react-dsfr/Tag";
 import { TurnstileWidget } from "./TurnstileWidget";
@@ -29,6 +36,24 @@ type ScreenshotInfo = {
 
 type UploadState = "idle" | "uploading" | "error" | "success";
 const MAX_SCREENSHOT_FILE_SIZE = 5 * 1024 * 1024;
+
+const STEP_EASING = cubicBezier(0.16, 1, 0.3, 1);
+
+const STEP_TRANSITION: Transition = {
+  duration: 0.4,
+  ease: STEP_EASING,
+};
+
+const FORM_STEPS = [
+  {
+    title: "Formulaire",
+    next: "Confirmation",
+  },
+  {
+    title: "Confirmation",
+    next: undefined,
+  },
+] as const;
 
 export function BugReportForm() {
   const [selectedType, setSelectedType] = useState<BugReportTypeOption>("BUG");
@@ -222,17 +247,41 @@ export function BugReportForm() {
 
   const hasErrors = formState.status === "error";
   const isLoading = formState.status === "loading" || isSubmitting;
+  const isSuccess = formState.status === "success";
+  const currentStep = isSuccess ? 2 : 1;
+  const currentStepMeta = FORM_STEPS[currentStep - 1];
   
   // Check if Turnstile is required (configured) but token is missing
   const isTurnstileRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const isTurnstileValid = !isTurnstileRequired || !!turnstileToken;
   const isSubmitDisabled = isLoading || !isTurnstileValid;
 
+  const handleNewReport = useCallback(() => {
+    resetForm();
+    setFormState({ status: "idle" });
+  }, [resetForm]);
+
   return (
-    <form
-      className="fr-container--fluid fr-p-4w fr-background-default--grey fr-radius--md"
-      onSubmit={handleSubmit}
-    >
+    <div className="fr-container--fluid">
+      <Stepper
+        currentStep={currentStep}
+        stepCount={FORM_STEPS.length}
+        title={currentStepMeta.title}
+        nextTitle={currentStepMeta.next}
+        className="fr-mb-4w"
+      />
+
+      <AnimatePresence mode="wait">
+        {!isSuccess ? (
+          <motion.form
+            key="form"
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -24 }}
+            transition={STEP_TRANSITION}
+            className="fr-p-4w fr-background-default--grey fr-radius--md"
+            onSubmit={handleSubmit}
+          >
       <fieldset className="fr-fieldset" aria-labelledby="bug-report-fieldset-title">
         <legend className="fr-fieldset__legend" id="bug-report-fieldset-title">
           Type de retour
@@ -403,13 +452,6 @@ export function BugReportForm() {
         </div>
       ) : null}
 
-      {formState.status === "success" ? (
-        <div className="fr-alert fr-alert--success fr-mt-4w" role="status">
-          <p className="fr-alert__title">Signalement enregistré</p>
-          <p className="fr-alert__desc">{formState.message}</p>
-        </div>
-      ) : null}
-
       {/* Honeypot field - invisible to humans, visible to bots */}
       <input
         type="text"
@@ -466,7 +508,59 @@ export function BugReportForm() {
           Effacer le formulaire
         </button>
       </div>
-    </form>
+    </motion.form>
+        ) : (
+          <motion.section
+            key="confirmation"
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -24 }}
+            transition={STEP_TRANSITION}
+            className="fr-flow fr-pb-4w"
+            aria-labelledby="bug-report-confirmation"
+          >
+            <div className="fr-callout">
+              <h2
+                id="bug-report-confirmation"
+                className="fr-callout__title fr-h4"
+              >
+                Merci pour votre signalement
+              </h2>
+              <p className="fr-text--sm">
+                {formState.status === "success" && formState.message
+                  ? formState.message
+                  : "Votre signalement a bien été enregistré. Il sera étudié par l'équipe produit dans les meilleurs délais."}
+              </p>
+              <p className="fr-text--sm fr-mb-0">
+                Vous pouvez consulter l'avancement des retours sur notre{" "}
+                <a
+                  href="/suivi-des-bugs"
+                  className="fr-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  suivi des bugs publics
+                </a>
+                .
+              </p>
+            </div>
+
+            <div className="fr-grid-row fr-grid-row--gutters fr-grid-row--right fr-mt-4w">
+              <div className="fr-col-12 fr-col-sm-auto">
+                <Button
+                  priority="primary"
+                  size="medium"
+                  iconId="fr-icon-add-line"
+                  onClick={handleNewReport}
+                >
+                  Faire un nouveau signalement
+                </Button>
+              </div>
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
