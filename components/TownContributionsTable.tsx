@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
@@ -43,8 +44,77 @@ export function TownContributionsTable({
 }: {
   items: ContributionListItem[];
 }) {
-  const [filters, setFilters] = useState<Filter[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Lire les filtres depuis l'URL au chargement
+  const initialFilters = useMemo(() => {
+    const fParam = searchParams.get("f");
+    if (!fParam) return [];
+    return fParam.split(",").filter((f): f is Filter => 
+      f === "open" || f === "alert" || f === "suggestion"
+    );
+  }, [searchParams]);
+
+  const initialCategory = useMemo(() => {
+    const cParam = searchParams.get("c");
+    if (!cParam) return null;
+    return cParam === UNCATEGORIZED_FILTER ? UNCATEGORIZED_FILTER : cParam;
+  }, [searchParams]);
+
+  const [filters, setFilters] = useState<Filter[]>(initialFilters);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory);
+  const isInitialMount = useRef(true);
+  const prevSearchParams = useRef(searchParams.toString());
+
+  // Fonction pour mettre à jour l'URL avec les filtres actuels
+  const updateURL = useCallback((newFilters: Filter[], newCategory: string | null) => {
+    const params = new URLSearchParams();
+    
+    if (newFilters.length > 0) {
+      params.set("f", newFilters.join(","));
+    }
+    
+    if (newCategory !== null) {
+      params.set("c", newCategory);
+    }
+
+    const queryString = params.toString();
+    const newURL = queryString ? `${pathname}?${queryString}` : pathname;
+    
+    router.replace(newURL, { scroll: false });
+  }, [pathname, router]);
+
+  // Synchroniser les filtres quand l'URL change (navigation navigateur)
+  useEffect(() => {
+    const currentSearchParams = searchParams.toString();
+    // Seulement mettre à jour si l'URL a vraiment changé (pas à cause de notre propre mise à jour)
+    if (prevSearchParams.current !== currentSearchParams) {
+      setFilters(initialFilters);
+      setSelectedCategory(initialCategory);
+      isInitialMount.current = true;
+      prevSearchParams.current = currentSearchParams;
+    }
+  }, [searchParams, initialFilters, initialCategory]);
+
+  // Synchroniser l'URL quand les filtres changent (mais pas au premier rendu)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    updateURL(filters, selectedCategory);
+    // Mettre à jour prevSearchParams pour éviter que le premier useEffect ne se déclenche
+    const params = new URLSearchParams();
+    if (filters.length > 0) {
+      params.set("f", filters.join(","));
+    }
+    if (selectedCategory !== null) {
+      params.set("c", selectedCategory);
+    }
+    prevSearchParams.current = params.toString();
+  }, [filters, selectedCategory, updateURL]);
 
   const { categoryOptions, uncategorizedCount } = useMemo(() => {
     const map = new Map<string, CategoryFilterOption>();
