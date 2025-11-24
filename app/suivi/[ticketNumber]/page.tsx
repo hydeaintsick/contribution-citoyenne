@@ -27,6 +27,7 @@ type TicketData = {
   createdAt: Date;
   closedAt: Date | null;
   closureNote: string | null;
+  isPotentiallyMalicious?: boolean;
 };
 
 const DEFAULT_CATEGORY_BADGE_COLOR = "#E5E5F4";
@@ -61,6 +62,7 @@ async function fetchTicket(ticketNumber: string): Promise<TicketData | null> {
         createdAt: true,
         closedAt: true,
         closureNote: true,
+        isPotentiallyMalicious: true,
         commune: {
           select: {
             name: true,
@@ -88,6 +90,7 @@ async function fetchTicket(ticketNumber: string): Promise<TicketData | null> {
       createdAt: contribution.createdAt,
       closedAt: contribution.closedAt,
       closureNote: contribution.closureNote,
+      isPotentiallyMalicious: contribution.isPotentiallyMalicious,
     };
   } catch (error) {
     console.error("Failed to fetch ticket", error);
@@ -182,6 +185,19 @@ export default async function TicketStatusPage({ params }: RouteParams) {
                     }}
                   >
                     {ticket.categoryLabel}
+                  </Badge>
+                </div>
+              )}
+              {ticket.isPotentiallyMalicious && (
+                <div className="fr-col-auto" style={{ display: "flex", alignItems: "center" }}>
+                  <Badge
+                    small
+                    style={{
+                      backgroundColor: "#8B0000",
+                      color: "#ffffff",
+                    }}
+                  >
+                    ⚠️ Malveillant
                   </Badge>
                 </div>
               )}

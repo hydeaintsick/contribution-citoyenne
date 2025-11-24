@@ -162,6 +162,7 @@ model Contribution {
   closureNote   String?
   closedById    String?            @db.ObjectId
   closedBy      User?              @relation("ContributionClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+  isPotentiallyMalicious Boolean   @default(false)
 }
 
 model BugReport {

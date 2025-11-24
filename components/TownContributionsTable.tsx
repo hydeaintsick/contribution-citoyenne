@@ -18,9 +18,10 @@ type ContributionListItem = {
   categoryTextColor?: string | null;
   createdAt: string;
   locationLabel?: string | null;
+  isPotentiallyMalicious?: boolean;
 };
 
-type Filter = "open" | "alert" | "suggestion";
+type Filter = "open" | "alert" | "suggestion" | "malicious";
 
 type CategoryFilterOption = {
   value: string;
@@ -53,7 +54,7 @@ export function TownContributionsTable({
     const fParam = searchParams.get("f");
     if (!fParam) return [];
     return fParam.split(",").filter((f): f is Filter => 
-      f === "open" || f === "alert" || f === "suggestion"
+      f === "open" || f === "alert" || f === "suggestion" || f === "malicious"
     );
   }, [searchParams]);
 
@@ -165,6 +166,7 @@ export function TownContributionsTable({
     const hasOpenFilter = filters.includes("open");
     const hasAlertFilter = filters.includes("alert");
     const hasSuggestionFilter = filters.includes("suggestion");
+    const hasMaliciousFilter = filters.includes("malicious");
     const normalizedCategoryFilter = selectedCategory;
 
     return items.filter((item) => {
@@ -178,6 +180,10 @@ export function TownContributionsTable({
 
       if (hasSuggestionFilter && !hasAlertFilter) {
         return item.type === "SUGGESTION";
+      }
+
+      if (hasMaliciousFilter && !item.isPotentiallyMalicious) {
+        return false;
       }
 
       if (normalizedCategoryFilter) {
@@ -260,6 +266,18 @@ export function TownContributionsTable({
               ></span>
             )}
             <span>Suggestions</span>
+          </Button>
+          <Button
+            priority={filters.includes("malicious") ? "primary" : "secondary"}
+            onClick={() => toggleFilter("malicious")}
+          >
+            {filters.includes("malicious") && (
+              <span
+                className="fr-icon-check-line fr-mr-1w"
+                aria-hidden="true"
+              ></span>
+            )}
+            <span>⚠️ Malveillant</span>
           </Button>
         </div>
 
@@ -385,6 +403,18 @@ export function TownContributionsTable({
                               >
                                 {hasCategory ? label : "Non catégorisé"}
                               </Badge>
+                              {item.isPotentiallyMalicious && (
+                                <Badge
+                                  small
+                                  style={{
+                                    backgroundColor: "#8B0000",
+                                    color: "#ffffff",
+                                    marginLeft: "0.5rem",
+                                  }}
+                                >
+                                  ⚠️ Malveillant
+                                </Badge>
+                              )}
                             </div>
                           </td>
                           <td className="fr-py-2w" style={{ verticalAlign: "top" }}>

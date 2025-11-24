@@ -36,6 +36,7 @@ type ContributionDetail = {
     lastName?: string | null;
     email: string;
   } | null;
+  isPotentiallyMalicious?: boolean;
 };
 
 type ClosureState =
@@ -149,6 +150,23 @@ export function TownContributionDetail({
     currentContribution.categoryLabel,
     currentContribution.categoryTextColor,
   ]);
+
+  const maliciousTag = useMemo(() => {
+    if (!currentContribution.isPotentiallyMalicious) {
+      return null;
+    }
+    return (
+      <Badge
+        small
+        style={{
+          backgroundColor: "#8B0000",
+          color: "#ffffff",
+        }}
+      >
+        ⚠️ Malveillant
+      </Badge>
+    );
+  }, [currentContribution.isPotentiallyMalicious]);
 
   // Initialiser selectedCategoryId avec la catégorie actuelle si disponible
   useEffect(() => {
@@ -307,6 +325,7 @@ export function TownContributionDetail({
             <div className="fr-col-auto">{typeTag}</div>
             <div className="fr-col-auto">{statusTag}</div>
             <div className="fr-col-auto">{categoryTag}</div>
+            {maliciousTag && <div className="fr-col-auto">{maliciousTag}</div>}
           </div>
           <h1 className="fr-h3 fr-mb-0">
             {currentContribution.title || "Sans titre"}

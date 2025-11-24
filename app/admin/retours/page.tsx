@@ -48,6 +48,7 @@ export default async function TownReturnsPage() {
       },
       createdAt: true,
       locationLabel: true,
+      isPotentiallyMalicious: true,
     },
     orderBy: {
       createdAt: "desc",
@@ -74,6 +75,7 @@ export default async function TownReturnsPage() {
           categoryTextColor: contribution.category?.badgeTextColor ?? null,
           createdAt: contribution.createdAt.toISOString(),
           locationLabel: contribution.locationLabel,
+          isPotentiallyMalicious: contribution.isPotentiallyMalicious,
         }))}
       />
     </div>

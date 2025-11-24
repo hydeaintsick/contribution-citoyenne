@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { ContributionStatus, ContributionType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { predictCategory } from "@/lib/mistral";
+import { predictCategory, detectMaliciousContent } from "@/lib/mistral";
 import { generateUniqueTicketNumber } from "@/lib/ticket";
 import { verifyTurnstileToken, getClientIp } from "@/lib/turnstile";
 
@@ -218,6 +218,14 @@ export async function POST(request: Request) {
       return null;
     });
 
+    const isPotentiallyMalicious = await detectMaliciousContent({
+      title: payload.title,
+      details: payload.details,
+    }).catch((error) => {
+      console.error("Mistral malicious content detection failed", error);
+      return false;
+    });
+
     const normalizedCategoryName =
       mistralResult?.category ?? categories[0]?.name ?? null;
 
@@ -279,6 +287,7 @@ export async function POST(request: Request) {
         longitude: payload.coordinates?.longitude ?? null,
         photoUrl: payload.photo?.url ?? null,
         photoPublicId: payload.photo?.publicId ?? null,
+        isPotentiallyMalicious,
       },
     });
 

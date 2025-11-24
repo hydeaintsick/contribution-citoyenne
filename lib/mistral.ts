@@ -288,3 +288,109 @@ export async function classifyContributionWithTitle({
 
   return parseJsonWithSchema(rawContent, categoryWithTitleSchema);
 }
+
+const maliciousContentSchema = z.object({
+  isMalicious: z.boolean(),
+  confidence: z.number().min(0).max(1).optional(),
+  rationale: z.string().optional(),
+});
+
+type MaliciousContentPrediction = z.infer<typeof maliciousContentSchema>;
+
+function buildMaliciousDetectionPrompt({
+  title,
+  details,
+}: {
+  title: string;
+  details: string;
+}): string {
+  return [
+    "Tu es un agent qui analyse des signalements citoyens pour une mairie française.",
+    "Ton rôle est de détecter si le contenu contient des propos insultants, inappropriés, malveillants ou offensants.",
+    "Analyse le titre et la description fournis et détermine si le contenu est potentiellement malveillant.",
+    'Réponds uniquement en JSON avec la forme {"isMalicious": true/false}.',
+    'Tu peux optionnellement inclure "confidence" (entre 0 et 1) et "rationale" pour expliquer ta décision.',
+    "",
+    "Un contenu est considéré comme malveillant s'il contient :",
+    "- Des insultes, des propos injurieux ou offensants",
+    "- Des attaques personnelles contre des personnes ou des institutions",
+    "- Du harcèlement ou des menaces",
+    "- Des propos discriminatoires ou haineux",
+    "- Du contenu inapproprié ou vulgaire",
+    "",
+    "Un contenu critique mais respectueux, même s'il exprime une frustration légitime, n'est PAS considéré comme malveillant.",
+    "",
+    `Titre : ${title}`,
+    `Description : ${details}`,
+  ].join("\n");
+}
+
+export async function detectMaliciousContent({
+  title,
+  details,
+  signal,
+}: {
+  title: string;
+  details: string;
+  signal?: AbortSignal;
+}): Promise<boolean> {
+  if (!isMistralConfigured) {
+    return false;
+  }
+
+  try {
+    const response = await fetch(MISTRAL_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${MISTRAL_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: MISTRAL_MODEL,
+        temperature: 0,
+        response_format: {
+          type: "json_object",
+        },
+        messages: [
+          {
+            role: "system",
+            content:
+              "Tu es un assistant qui aide à protéger les collectivités françaises en détectant les contenus malveillants dans les signalements citoyens.",
+          },
+          {
+            role: "user",
+            content: buildMaliciousDetectionPrompt({ title, details }),
+          },
+        ],
+      }),
+      signal,
+    });
+
+    if (!response.ok) {
+      const message = await response.text().catch(() => "Unknown error");
+      console.error(
+        `Mistral malicious content detection failed (${response.status}): ${message}`
+      );
+      return false;
+    }
+
+    const payload = (await response
+      .json()
+      .catch(() => null)) as MistralResponse | null;
+
+    const rawContent =
+      payload?.choices?.[0]?.message?.content?.trim() ?? JSON.stringify({});
+
+    const parsed = parseJsonWithSchema(rawContent, maliciousContentSchema);
+
+    if (!parsed) {
+      return false;
+    }
+
+    return parsed.isMalicious;
+  } catch (error) {
+    console.error("Failed to detect malicious content", error);
+    return false;
+  }
+}

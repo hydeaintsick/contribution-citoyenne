@@ -42,6 +42,7 @@ export async function GET(request: Request, context: RouteParams) {
         createdAt: true,
         closedAt: true,
         closureNote: true,
+        isPotentiallyMalicious: true,
         commune: {
           select: {
             name: true,
@@ -75,6 +76,7 @@ export async function GET(request: Request, context: RouteParams) {
           ? contribution.closedAt.toISOString()
           : null,
         closureNote: contribution.closureNote,
+        isPotentiallyMalicious: contribution.isPotentiallyMalicious,
       },
     });
   } catch (error) {

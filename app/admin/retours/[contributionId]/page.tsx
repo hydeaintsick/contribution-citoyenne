@@ -65,6 +65,7 @@ export default async function TownReturnDetailPage({ params }: RouteParams) {
       updatedAt: true,
       closedAt: true,
       closureNote: true,
+      isPotentiallyMalicious: true,
       closedBy: {
         select: {
           firstName: true,
@@ -122,6 +123,7 @@ export default async function TownReturnDetailPage({ params }: RouteParams) {
                 email: contribution.closedBy.email,
               }
             : null,
+          isPotentiallyMalicious: contribution.isPotentiallyMalicious,
         }}
         categories={categories.map((category) => ({
           id: category.id,
