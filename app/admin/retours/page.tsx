@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSessionCookieName, parseSessionCookie } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { TownContributionsTable } from "@/components/TownContributionsTable";
+import { ExportContributionsButton } from "@/components/ExportContributionsButton";
 
 const DEFAULT_CATEGORY_BADGE_COLOR = "#000091";
 const DEFAULT_CATEGORY_BADGE_TEXT_COLOR = "#FFFFFF";

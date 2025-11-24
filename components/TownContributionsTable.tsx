@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { Button } from "@codegouvfr/react-dsfr/Button";
+import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
+import { ExportContributionsButton } from "./ExportContributionsButton";
 import styles from "./TownContributionsTable.module.css";
 
 type ContributionListItem = {
@@ -357,6 +359,14 @@ export function TownContributionsTable({
           </div>
         </div>
       )}
+
+      <div className="fr-mt-3w">
+        <Accordion label="Export vers d'autres applications">
+          <div className="fr-mt-2w">
+            <ExportContributionsButton />
+          </div>
+        </Accordion>
+      </div>
     </div>
   );
 }
