@@ -41,6 +41,7 @@ export async function middleware(request: NextRequest) {
       "/admin/dashboard",
       "/admin/profile",
       "/admin/kit-media",
+      "/admin/configuration-ville",
     ]);
     const prefixAllowed = ["/admin/retours"];
 

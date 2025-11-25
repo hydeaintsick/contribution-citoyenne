@@ -257,21 +257,34 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
     };
   }, [isDsfrReady]);
 
-  const updateSessionState = useCallback((nextUser: SessionUser | null) => {
-    setSessionUser((currentUser) => {
-      if (areSessionUsersEqual(currentUser, nextUser)) {
-        return currentUser;
-      }
-      return nextUser;
-    });
-    setHasSession((currentHasSession) => {
-      const nextHasSession = Boolean(nextUser);
-      if (currentHasSession === nextHasSession) {
-        return currentHasSession;
-      }
-      return nextHasSession;
-    });
-  }, []);
+  const updateSessionState = useCallback(
+    (nextUser: SessionUser | null) => {
+      setSessionUser((currentUser) => {
+        // Si nextUser est null mais qu'on a un initialSessionUser et pas de currentUser,
+        // utiliser initialSessionUser comme fallback pour éviter de perdre la session au rafraîchissement
+        if (!nextUser && initialSessionUser && !currentUser) {
+          return initialSessionUser;
+        }
+        // Si nextUser est null mais qu'on a déjà un currentUser, le garder
+        // (évite d'écraser une session valide en cas d'erreur réseau temporaire)
+        if (!nextUser && currentUser) {
+          return currentUser;
+        }
+        if (areSessionUsersEqual(currentUser, nextUser)) {
+          return currentUser;
+        }
+        return nextUser;
+      });
+      setHasSession((currentHasSession) => {
+        const nextHasSession = Boolean(nextUser ?? initialSessionUser);
+        if (currentHasSession === nextHasSession) {
+          return currentHasSession;
+        }
+        return nextHasSession;
+      });
+    },
+    [initialSessionUser]
+  );
 
   const openAdminSpace = useCallback(() => {
     window.open("/admin", "_blank", "noopener,noreferrer");
@@ -350,7 +363,8 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
     }
   }, [isLoggingOut, router, updateSessionState]);
 
-  const userRole = sessionUser?.role ?? null;
+  // Utiliser initialSessionUser comme fallback pour éviter que la navigation disparaisse au rafraîchissement
+  const userRole = sessionUser?.role ?? initialSessionUser?.role ?? null;
 
   const normalizePath = useCallback((href: string) => {
     const [pathWithoutHash] = href.split("#");
@@ -587,6 +601,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           },
         },
         {
+          text: "Configuration",
+          linkProps: {
+            href: "/admin/configuration-ville",
+          },
+        },
+        {
           text: "Accès salariés",
           linkProps: {
             href: "/admin/acces-salaries",
@@ -622,6 +642,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           },
         },
         {
+          text: "Configuration",
+          linkProps: {
+            href: "/admin/configuration-ville",
+          },
+        },
+        {
           text: "Mon profil",
           linkProps: {
             href: "/admin/profile",
@@ -644,7 +670,7 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
         },
       },
     ]);
-  }, [isAdminArea, userRole, withActiveNavigation]);
+  }, [isAdminArea, userRole, withActiveNavigation, initialSessionUser]);
 
   const quickAccessItems = useMemo<QuickAccessItems>(() => {
     const themeToggleItem: QuickAccessItems[number] = {

@@ -53,3 +53,9 @@
   flex-wrap: wrap;
 }
 
+.blurredContent {
+  filter: blur(4px);
+  user-select: none;
+  pointer-events: none;
+}
+

@@ -30,6 +30,17 @@ export default async function TownReturnsPage() {
     redirect("/admin/profile");
   }
 
+  const commune = await prisma.commune.findUnique({
+    where: { id: session.user.communeId },
+    select: {
+      safeModeEnabled: true,
+    },
+  });
+
+  if (!commune) {
+    redirect("/admin");
+  }
+
   const contributions = await prisma.contribution.findMany({
     where: {
       communeId: session.user.communeId,
@@ -77,6 +88,7 @@ export default async function TownReturnsPage() {
           locationLabel: contribution.locationLabel,
           isPotentiallyMalicious: contribution.isPotentiallyMalicious,
         }))}
+        safeModeEnabled={commune.safeModeEnabled}
       />
     </div>
   );

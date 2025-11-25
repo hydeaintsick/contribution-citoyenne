@@ -91,6 +91,7 @@ model Commune {
   websiteUrl  String?
   isVisible   Boolean  @default(true)
   isPartner   Boolean  @default(false)
+  safeModeEnabled Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdById String?  @db.ObjectId

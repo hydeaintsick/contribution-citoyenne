@@ -42,8 +42,10 @@ const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
 
 export function TownContributionsTable({
   items,
+  safeModeEnabled = false,
 }: {
   items: ContributionListItem[];
+  safeModeEnabled?: boolean;
 }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -389,7 +391,13 @@ export function TownContributionsTable({
                             </Badge>
                           </td>
                           <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
-                            <p className="fr-text--md fr-text--bold fr-mb-0">
+                            <p
+                              className={`fr-text--md fr-text--bold fr-mb-0 ${
+                                safeModeEnabled && item.isPotentiallyMalicious
+                                  ? styles.blurredContent
+                                  : ""
+                              }`}
+                            >
                               {item.title || "Sans titre"}
                             </p>
                             <div className={styles.categoryBadgeWrapper}>

@@ -80,6 +80,18 @@ export default async function TownReturnDetailPage({ params }: RouteParams) {
     redirect("/admin/retours");
   }
 
+  // Récupérer safeModeEnabled depuis la commune
+  const commune = await prisma.commune.findUnique({
+    where: { id: session.user.communeId },
+    select: {
+      safeModeEnabled: true,
+    },
+  });
+
+  if (!commune) {
+    redirect("/admin/retours");
+  }
+
   // Récupérer les catégories actives pour le reclassement
   const categories = await prisma.category.findMany({
     where: {
@@ -131,6 +143,7 @@ export default async function TownReturnDetailPage({ params }: RouteParams) {
           badgeColor: category.badgeColor,
           badgeTextColor: category.badgeTextColor,
         }))}
+        safeModeEnabled={commune.safeModeEnabled}
       />
     </div>
   );

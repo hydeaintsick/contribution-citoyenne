@@ -75,9 +75,11 @@ function formatUserName(user?: ContributionDetail["closedBy"]) {
 export function TownContributionDetail({
   contribution,
   categories = [],
+  safeModeEnabled = false,
 }: {
   contribution: ContributionDetail;
   categories?: CategoryOption[];
+  safeModeEnabled?: boolean;
 }) {
   const [closureMessage, setClosureMessage] = useState("");
   const [closureState, setClosureState] = useState<ClosureState>({

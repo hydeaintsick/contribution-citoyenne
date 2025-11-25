@@ -176,6 +176,13 @@ export function AdminSidebar() {
             href: "/admin/kit-media",
           },
         },
+        {
+          text: "Configuration",
+          isActive: pathname === "/admin/configuration-ville",
+          linkProps: {
+            href: "/admin/configuration-ville",
+          },
+        },
       ];
 
       if (isTownManager) {
