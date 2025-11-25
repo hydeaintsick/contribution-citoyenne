@@ -74,6 +74,7 @@ model User {
   closedReports     Contribution[]     @relation("ContributionClosedBy")
   contactTickets    ContactTicket[]
   bugReportComments BugReportComment[]
+  createdNews       News[]             @relation("NewsCreatedBy")
 }
 
 model Commune {
@@ -100,6 +101,7 @@ model Commune {
   users     User[]
   auditLogs CityAuditLog[]
   reports   Contribution[]
+  newsRead  NewsRead[]
 }
 
 model Category {
@@ -219,4 +221,32 @@ model BugReportComment {
 
   @@index([bugReportId])
   @@index([createdAt])
+}
+
+model News {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdById String    @db.ObjectId
+  createdBy   User      @relation("NewsCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reads       NewsRead[]
+
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model NewsRead {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  newsId    String   @db.ObjectId
+  news      News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  communeId String   @db.ObjectId
+  commune   Commune  @relation(fields: [communeId], references: [id], onDelete: Cascade)
+  readAt    DateTime @default(now())
+
+  @@unique([newsId, communeId])
+  @@index([communeId])
+  @@index([newsId])
 }

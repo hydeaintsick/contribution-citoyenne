@@ -469,6 +469,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           },
         },
         {
+          text: "Annonces",
+          linkProps: {
+            href: "/admin/news",
+          },
+        },
+        {
           text: "Retours produits",
           linkProps: {
             href: "/admin/retours-produits",
@@ -519,6 +525,12 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           text: "Communes",
           linkProps: {
             href: "/admin/communes",
+          },
+        },
+        {
+          text: "Annonces",
+          linkProps: {
+            href: "/admin/news",
           },
         },
         {

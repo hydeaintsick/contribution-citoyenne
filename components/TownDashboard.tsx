@@ -24,11 +24,13 @@ import type {
 } from "recharts/types/component/DefaultTooltipContent";
 import type { TooltipProps } from "recharts";
 import type { TownDashboardData, TrendPoint } from "@/lib/contributionStats";
+import { NewsCarousel } from "@/components/NewsCarousel";
 
 type TimelineGranularity = "weekly" | "monthly" | "yearly";
 
 type TownDashboardProps = {
   commune: {
+    id: string;
     name: string;
     websiteUrl?: string | null;
   };
@@ -134,6 +136,8 @@ export function TownDashboard({ commune, data }: TownDashboardProps) {
           en bref.
         </p>
       </header>
+
+      <NewsCarousel communeId={commune.id} />
 
       <section
         aria-label="Indicateurs clés"

@@ -114,6 +114,13 @@ export function AdminSidebar() {
             href: "/admin/communes",
           },
         },
+        {
+          text: "Annonces",
+          isActive: pathname === "/admin/news",
+          linkProps: {
+            href: "/admin/news",
+          },
+        },
       ];
 
       if (isAdmin) {

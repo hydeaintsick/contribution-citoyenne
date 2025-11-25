@@ -113,6 +113,7 @@ export default async function AdminHomePage() {
     return (
       <TownDashboard
         commune={{
+          id: commune.id,
           name: commune.name,
           websiteUrl: commune.websiteUrl,
         }}
