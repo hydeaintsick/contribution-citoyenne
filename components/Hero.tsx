@@ -43,7 +43,7 @@ export function Hero() {
               </Button>
             </div>
             <div className="fr-mt-4w">
-              <Badge severity="success" noIcon>
+              <Badge severity="success">
                 Conforme RGPD
               </Badge>
             </div>

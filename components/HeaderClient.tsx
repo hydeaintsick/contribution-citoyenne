@@ -675,7 +675,7 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
   const quickAccessItems = useMemo<QuickAccessItems>(() => {
     const themeToggleItem: QuickAccessItems[number] = {
       iconId: isDarkTheme ? "fr-icon-sun-line" : "fr-icon-moon-line",
-      text: "",
+      text: "Mode " + (isDarkTheme ? "clair" : "nuit"),
       buttonProps: {
         onClick: toggleTheme,
         "aria-pressed": isDarkTheme,

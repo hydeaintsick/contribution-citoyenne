@@ -1,0 +1,12 @@
+.fr-icon-linkedin-box-fill:after, .fr-icon-linkedin-box-fill:before {
+  -webkit-mask-image: url('../public/icons/linkedin.svg');
+  mask-image: url('../public/icons/linkedin.svg');
+}
+.fr-icon-facebook-box-fill:after, .fr-icon-facebook-box-fill:before {
+  -webkit-mask-image: url('../public/icons/facebook.svg');
+  mask-image: url('../public/icons/facebook.svg');
+}
+.fr-icon-instagram-box-fill:after, .fr-icon-instagram-box-fill:before {
+  -webkit-mask-image: url('../public/icons/instagram.svg');
+  mask-image: url('../public/icons/instagram.svg');
+}
