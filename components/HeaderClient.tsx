@@ -128,9 +128,58 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(
     () => initialSessionUser
   );
+  const [hasPremiumAccess, setHasPremiumAccess] = useState<boolean | null>(null);
   const [isDsfrReady, setIsDsfrReady] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const isDarkTheme = theme === "dark";
+
+  // Charger l'accès premium pour les communes
+  useEffect(() => {
+    if (
+      !sessionUser ||
+      !sessionUser.communeId ||
+      (sessionUser.role !== "TOWN_MANAGER" && sessionUser.role !== "TOWN_EMPLOYEE")
+    ) {
+      setHasPremiumAccess(null);
+      return;
+    }
+
+    let isCancelled = false;
+
+    async function loadPremiumAccess() {
+      try {
+        const response = await fetch("/api/admin/communes/premium-access", {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        });
+        if (isCancelled) {
+          return;
+        }
+        if (response.ok) {
+          const data = (await response.json()) as {
+            hasPremiumAccess?: boolean;
+          };
+          const premiumAccess = data.hasPremiumAccess ?? false;
+          setHasPremiumAccess(premiumAccess);
+        } else {
+          setHasPremiumAccess(false);
+        }
+      } catch (error) {
+        console.error("Failed to load premium access", error);
+        if (!isCancelled) {
+          setHasPremiumAccess(false);
+        }
+      }
+    }
+
+    loadPremiumAccess();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [sessionUser]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -581,7 +630,7 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
     }
 
     if (userRole === "TOWN_MANAGER") {
-      return withActiveNavigation([
+      const items = [
         {
           text: "Dashboard",
           linkProps: {
@@ -606,6 +655,19 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
             href: "/admin/configuration-ville",
           },
         },
+      ];
+
+      // Ajouter le lien API uniquement si l'accès premium est activé
+      if (hasPremiumAccess === true) {
+        items.push({
+          text: "API",
+          linkProps: {
+            href: "/admin/api",
+          },
+        });
+      }
+
+      items.push(
         {
           text: "Accès salariés",
           linkProps: {
@@ -618,11 +680,13 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
             href: "/admin/profile",
           },
         },
-      ]);
+      );
+
+      return withActiveNavigation(items);
     }
 
     if (userRole === "TOWN_EMPLOYEE") {
-      return withActiveNavigation([
+      const items = [
         {
           text: "Dashboard",
           linkProps: {
@@ -647,13 +711,26 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
             href: "/admin/configuration-ville",
           },
         },
-        {
-          text: "Mon profil",
+      ];
+
+      // Ajouter le lien API uniquement si l'accès premium est activé
+      if (hasPremiumAccess === true) {
+        items.push({
+          text: "API",
           linkProps: {
-            href: "/admin/profile",
+            href: "/admin/api",
           },
+        });
+      }
+
+      items.push({
+        text: "Mon profil",
+        linkProps: {
+          href: "/admin/profile",
         },
-      ]);
+      });
+
+      return withActiveNavigation(items);
     }
 
     return withActiveNavigation([
@@ -670,7 +747,7 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
         },
       },
     ]);
-  }, [isAdminArea, userRole, withActiveNavigation, initialSessionUser]);
+  }, [isAdminArea, userRole, withActiveNavigation, initialSessionUser, hasPremiumAccess]);
 
   const quickAccessItems = useMemo<QuickAccessItems>(() => {
     const themeToggleItem: QuickAccessItems[number] = {

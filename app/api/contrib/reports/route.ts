@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { predictCategory, detectMaliciousContent } from "@/lib/mistral";
 import { generateUniqueTicketNumber } from "@/lib/ticket";
 import { verifyTurnstileToken, getClientIp } from "@/lib/turnstile";
+import { sendWebhookForContribution } from "@/lib/webhook";
 
 export const runtime = "nodejs";
 
@@ -305,6 +306,36 @@ export async function POST(request: Request) {
         contributionId: contribution.id,
       });
     }
+
+    // Envoyer le webhook de manière asynchrone (ne pas bloquer la réponse)
+    // Charger les données complètes nécessaires pour le webhook
+    prisma.contribution
+      .findUnique({
+        where: { id: contribution.id },
+        include: {
+          commune: {
+            select: {
+              id: true,
+              name: true,
+              postalCode: true,
+              webhookUrl: true,
+              webhookSecret: true,
+            },
+          },
+          category: true,
+        },
+      })
+      .then((fullContribution) => {
+        if (fullContribution) {
+          return sendWebhookForContribution(fullContribution);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to send webhook for contribution", {
+          contributionId: contribution.id,
+          error,
+        });
+      });
 
     return NextResponse.json(
       {

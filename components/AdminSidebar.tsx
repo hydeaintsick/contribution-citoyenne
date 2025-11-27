@@ -183,6 +183,13 @@ export function AdminSidebar() {
             href: "/admin/configuration-ville",
           },
         },
+        {
+          text: "API",
+          isActive: pathname === "/admin/api",
+          linkProps: {
+            href: "/admin/api",
+          },
+        },
       ];
 
       if (isTownManager) {

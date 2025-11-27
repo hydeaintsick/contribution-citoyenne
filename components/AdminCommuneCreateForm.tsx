@@ -37,6 +37,7 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
   const [communeData, setCommuneData] = useState<CommunePayload | null>(null);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [isPartner, setIsPartner] = useState(false);
+  const [hasPremiumAccess, setHasPremiumAccess] = useState(false);
   const [verificationState, setVerificationState] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
@@ -152,6 +153,7 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
             ...communeData,
             websiteUrl: websiteUrl.trim(),
             isPartner,
+            hasPremiumAccess,
             manager: {
               email: manager.email,
               password: manager.password,
@@ -193,7 +195,7 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
         setIsSubmitting(false);
       }
     },
-    [communeData, manager, onCommuneCreated, resetForm, websiteUrl, isPartner],
+    [communeData, manager, onCommuneCreated, resetForm, websiteUrl, isPartner, hasPremiumAccess],
   );
 
   const bboxDisplayValue = useMemo(() => {
@@ -322,6 +324,20 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
             />
             <label className="fr-label" htmlFor="is-partner-checkbox">
               Commune partenaire
+            </label>
+          </div>
+        </div>
+
+        <div className="fr-mt-2w">
+          <div className="fr-checkbox-group">
+            <input
+              type="checkbox"
+              id="has-premium-access-checkbox"
+              checked={hasPremiumAccess}
+              onChange={(e) => setHasPremiumAccess(e.target.checked)}
+            />
+            <label className="fr-label" htmlFor="has-premium-access-checkbox">
+              Accès premium
             </label>
           </div>
         </div>

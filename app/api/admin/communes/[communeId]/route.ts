@@ -43,6 +43,7 @@ const updateSchema = z
     websiteUrl: websiteUrlSchema,
     isVisible: z.boolean().optional(),
     isPartner: z.boolean().optional(),
+    hasPremiumAccess: z.boolean().optional(),
     manager: managerSchema,
   })
   .refine(
@@ -50,6 +51,7 @@ const updateSchema = z
       typeof value.websiteUrl !== "undefined" ||
       typeof value.isVisible !== "undefined" ||
       typeof value.isPartner !== "undefined" ||
+      typeof value.hasPremiumAccess !== "undefined" ||
       typeof value.manager !== "undefined",
     { message: "Aucune modification demandée." }
   );
@@ -95,7 +97,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const { websiteUrl, isVisible, isPartner, manager } = parseResult.data;
+  const { websiteUrl, isVisible, isPartner, hasPremiumAccess, manager } =
+    parseResult.data;
 
   try {
     const updateResult = await prisma.$transaction(async (tx) => {
@@ -108,6 +111,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           websiteUrl: true,
           isVisible: true,
           isPartner: true,
+          hasPremiumAccess: true,
           users: {
             where: { role: "TOWN_MANAGER" },
             select: {
@@ -151,6 +155,17 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           before: commune.isPartner,
           after: isPartner,
         };
+      }
+
+      if (typeof hasPremiumAccess !== "undefined") {
+        const currentValue = commune.hasPremiumAccess ?? false;
+        if (hasPremiumAccess !== currentValue) {
+          updates.hasPremiumAccess = hasPremiumAccess;
+          auditDetails.hasPremiumAccess = {
+            before: currentValue,
+            after: hasPremiumAccess,
+          };
+        }
       }
 
       if (Object.keys(updates).length > 0) {
@@ -216,6 +231,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           websiteUrl: true,
           isVisible: true,
           isPartner: true,
+          hasPremiumAccess: true,
           users: {
             where: { role: "TOWN_MANAGER" },
             select: {

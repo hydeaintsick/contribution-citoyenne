@@ -92,6 +92,9 @@ model Commune {
   isVisible   Boolean  @default(true)
   isPartner   Boolean  @default(false)
   safeModeEnabled Boolean @default(false)
+  hasPremiumAccess Boolean @default(false)
+  webhookUrl  String?
+  webhookSecret String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdById String?  @db.ObjectId
@@ -103,6 +106,7 @@ model Commune {
   auditLogs CityAuditLog[]
   reports   Contribution[]
   newsRead  NewsRead[]
+  webhookLogs WebhookLog[]
 }
 
 model Category {
@@ -250,4 +254,22 @@ model NewsRead {
   @@unique([newsId, communeId])
   @@index([communeId])
   @@index([newsId])
+}
+
+model WebhookLog {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  communeId     String    @db.ObjectId
+  commune       Commune   @relation(fields: [communeId], references: [id], onDelete: Cascade)
+  url           String
+  statusCode    Int?
+  success       Boolean
+  errorMessage  String?
+  responseTime  Int?
+  contributionId String?  @db.ObjectId
+  isTest        Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  @@index([communeId])
+  @@index([createdAt])
+  @@index([isTest])
 }

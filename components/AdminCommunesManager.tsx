@@ -317,21 +317,40 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
         return (
           <tr key={commune.id}>
             <td className="fr-py-2w" style={{ verticalAlign: "top" }}>
-              {commune.isPartner && (
+              {(commune.isPartner || (commune as { hasPremiumAccess?: boolean }).hasPremiumAccess) && (
                 <div className="fr-mb-1w">
-                  <Badge
-                    as="span"
-                    severity="info"
-                    small
-                    noIcon
-                    style={{
-                      display: "inline-block",
-                      backgroundColor: "var(--background-action-low-blue-france)",
-                      color: "var(--text-title-blue-france)",
-                    }}
-                  >
-                    Commune partenaire
-                  </Badge>
+                  <div className="fr-btns-group fr-btns-group--inline-sm">
+                    {commune.isPartner && (
+                      <Badge
+                        as="span"
+                        severity="info"
+                        small
+                        noIcon
+                        style={{
+                          display: "inline-block",
+                          backgroundColor: "var(--background-action-low-blue-france)",
+                          color: "var(--text-title-blue-france)",
+                        }}
+                      >
+                        Commune partenaire
+                      </Badge>
+                    )}
+                    {(commune as { hasPremiumAccess?: boolean }).hasPremiumAccess && (
+                      <Badge
+                        as="span"
+                        small
+                        noIcon
+                        style={{
+                          display: "inline-block",
+                          backgroundColor: "#FFD700",
+                          color: "#000000",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        PREMIUM
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               )}
               <div className="fr-text--md fr-text--bold">{commune.name}</div>
@@ -764,6 +783,7 @@ export function AdminCommunesManager({ communes }: AdminCommunesManagerProps) {
                     postalCode: editingCommune.postalCode,
                     websiteUrl: editingCommune.websiteUrl ?? "",
                     isPartner: editingCommune.isPartner ?? false,
+                    hasPremiumAccess: (editingCommune as { hasPremiumAccess?: boolean }).hasPremiumAccess ?? false,
                     manager: editingCommune.users[0]
                       ? {
                           id: editingCommune.users[0].id,

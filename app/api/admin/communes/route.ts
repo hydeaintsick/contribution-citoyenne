@@ -40,6 +40,7 @@ const createCommuneSchema = z.object({
       return value;
     }),
   isPartner: z.boolean().optional().default(false),
+  hasPremiumAccess: z.boolean().optional().default(false),
   manager: z.object({
     email: z.string().email("Email du manager invalide."),
     password: z
@@ -123,6 +124,7 @@ export async function POST(request: NextRequest) {
     longitude,
     websiteUrl,
     isPartner,
+    hasPremiumAccess,
     manager,
   } = parseResult.data;
 
@@ -187,6 +189,7 @@ export async function POST(request: NextRequest) {
           longitude,
           websiteUrl,
           isPartner,
+          hasPremiumAccess: hasPremiumAccess ?? false,
           createdById: session.user.id,
           updatedById: session.user.id,
         },

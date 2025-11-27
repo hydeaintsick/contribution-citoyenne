@@ -42,6 +42,7 @@ export async function middleware(request: NextRequest) {
       "/admin/profile",
       "/admin/kit-media",
       "/admin/configuration-ville",
+      "/admin/api",
     ]);
     const prefixAllowed = ["/admin/retours"];
 
@@ -60,6 +61,9 @@ export async function middleware(request: NextRequest) {
       const redirectUrl = new URL("/admin", request.url);
       return NextResponse.redirect(redirectUrl);
     }
+
+    // Note: La vérification de l'accès premium est faite dans la page /admin/api/page.tsx
+    // car le middleware Edge ne peut pas utiliser Prisma directement
 
     return NextResponse.next();
   }

@@ -20,6 +20,7 @@ type AdminCommuneEditFormProps = {
     postalCode: string;
     websiteUrl: string;
     isPartner?: boolean;
+    hasPremiumAccess?: boolean;
     manager: ManagerFormState;
   };
   onClose: () => void;
@@ -29,6 +30,7 @@ type AdminCommuneEditFormProps = {
 export function AdminCommuneEditForm({ commune, onClose, onUpdated }: AdminCommuneEditFormProps) {
   const [websiteUrl, setWebsiteUrl] = useState(() => commune.websiteUrl ?? "");
   const [isPartner, setIsPartner] = useState(() => commune.isPartner ?? false);
+  const [hasPremiumAccess, setHasPremiumAccess] = useState(() => (commune as { hasPremiumAccess?: boolean }).hasPremiumAccess ?? false);
   const [managerState, setManagerState] = useState<ManagerFormState>(() => commune.manager);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -55,6 +57,13 @@ export function AdminCommuneEditForm({ commune, onClose, onUpdated }: AdminCommu
     [],
   );
 
+  const handleHasPremiumAccessChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setHasPremiumAccess(event.target.checked);
+    },
+    [],
+  );
+
   const handleSubmit = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -72,6 +81,7 @@ export function AdminCommuneEditForm({ commune, onClose, onUpdated }: AdminCommu
         const payload: Record<string, unknown> = {
           websiteUrl: websiteUrl.trim(),
           isPartner,
+          hasPremiumAccess,
         };
 
         if (managerState) {
@@ -107,7 +117,7 @@ export function AdminCommuneEditForm({ commune, onClose, onUpdated }: AdminCommu
         setIsSubmitting(false);
       }
     },
-    [commune.id, managerState, onUpdated, websiteUrl, isPartner],
+    [commune.id, managerState, onUpdated, websiteUrl, isPartner, hasPremiumAccess],
   );
 
   return (
@@ -157,6 +167,20 @@ export function AdminCommuneEditForm({ commune, onClose, onUpdated }: AdminCommu
           />
           <label className="fr-label" htmlFor="is-partner-checkbox-edit">
             Commune partenaire
+          </label>
+        </div>
+      </div>
+
+      <div className="fr-mt-2w">
+        <div className="fr-checkbox-group">
+          <input
+            type="checkbox"
+            id="has-premium-access-checkbox-edit"
+            checked={hasPremiumAccess}
+            onChange={handleHasPremiumAccessChange}
+          />
+          <label className="fr-label" htmlFor="has-premium-access-checkbox-edit">
+            Accès premium
           </label>
         </div>
       </div>
