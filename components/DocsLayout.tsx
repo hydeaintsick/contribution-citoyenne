@@ -10,7 +10,7 @@ type DocsLayoutProps = {
 
 const SECTIONS = [
   { id: "webhook", title: "Webhook", available: true },
-  { id: "api-graph", title: "API Graph", available: false },
+  { id: "graphql", title: "API GraphQL", available: true },
   { id: "services-tiers", title: "Services tiers", available: false },
 ];
 
@@ -34,7 +34,8 @@ export function DocsLayout({ children }: DocsLayoutProps) {
     const hash = window.location.hash.slice(1);
     if (hash) {
       setTimeout(() => {
-        const element = sectionsRef.current.get(hash) || document.getElementById(hash);
+        const element =
+          sectionsRef.current.get(hash) || document.getElementById(hash);
         if (element) {
           element.scrollIntoView({ behavior: "smooth", block: "start" });
           setActiveSection(hash);
@@ -84,7 +85,8 @@ export function DocsLayout({ children }: DocsLayoutProps) {
   }, []);
 
   const handleSectionClick = (sectionId: string) => {
-    const element = sectionsRef.current.get(sectionId) || document.getElementById(sectionId);
+    const element =
+      sectionsRef.current.get(sectionId) || document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
       setActiveSection(sectionId);
@@ -111,19 +113,28 @@ export function DocsLayout({ children }: DocsLayoutProps) {
                         <li key={section.id} className="fr-sidemenu__item">
                           <button
                             className={`fr-sidemenu__btn ${
-                              activeSection === section.id ? "fr-sidemenu__btn--active" : ""
+                              activeSection === section.id
+                                ? "fr-sidemenu__btn--active"
+                                : ""
                             }`}
                             onClick={() => handleSectionClick(section.id)}
-                            aria-current={activeSection === section.id ? "page" : undefined}
+                            aria-current={
+                              activeSection === section.id ? "page" : undefined
+                            }
                             disabled={!section.available}
                             style={{
                               opacity: section.available ? 1 : 0.5,
-                              cursor: section.available ? "pointer" : "not-allowed",
+                              cursor: section.available
+                                ? "pointer"
+                                : "not-allowed",
                             }}
                           >
                             {section.title}
                             {!section.available && (
-                              <span className="fr-text--xs fr-ml-1w" style={{ fontStyle: "italic" }}>
+                              <span
+                                className="fr-text--xs fr-ml-1w"
+                                style={{ fontStyle: "italic" }}
+                              >
                                 (bientôt disponible)
                               </span>
                             )}
@@ -158,9 +169,7 @@ export function DocsLayout({ children }: DocsLayoutProps) {
                 </div>
 
                 {/* Contenu des sections */}
-                <div className="fr-flow">
-                  {children}
-                </div>
+                <div className="fr-flow">{children}</div>
               </div>
             </div>
           </div>
@@ -178,4 +187,3 @@ export function useDocsContext() {
   }
   return context;
 }
-
