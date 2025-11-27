@@ -657,12 +657,31 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
         },
       ];
 
-      // Ajouter le lien API uniquement si l'accès premium est activé
+      // Ajouter le lien Développeurs uniquement si l'accès premium est activé
       if (hasPremiumAccess === true) {
         items.push({
-          text: "API",
+          text: (
+            <>
+              Développeurs
+              <Badge
+                as="span"
+                severity="new"
+                small
+                noIcon
+                style={{
+                  display: "inline-block",
+                  marginLeft: "0.5rem",
+                  backgroundColor: "#FFD700",
+                  color: "#1a1a1a",
+                  fontWeight: 600,
+                }}
+              >
+                Premium
+              </Badge>
+            </>
+          ) as any,
           linkProps: {
-            href: "/admin/api",
+            href: "/admin/developpeurs/api",
           },
         });
       }
@@ -713,12 +732,31 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
         },
       ];
 
-      // Ajouter le lien API uniquement si l'accès premium est activé
+      // Ajouter le lien Développeurs uniquement si l'accès premium est activé
       if (hasPremiumAccess === true) {
         items.push({
-          text: "API",
+          text: (
+            <>
+              Développeurs
+              <Badge
+                as="span"
+                severity="new"
+                small
+                noIcon
+                style={{
+                  display: "inline-block",
+                  marginLeft: "0.5rem",
+                  backgroundColor: "#FFD700",
+                  color: "#1a1a1a",
+                  fontWeight: 600,
+                }}
+              >
+                Premium
+              </Badge>
+            </>
+          ) as any,
           linkProps: {
-            href: "/admin/api",
+            href: "/admin/developpeurs/api",
           },
         });
       }

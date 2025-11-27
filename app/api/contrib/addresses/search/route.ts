@@ -44,7 +44,7 @@ type InternalSuggestion = AddressSuggestion & {
 };
 
 const BAN_BASE_URL = "https://api-adresse.data.gouv.fr/search/";
-const DEFAULT_USER_AGENT = "Contribcit/1.0 (+https://contribcit.fr)";
+const DEFAULT_USER_AGENT = "Contribcit/1.0 (+https://contribcit.org)";
 const COORDINATE_TOLERANCE = 0.01; // ~1km, laisse un peu de marge pour BAN
 
 function normalizeString(value: string | null | undefined) {
@@ -93,7 +93,12 @@ function doesFeatureMatchCommune(
   return false;
 }
 
-function isWithinBbox(latitude: number, longitude: number, bbox: number[], tolerance = COORDINATE_TOLERANCE) {
+function isWithinBbox(
+  latitude: number,
+  longitude: number,
+  bbox: number[],
+  tolerance = COORDINATE_TOLERANCE
+) {
   if (bbox.length !== 4) {
     return true;
   }
@@ -122,7 +127,7 @@ export async function GET(request: NextRequest) {
       {
         error: issue?.message ?? "Paramètres de recherche invalides.",
       },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -147,7 +152,7 @@ export async function GET(request: NextRequest) {
     if (!commune || !commune.isVisible) {
       return NextResponse.json(
         { error: "Commune introuvable ou indisponible." },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -165,7 +170,10 @@ export async function GET(request: NextRequest) {
 
     const maxResults = Math.min(limit ?? 7, 10);
 
-    const buildBanUrl = (query: string, options?: { includeTypeFilters?: boolean }) => {
+    const buildBanUrl = (
+      query: string,
+      options?: { includeTypeFilters?: boolean }
+    ) => {
       const urlInstance = new URL(BAN_BASE_URL);
       urlInstance.searchParams.set("q", query);
       urlInstance.searchParams.set("limit", String(maxResults));
@@ -192,30 +200,35 @@ export async function GET(request: NextRequest) {
 
     const mapFeaturesToSuggestions = (
       features: BanFeature[] | undefined,
-      origin: InternalSuggestion["origin"],
+      origin: InternalSuggestion["origin"]
     ) => {
       if (!features || features.length === 0) {
         return [] as InternalSuggestion[];
       }
       const mapped: InternalSuggestion[] = [];
       for (const feature of features) {
-        const [lon, lat] = feature.geometry?.coordinates ?? [undefined, undefined];
+        const [lon, lat] = feature.geometry?.coordinates ?? [
+          undefined,
+          undefined,
+        ];
         const label = feature.properties?.label?.trim();
-        if (
-          typeof lat !== "number" ||
-          typeof lon !== "number" ||
-          !label
-        ) {
+        if (typeof lat !== "number" || typeof lon !== "number" || !label) {
           continue;
         }
         const matchesCommune =
           isWithinBbox(lat, lon, commune.bbox) ||
-          doesFeatureMatchCommune(feature.properties, normalizedCommuneName, communePostalCodes);
+          doesFeatureMatchCommune(
+            feature.properties,
+            normalizedCommuneName,
+            communePostalCodes
+          );
         if (!matchesCommune) {
           continue;
         }
         mapped.push({
-          id: feature.properties?.id ? String(feature.properties.id) : `${lat},${lon}`,
+          id: feature.properties?.id
+            ? String(feature.properties.id)
+            : `${lat},${lon}`,
           label,
           name: feature.properties?.name ?? label,
           context: feature.properties?.context ?? null,
@@ -234,15 +247,18 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       return NextResponse.json(
         { error: "Le service d’autocomplétion est indisponible." },
-        { status: 502 },
+        { status: 502 }
       );
     }
 
-    const payload = (await response.json().catch(() => null)) as
-      | { features?: BanFeature[] }
-      | null;
+    const payload = (await response.json().catch(() => null)) as {
+      features?: BanFeature[];
+    } | null;
 
-    const primarySuggestions = mapFeaturesToSuggestions(payload?.features ?? [], "primary");
+    const primarySuggestions = mapFeaturesToSuggestions(
+      payload?.features ?? [],
+      "primary"
+    );
 
     const normalizedQueryTokens = normalizeString(q)
       .split(/\s+/)
@@ -254,7 +270,9 @@ export async function GET(request: NextRequest) {
         ? primarySuggestions.length > 0
         : primarySuggestions.some((suggestion) => {
             const normalizedLabel = normalizeString(suggestion.label);
-            return normalizedQueryTokens.every((token) => normalizedLabel.includes(token));
+            return normalizedQueryTokens.every((token) =>
+              normalizedLabel.includes(token)
+            );
           });
 
     const shouldRunFallback = !hasMeaningfulMatch;
@@ -302,24 +320,26 @@ export async function GET(request: NextRequest) {
         try {
           const fallbackResponse = await fetch(
             buildBanUrl(fallbackQuery, { includeTypeFilters: false }),
-            fetchOptions,
+            fetchOptions
           );
           if (!fallbackResponse.ok) {
             continue;
           }
-          const fallbackPayload = (await fallbackResponse.json().catch(() => null)) as
-            | { features?: BanFeature[] }
-            | null;
+          const fallbackPayload = (await fallbackResponse
+            .json()
+            .catch(() => null)) as { features?: BanFeature[] } | null;
           const fallbackSuggestions = mapFeaturesToSuggestions(
             fallbackPayload?.features ?? [],
-            "fallback",
+            "fallback"
           );
           suggestions = mergeSuggestions(suggestions, fallbackSuggestions);
           if (
             normalizedQueryTokens.length > 0 &&
             suggestions.some((suggestion) => {
               const normalizedLabel = normalizeString(suggestion.label);
-              return normalizedQueryTokens.every((token) => normalizedLabel.includes(token));
+              return normalizedQueryTokens.every((token) =>
+                normalizedLabel.includes(token)
+              );
             })
           ) {
             break;
@@ -344,19 +364,28 @@ export async function GET(request: NextRequest) {
           return acc;
         }, 0);
 
-        const startsWithQuery = normalizedLabel.startsWith(normalizeString(q).trim())
+        const startsWithQuery = normalizedLabel.startsWith(
+          normalizeString(q).trim()
+        )
           ? 1
           : 0;
 
-        const numericTokens = normalizedQueryTokens.filter((token) => /\d/.test(token));
+        const numericTokens = normalizedQueryTokens.filter((token) =>
+          /\d/.test(token)
+        );
         const numericMatch =
           numericTokens.length === 0
             ? 1
-            : numericTokens.every((token) => normalizedLabel.includes(token) || normalizedName.includes(token))
-              ? 1
-              : 0;
+            : numericTokens.every(
+                (token) =>
+                  normalizedLabel.includes(token) ||
+                  normalizedName.includes(token)
+              )
+            ? 1
+            : 0;
 
-        const score = tokenMatches * 10 + startsWithQuery * 5 + numericMatch * 3;
+        const score =
+          tokenMatches * 10 + startsWithQuery * 5 + numericMatch * 3;
 
         return {
           suggestion,
@@ -366,7 +395,8 @@ export async function GET(request: NextRequest) {
       });
 
       const filtered =
-        suggestionsWithScore.filter((item) => item.tokenMatches > 0) ?? suggestionsWithScore;
+        suggestionsWithScore.filter((item) => item.tokenMatches > 0) ??
+        suggestionsWithScore;
 
       const baseToSort = filtered.length > 0 ? filtered : suggestionsWithScore;
 
@@ -384,7 +414,7 @@ export async function GET(request: NextRequest) {
     }
 
     const publicSuggestions: AddressSuggestion[] = suggestions.map(
-      ({ origin: _origin, ...rest }) => rest,
+      ({ origin: _origin, ...rest }) => rest
     );
 
     return NextResponse.json({ suggestions: publicSuggestions });
@@ -392,7 +422,7 @@ export async function GET(request: NextRequest) {
     console.error("BAN search failed", error);
     return NextResponse.json(
       { error: "La recherche d’adresse a échoué. Veuillez réessayer." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

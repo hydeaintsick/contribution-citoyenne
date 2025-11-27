@@ -114,7 +114,7 @@ export function QrDemo() {
               >
                 {mounted ? (
                   <QRCodeSVG
-                    value="https://contribcit.fr"
+                    value="https://contribcit.org"
                     size={80}
                     level="H"
                     fgColor="#ffffff"
@@ -193,7 +193,10 @@ export function QrDemo() {
                 width: "12px",
                 height: "12px",
                 borderRadius: "50%",
-                backgroundColor: index === currentStep ? "var(--blue-france-sun-113-625)" : "var(--border-default-grey)",
+                backgroundColor:
+                  index === currentStep
+                    ? "var(--blue-france-sun-113-625)"
+                    : "var(--border-default-grey)",
                 cursor: "pointer",
                 border: "none",
                 padding: 0,

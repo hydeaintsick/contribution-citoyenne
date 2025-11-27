@@ -163,21 +163,21 @@ Pour activer l'envoi d'emails de notification, vous devez configurer Brevo :
 
 ## 🔐 Variables d'environnement
 
-| Variable                         | Obligatoire  | Description                                     | Exemple                          |
-| -------------------------------- | ------------ | ----------------------------------------------- | -------------------------------- |
-| `DATABASE_URL`                   | ✅           | Chaîne de connexion MongoDB pour Prisma         | `mongodb+srv://`…                |
-| `SESSION_SECRET`                 | ✅           | Clé HMAC pour signer les cookies session        | `super-secret-64`                |
-| `BASE_URL`                       | ✅           | URL publique utilisée pour SEO & liens          | `https://contribcit.fr`          |
-| `NEXT_PUBLIC_COMMUNE_PORTAL_URL` | ➖           | URL externe vers portail communes               | `https://communes.contribcit.fr` |
-| `BAN_USER_AGENT`                 | ➖           | User-Agent pour requêtes Base Adresse Nationale | `Contribcit/1.0 (+contact@...)`  |
-| `OSM_USER_AGENT`                 | ➖           | User-Agent pour requêtes OpenStreetMap          | `Contribcit/1.0 (+contact@...)`  |
-| `CLOUDINARY_CLOUD_NAME`          | ✅ si upload | Espace Cloudinary                               | `contribcit`                     |
-| `CLOUDINARY_API_KEY`             | ✅ si upload | Clef API Cloudinary                             | `1234567890`                     |
-| `CLOUDINARY_API_SECRET`          | ✅ si upload | Secret API Cloudinary                           | `abcDEFghiJKL`                   |
-| `BREVO_API_KEY`                  | ➖           | Clé API Brevo pour l'envoi d'emails transactionnels | `xkeysib-...`                    |
-| `NEXT_PUBLIC_BASE_URL`           | ➖           | URL de base pour les liens dans les emails      | `https://contribcit.fr`          |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | ➖           | Clé publique Cloudflare Turnstile (protection anti-bot) | `0x4AAAAAA...`                   |
-| `TURNSTILE_SECRET_KEY`           | ➖           | Clé secrète Cloudflare Turnstile (côté serveur uniquement) | `0x4AAAAAA...`                   |
+| Variable                         | Obligatoire  | Description                                                | Exemple                           |
+| -------------------------------- | ------------ | ---------------------------------------------------------- | --------------------------------- |
+| `DATABASE_URL`                   | ✅           | Chaîne de connexion MongoDB pour Prisma                    | `mongodb+srv://`…                 |
+| `SESSION_SECRET`                 | ✅           | Clé HMAC pour signer les cookies session                   | `super-secret-64`                 |
+| `BASE_URL`                       | ✅           | URL publique utilisée pour SEO & liens                     | `https://contribcit.org`          |
+| `NEXT_PUBLIC_COMMUNE_PORTAL_URL` | ➖           | URL externe vers portail communes                          | `https://communes.contribcit.org` |
+| `BAN_USER_AGENT`                 | ➖           | User-Agent pour requêtes Base Adresse Nationale            | `Contribcit/1.0 (+contact@...)`   |
+| `OSM_USER_AGENT`                 | ➖           | User-Agent pour requêtes OpenStreetMap                     | `Contribcit/1.0 (+contact@...)`   |
+| `CLOUDINARY_CLOUD_NAME`          | ✅ si upload | Espace Cloudinary                                          | `contribcit`                      |
+| `CLOUDINARY_API_KEY`             | ✅ si upload | Clef API Cloudinary                                        | `1234567890`                      |
+| `CLOUDINARY_API_SECRET`          | ✅ si upload | Secret API Cloudinary                                      | `abcDEFghiJKL`                    |
+| `BREVO_API_KEY`                  | ➖           | Clé API Brevo pour l'envoi d'emails transactionnels        | `xkeysib-...`                     |
+| `NEXT_PUBLIC_BASE_URL`           | ➖           | URL de base pour les liens dans les emails                 | `https://contribcit.org`          |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | ➖           | Clé publique Cloudflare Turnstile (protection anti-bot)    | `0x4AAAAAA...`                    |
+| `TURNSTILE_SECRET_KEY`           | ➖           | Clé secrète Cloudflare Turnstile (côté serveur uniquement) | `0x4AAAAAA...`                    |
 
 👉 Créez un fichier `.env.local` à la racine et redémarrez `npm run dev` après toute modification.
 

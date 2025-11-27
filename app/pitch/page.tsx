@@ -155,7 +155,7 @@ export default function PitchPage() {
               </div>
             </div>
             <div className="fr-btns-group fr-btns-group--inline-reverse fr-mt-5w">
-              <Link className="fr-btn" href="mailto:contact@contribcit.fr">
+              <Link className="fr-btn" href="mailto:contact@contribcit.org">
                 Planifier une présentation
               </Link>
               <Link className="fr-btn fr-btn--secondary" href="#vision">
@@ -492,7 +492,7 @@ export default function PitchPage() {
               <div className="fr-btns-group fr-btns-group--inline fr-btns-group--center">
                 <Link
                   className="fr-btn fr-btn--inverted"
-                  href="mailto:contact@contribcit.fr"
+                  href="mailto:contact@contribcit.org"
                 >
                   Échanger avec l'équipe
                 </Link>

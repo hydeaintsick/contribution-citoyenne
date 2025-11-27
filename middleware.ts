@@ -44,7 +44,7 @@ export async function middleware(request: NextRequest) {
       "/admin/configuration-ville",
       "/admin/api",
     ]);
-    const prefixAllowed = ["/admin/retours"];
+    const prefixAllowed = ["/admin/retours", "/admin/developpeurs"];
 
     if (role === "TOWN_MANAGER") {
       exactAllowed.add("/admin/acces-salaries");
@@ -62,7 +62,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    // Note: La vérification de l'accès premium est faite dans la page /admin/api/page.tsx
+    // Note: La vérification de l'accès premium est faite dans les pages /admin/developpeurs/*
     // car le middleware Edge ne peut pas utiliser Prisma directement
 
     return NextResponse.next();

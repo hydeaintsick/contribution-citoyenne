@@ -33,7 +33,7 @@ type NominatimResult = {
   };
 };
 
-const DEFAULT_USER_AGENT = "Contribcit/1.0 (+https://contribcit.fr)";
+const DEFAULT_USER_AGENT = "Contribcit/1.0 (+https://contribcit.org)";
 
 const ARRONDISSEMENT_CITIES = new Set(["Paris", "Lyon", "Marseille"]);
 
