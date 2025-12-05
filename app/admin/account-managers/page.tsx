@@ -24,13 +24,16 @@ export default async function AdminAccountManagersPage() {
 
   const accountManagers = await prisma.user.findMany({
     where: {
-      role: "ACCOUNT_MANAGER",
+      role: {
+        in: ["ACCOUNT_MANAGER", "ADMIN"],
+      },
     },
     select: {
       id: true,
       email: true,
       firstName: true,
       lastName: true,
+      role: true,
       createdAt: true,
       updatedAt: true,
       lastLoginAt: true,
@@ -45,6 +48,7 @@ export default async function AdminAccountManagersPage() {
       <AdminAccountManagers
         initialAccountManagers={accountManagers.map((manager) => ({
           ...manager,
+          role: manager.role as "ADMIN" | "ACCOUNT_MANAGER",
           createdAt: manager.createdAt.toISOString(),
           updatedAt: manager.updatedAt.toISOString(),
           lastLoginAt: manager.lastLoginAt

@@ -10,6 +10,7 @@ export type AccountManagerPayload = {
   email: string;
   firstName: string | null;
   lastName: string | null;
+  role: "ADMIN" | "ACCOUNT_MANAGER";
   createdAt: string;
   updatedAt: string;
   lastLoginAt: string | null;

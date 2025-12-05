@@ -17,6 +17,7 @@ function sanitizeAccountManager(accountManager: {
   email: string;
   firstName: string | null;
   lastName: string | null;
+  role: import("@prisma/client").Role;
   createdAt: Date;
   updatedAt: Date;
   lastLoginAt: Date | null;
@@ -26,6 +27,7 @@ function sanitizeAccountManager(accountManager: {
     email: accountManager.email,
     firstName: accountManager.firstName,
     lastName: accountManager.lastName,
+    role: accountManager.role,
     createdAt: accountManager.createdAt.toISOString(),
     updatedAt: accountManager.updatedAt.toISOString(),
     lastLoginAt: accountManager.lastLoginAt
@@ -43,13 +45,16 @@ export async function GET(request: NextRequest) {
 
   const accountManagers = await prisma.user.findMany({
     where: {
-      role: "ACCOUNT_MANAGER",
+      role: {
+        in: ["ACCOUNT_MANAGER", "ADMIN"],
+      },
     },
     select: {
       id: true,
       email: true,
       firstName: true,
       lastName: true,
+      role: true,
       createdAt: true,
       updatedAt: true,
       lastLoginAt: true,
@@ -108,6 +113,7 @@ export async function POST(request: NextRequest) {
       email: true,
       firstName: true,
       lastName: true,
+      role: true,
       createdAt: true,
       updatedAt: true,
       lastLoginAt: true,
