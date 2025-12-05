@@ -26,11 +26,25 @@ export async function middleware(request: NextRequest) {
   }
 
   if (role === "ACCOUNT_MANAGER") {
-    const isRestricted = pathname.startsWith("/admin/account-managers");
+    // Routes interdites pour ACCOUNT_MANAGER
+    const restrictedRoutes = [
+      "/admin/account-managers",
+      "/admin/news",
+      "/admin/retours-produits",
+      "/admin/contact-tickets",
+      "/admin/activite",
+      "/admin/configuration",
+    ];
+    
+    const isRestricted = restrictedRoutes.some((route) =>
+      pathname.startsWith(route)
+    );
+    
     if (isRestricted) {
       const redirectUrl = new URL("/admin", request.url);
       return NextResponse.redirect(redirectUrl);
     }
+    
     return NextResponse.next();
   }
 

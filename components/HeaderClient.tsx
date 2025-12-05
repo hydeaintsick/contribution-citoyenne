@@ -128,7 +128,9 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(
     () => initialSessionUser
   );
-  const [hasPremiumAccess, setHasPremiumAccess] = useState<boolean | null>(null);
+  const [hasPremiumAccess, setHasPremiumAccess] = useState<boolean | null>(
+    null
+  );
   const [isDsfrReady, setIsDsfrReady] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const isDarkTheme = theme === "dark";
@@ -138,7 +140,8 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
     if (
       !sessionUser ||
       !sessionUser.communeId ||
-      (sessionUser.role !== "TOWN_MANAGER" && sessionUser.role !== "TOWN_EMPLOYEE")
+      (sessionUser.role !== "TOWN_MANAGER" &&
+        sessionUser.role !== "TOWN_EMPLOYEE")
     ) {
       setHasPremiumAccess(null);
       return;
@@ -526,12 +529,6 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           },
         },
         {
-          text: "Communes",
-          linkProps: {
-            href: "/admin/communes",
-          },
-        },
-        {
           text: "Annonces",
           linkProps: {
             href: "/admin/news",
@@ -585,45 +582,9 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           },
         },
         {
-          text: "Communes",
-          linkProps: {
-            href: "/admin/communes",
-          },
-        },
-        {
-          text: "Annonces",
-          linkProps: {
-            href: "/admin/news",
-          },
-        },
-        {
-          text: "Retours produits",
-          linkProps: {
-            href: "/admin/retours-produits",
-          },
-        },
-        {
-          text: "Demandes de contact",
-          linkProps: {
-            href: "/admin/contact-tickets",
-          },
-        },
-        {
-          text: "Activité",
-          linkProps: {
-            href: "/admin/activite",
-          },
-        },
-        {
           text: "Mon profil",
           linkProps: {
             href: "/admin/profile",
-          },
-        },
-        {
-          text: "Configuration",
-          linkProps: {
-            href: "/admin/configuration",
           },
         },
       ]);
@@ -698,7 +659,7 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           linkProps: {
             href: "/admin/profile",
           },
-        },
+        }
       );
 
       return withActiveNavigation(items);
@@ -785,7 +746,13 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
         },
       },
     ]);
-  }, [isAdminArea, userRole, withActiveNavigation, initialSessionUser, hasPremiumAccess]);
+  }, [
+    isAdminArea,
+    userRole,
+    withActiveNavigation,
+    initialSessionUser,
+    hasPremiumAccess,
+  ]);
 
   const quickAccessItems = useMemo<QuickAccessItems>(() => {
     const themeToggleItem: QuickAccessItems[number] = {

@@ -108,17 +108,17 @@ export function AdminSidebar() {
           },
         },
         {
-          text: "Communes",
-          isActive: pathname === "/admin/communes",
-          linkProps: {
-            href: "/admin/communes",
-          },
-        },
-        {
           text: "Annonces",
           isActive: pathname === "/admin/news",
           linkProps: {
             href: "/admin/news",
+          },
+        },
+        {
+          text: "CRM",
+          isActive: pathname === "/admin" || pathname.startsWith("/admin/communes"),
+          linkProps: {
+            href: "/admin",
           },
         },
       ];

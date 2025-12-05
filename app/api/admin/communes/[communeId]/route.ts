@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { CityAuditAction, Role, Prisma } from "@prisma/client";
-import { getSessionFromRequest } from "@/lib/auth";
+import { getSessionFromRequest, hashPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const websiteUrlSchema = z
@@ -35,6 +35,11 @@ const managerSchema = z
         }
         return value;
       }),
+    password: z
+      .string()
+      .min(8, "Le mot de passe doit contenir au moins 8 caractères.")
+      .optional()
+      .or(z.literal("")),
   })
   .optional();
 
@@ -63,6 +68,135 @@ function ensureAdminOrAccountManager(role: Role) {
 type RouteContext = {
   params: { communeId: string } | Promise<{ communeId: string }>;
 };
+
+export async function GET(request: NextRequest, context: RouteContext) {
+  const { communeId } = await context.params;
+
+  if (!communeId) {
+    return NextResponse.json(
+      { error: "Identifiant de commune manquant." },
+      { status: 400 },
+    );
+  }
+
+  const session = await getSessionFromRequest(request);
+
+  if (!session || !ensureAdminOrAccountManager(session.user.role)) {
+    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+  }
+
+  try {
+    const whereClause: any = {
+      id: communeId,
+    };
+
+    // Les ACCOUNT_MANAGER ne peuvent voir que leurs communes CRM
+    // Soit celles qui leur sont assignées (accountManagerId), soit celles qu'ils ont créées (createdById)
+    if (session.user.role === "ACCOUNT_MANAGER") {
+      whereClause.OR = [
+        { accountManagerId: session.user.id },
+        { createdById: session.user.id, isVisible: false },
+      ];
+    }
+    // Les ADMIN peuvent voir toutes les communes
+
+    const commune = await prisma.commune.findFirst({
+      where: whereClause,
+      select: {
+        id: true,
+        name: true,
+        postalCode: true,
+        slug: true,
+        osmId: true,
+        osmType: true,
+        bbox: true,
+        latitude: true,
+        longitude: true,
+        websiteUrl: true,
+        isVisible: true,
+        hasPremiumAccess: true,
+        isPartner: true,
+        createdAt: true,
+        updatedAt: true,
+        createdById: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        accountManagerId: true,
+        accountManager: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        users: {
+          where: { role: "TOWN_MANAGER" },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+          },
+          take: 1,
+        },
+        comments: {
+          select: {
+            id: true,
+            message: true,
+            createdAt: true,
+            updatedAt: true,
+            authorId: true,
+            author: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+      },
+    });
+
+    if (!commune) {
+      return NextResponse.json(
+        { error: "Commune introuvable." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      commune: {
+        ...commune,
+        createdAt: commune.createdAt.toISOString(),
+        updatedAt: commune.updatedAt.toISOString(),
+        comments: commune.comments.map((c) => ({
+          ...c,
+          createdAt: c.createdAt.toISOString(),
+          updatedAt: c.updatedAt.toISOString(),
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Failed to fetch commune", error);
+    return NextResponse.json(
+      { error: "Impossible de récupérer la commune pour le moment." },
+      { status: 500 },
+    );
+  }
+}
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
   const { communeId } = await context.params;
@@ -102,8 +236,21 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const updateResult = await prisma.$transaction(async (tx) => {
-      const commune = await tx.commune.findUnique({
-        where: { id: communeId },
+      const whereClause: any = {
+        id: communeId,
+      };
+
+      // Les ACCOUNT_MANAGER ne peuvent modifier que leurs communes CRM
+      // Soit celles qui leur sont assignées (accountManagerId), soit celles qu'ils ont créées (createdById)
+      if (session.user.role === "ACCOUNT_MANAGER") {
+        whereClause.OR = [
+          { accountManagerId: session.user.id },
+          { createdById: session.user.id, isVisible: false },
+        ];
+      }
+
+      const commune = await tx.commune.findFirst({
+        where: whereClause,
         select: {
           id: true,
           name: true,
@@ -112,6 +259,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           isVisible: true,
           isPartner: true,
           hasPremiumAccess: true,
+          accountManagerId: true,
+          createdById: true,
           users: {
             where: { role: "TOWN_MANAGER" },
             select: {
@@ -141,30 +290,33 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         };
       }
 
-      if (typeof isVisible !== "undefined" && isVisible !== commune.isVisible) {
-        updates.isVisible = isVisible;
-        auditDetails.isVisible = {
-          before: commune.isVisible,
-          after: isVisible,
-        };
-      }
-
-      if (typeof isPartner !== "undefined" && isPartner !== commune.isPartner) {
-        updates.isPartner = isPartner;
-        auditDetails.isPartner = {
-          before: commune.isPartner,
-          after: isPartner,
-        };
-      }
-
-      if (typeof hasPremiumAccess !== "undefined") {
-        const currentValue = commune.hasPremiumAccess ?? false;
-        if (hasPremiumAccess !== currentValue) {
-          updates.hasPremiumAccess = hasPremiumAccess;
-          auditDetails.hasPremiumAccess = {
-            before: currentValue,
-            after: hasPremiumAccess,
+      // Seuls les ADMIN peuvent modifier isVisible, isPartner et hasPremiumAccess
+      if (session.user.role === "ADMIN") {
+        if (typeof isVisible !== "undefined" && isVisible !== commune.isVisible) {
+          updates.isVisible = isVisible;
+          auditDetails.isVisible = {
+            before: commune.isVisible,
+            after: isVisible,
           };
+        }
+
+        if (typeof isPartner !== "undefined" && isPartner !== commune.isPartner) {
+          updates.isPartner = isPartner;
+          auditDetails.isPartner = {
+            before: commune.isPartner,
+            after: isPartner,
+          };
+        }
+
+        if (typeof hasPremiumAccess !== "undefined") {
+          const currentValue = commune.hasPremiumAccess ?? false;
+          if (hasPremiumAccess !== currentValue) {
+            updates.hasPremiumAccess = hasPremiumAccess;
+            auditDetails.hasPremiumAccess = {
+              before: currentValue,
+              after: hasPremiumAccess,
+            };
+          }
         }
       }
 
@@ -194,14 +346,26 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           }
         }
 
+        const updateData: {
+          email: string;
+          firstName: string;
+          lastName: string;
+          phone: string | null;
+          password?: string;
+        } = {
+          email: manager.email,
+          firstName: manager.firstName,
+          lastName: manager.lastName,
+          phone: manager.phone,
+        };
+
+        if (manager.password && manager.password.length >= 8) {
+          updateData.password = await hashPassword(manager.password);
+        }
+
         await tx.user.update({
           where: { id: manager.id },
-          data: {
-            email: manager.email,
-            firstName: manager.firstName,
-            lastName: manager.lastName,
-            phone: manager.phone,
-          },
+          data: updateData,
         });
 
         auditDetails.manager = {

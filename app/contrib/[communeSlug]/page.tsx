@@ -36,10 +36,11 @@ export default async function ContribPage(props: ContribPageProps) {
 
   const commune = await loadCommune(communeIdentifier);
 
-  if (!commune || !commune.isVisible) {
+  if (!commune) {
     notFound();
   }
 
+  // Rediriger vers le bon slug si nécessaire
   if (commune.slug !== communeIdentifier) {
     redirect(`/contrib/${commune.slug}`);
   }

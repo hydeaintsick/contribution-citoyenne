@@ -4,11 +4,11 @@ import {
   getSessionCookieName,
   parseSessionCookie,
 } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { buildCommuneStats } from "@/lib/communeStats";
-import { ContribcitTeamDashboard } from "@/components/ContribcitTeamDashboard";
+import { AdminCrmDashboard } from "@/components/AdminCrmDashboard";
+import { AccountManagerCrmView } from "@/components/AccountManagerCrmView";
 import { TownDashboard } from "@/components/TownDashboard";
 import { buildTownDashboardData } from "@/lib/contributionStats";
+import { prisma } from "@/lib/prisma";
 
 export default async function AdminHomePage() {
   const cookieHeader = (await headers()).get("cookie") ?? "";
@@ -27,31 +27,12 @@ export default async function AdminHomePage() {
 
   const role = session.user.role;
 
-  if (role === "ADMIN" || role === "ACCOUNT_MANAGER") {
-    const communes = await prisma.commune.findMany({
-      select: {
-        id: true,
-        name: true,
-        postalCode: true,
-        bbox: true,
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-    });
+  if (role === "ADMIN") {
+    return <AdminCrmDashboard />;
+  }
 
-    const stats = await buildCommuneStats(
-      communes.map((commune) => ({
-        id: commune.id,
-        name: commune.name,
-        postalCode: commune.postalCode,
-        bbox: commune.bbox,
-        createdAt: commune.createdAt,
-      })),
-    );
-
-    return <ContribcitTeamDashboard stats={stats} />;
+  if (role === "ACCOUNT_MANAGER") {
+    return <AccountManagerCrmView />;
   }
 
   if (role === "TOWN_MANAGER" || role === "TOWN_EMPLOYEE") {

@@ -67,18 +67,64 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const whereClause: any = {};
+
+    // Les ACCOUNT_MANAGER ne peuvent voir que leurs communes CRM
+    // Soit celles qui leur sont assignées (accountManagerId), soit celles qu'ils ont créées (createdById)
+    if (session.user.role === "ACCOUNT_MANAGER") {
+      whereClause.OR = [
+        { accountManagerId: session.user.id },
+        { createdById: session.user.id, isVisible: false },
+      ];
+    }
+    // Les ADMIN peuvent voir toutes les communes
+
     const communes = await prisma.commune.findMany({
+      where: whereClause,
       select: {
         id: true,
         name: true,
         postalCode: true,
+        slug: true,
+        latitude: true,
+        longitude: true,
+        isVisible: true,
+        hasPremiumAccess: true,
+        isPartner: true,
+        createdAt: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        accountManager: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
       },
       orderBy: {
-        name: "asc",
+        createdAt: "desc",
       },
     });
 
-    return NextResponse.json({ communes });
+    return NextResponse.json({
+      communes: communes.map((commune) => ({
+        ...commune,
+        createdAt: commune.createdAt.toISOString(),
+      })),
+    });
   } catch (error) {
     console.error("Failed to fetch communes", error);
     return NextResponse.json(
@@ -177,22 +223,30 @@ export async function POST(request: NextRequest) {
     const slug = generateCommuneSlug(name, postalCode);
 
     const { commune: createdCommune } = await prisma.$transaction(async (tx) => {
+      const communeData: any = {
+        name,
+        slug,
+        postalCode,
+        osmId,
+        osmType,
+        bbox,
+        latitude,
+        longitude,
+        websiteUrl,
+        isPartner,
+        hasPremiumAccess: hasPremiumAccess ?? false,
+        createdById: session.user.id,
+        updatedById: session.user.id,
+        isVisible: false, // Par défaut, les communes CRM ne sont pas visibles
+      };
+
+      // Si c'est un ACCOUNT_MANAGER qui crée la commune, l'assigner automatiquement
+      if (session.user.role === "ACCOUNT_MANAGER") {
+        communeData.accountManagerId = session.user.id;
+      }
+
       const commune = await tx.commune.create({
-        data: {
-          name,
-          slug,
-          postalCode,
-          osmId,
-          osmType,
-          bbox,
-          latitude,
-          longitude,
-          websiteUrl,
-          isPartner,
-          hasPremiumAccess: hasPremiumAccess ?? false,
-          createdById: session.user.id,
-          updatedById: session.user.id,
-        },
+        data: communeData,
       });
 
       await tx.user.create({

@@ -75,38 +75,46 @@ model User {
   contactTickets    ContactTicket[]
   bugReportComments BugReportComment[]
   createdNews       News[]             @relation("NewsCreatedBy")
+  managedCommunes   Commune[]          @relation("CommuneAccountManager")
+  communeComments   CommuneComment[]
 }
 
 model Commune {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  slug        String?  @unique
-  postalCode  String   @unique
-  osmId       String   @unique
-  osmType     String
-  bbox        Float[]
-  latitude    Float
-  longitude   Float
-  country     String   @default("FR")
-  websiteUrl  String?
-  isVisible   Boolean  @default(true)
-  isPartner   Boolean  @default(false)
-  safeModeEnabled Boolean @default(false)
-  hasPremiumAccess Boolean @default(false)
-  webhookUrl  String?
-  webhookSecret String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdById String?  @db.ObjectId
-  createdBy   User?    @relation("CommuneCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  updatedById String?  @db.ObjectId
-  updatedBy   User?    @relation("CommuneUpdatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  slug             String?  @unique
+  postalCode       String   @unique
+  osmId            String   @unique
+  osmType          String
+  bbox             Float[]
+  latitude         Float
+  longitude        Float
+  country          String   @default("FR")
+  websiteUrl       String?
+  isVisible        Boolean  @default(true)
+  isPartner        Boolean  @default(false)
+  safeModeEnabled  Boolean  @default(false)
+  hasPremiumAccess Boolean  @default(false)
+  webhookUrl       String?
+  webhookSecret    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  createdById      String?  @db.ObjectId
+  createdBy        User?    @relation("CommuneCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedById      String?  @db.ObjectId
+  updatedBy        User?    @relation("CommuneUpdatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  accountManagerId String?  @db.ObjectId
+  accountManager   User?    @relation("CommuneAccountManager", fields: [accountManagerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  users     User[]
-  auditLogs CityAuditLog[]
-  reports   Contribution[]
-  newsRead  NewsRead[]
+  users       User[]
+  auditLogs   CityAuditLog[]
+  reports     Contribution[]
+  newsRead    NewsRead[]
   webhookLogs WebhookLog[]
+  comments    CommuneComment[]
+
+  @@index([accountManagerId])
+  @@index([isVisible])
 }
 
 model Category {
@@ -146,30 +154,30 @@ model UserLoginLog {
 }
 
 model Contribution {
-  id            String             @id @default(auto()) @map("_id") @db.ObjectId
-  communeId     String             @db.ObjectId
-  commune       Commune            @relation(fields: [communeId], references: [id], onDelete: Cascade)
-  type          ContributionType
-  status        ContributionStatus @default(OPEN)
-  categoryId    String?            @db.ObjectId
-  category      Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  categoryLabel String
-  title         String             @default("")
-  details       String
-  locationLabel String?
-  latitude      Float?
-  longitude     Float?
-  photoUrl      String?
-  photoPublicId String?
-  email         String?
-  ticketNumber  String?            @unique
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  closedAt      DateTime?
-  closureNote   String?
-  closedById    String?            @db.ObjectId
-  closedBy      User?              @relation("ContributionClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
-  isPotentiallyMalicious Boolean   @default(false)
+  id                     String             @id @default(auto()) @map("_id") @db.ObjectId
+  communeId              String             @db.ObjectId
+  commune                Commune            @relation(fields: [communeId], references: [id], onDelete: Cascade)
+  type                   ContributionType
+  status                 ContributionStatus @default(OPEN)
+  categoryId             String?            @db.ObjectId
+  category               Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryLabel          String
+  title                  String             @default("")
+  details                String
+  locationLabel          String?
+  latitude               Float?
+  longitude              Float?
+  photoUrl               String?
+  photoPublicId          String?
+  email                  String?
+  ticketNumber           String?            @unique
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  closedAt               DateTime?
+  closureNote            String?
+  closedById             String?            @db.ObjectId
+  closedBy               User?              @relation("ContributionClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+  isPotentiallyMalicious Boolean            @default(false)
 }
 
 model BugReport {
@@ -229,14 +237,14 @@ model BugReportComment {
 }
 
 model News {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   content     String
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  createdById String    @db.ObjectId
-  createdBy   User      @relation("NewsCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  createdById String     @db.ObjectId
+  createdBy   User       @relation("NewsCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
   reads       NewsRead[]
 
   @@index([isActive])
@@ -257,19 +265,33 @@ model NewsRead {
 }
 
 model WebhookLog {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  communeId     String    @db.ObjectId
-  commune       Commune   @relation(fields: [communeId], references: [id], onDelete: Cascade)
-  url           String
-  statusCode    Int?
-  success       Boolean
-  errorMessage  String?
-  responseTime  Int?
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  communeId      String   @db.ObjectId
+  commune        Commune  @relation(fields: [communeId], references: [id], onDelete: Cascade)
+  url            String
+  statusCode     Int?
+  success        Boolean
+  errorMessage   String?
+  responseTime   Int?
   contributionId String?  @db.ObjectId
-  isTest        Boolean   @default(false)
-  createdAt     DateTime  @default(now())
+  isTest         Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
   @@index([communeId])
   @@index([createdAt])
   @@index([isTest])
+}
+
+model CommuneComment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  communeId String   @db.ObjectId
+  commune   Commune  @relation(fields: [communeId], references: [id], onDelete: Cascade)
+  authorId  String?  @db.ObjectId
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([communeId])
+  @@index([createdAt])
 }

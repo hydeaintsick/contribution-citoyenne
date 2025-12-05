@@ -20,24 +20,14 @@ type FormStatus = {
   message: string;
 };
 
-const INITIAL_MANAGER_STATE = {
-  email: "",
-  password: "",
-  firstName: "",
-  lastName: "",
-  phone: "",
-};
-
-type AdminCommuneCreateFormProps = {
+type CrmCommuneCreateFormProps = {
   onCommuneCreated?: () => void;
 };
 
-export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateFormProps) {
+export function CrmCommuneCreateForm({ onCommuneCreated }: CrmCommuneCreateFormProps) {
   const [postalCode, setPostalCode] = useState("");
   const [communeData, setCommuneData] = useState<CommunePayload | null>(null);
   const [websiteUrl, setWebsiteUrl] = useState("");
-  const [isPartner, setIsPartner] = useState(false);
-  const [hasPremiumAccess, setHasPremiumAccess] = useState(false);
   const [verificationState, setVerificationState] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
@@ -45,7 +35,6 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
     null,
   );
 
-  const [manager, setManager] = useState({ ...INITIAL_MANAGER_STATE });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formStatus, setFormStatus] = useState<FormStatus | null>(null);
 
@@ -93,31 +82,12 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
     }
   }, [postalCode]);
 
-  const handleManagerChange = useCallback(
-    (field: keyof typeof INITIAL_MANAGER_STATE, value: string) => {
-      setManager((previous) => ({
-        ...previous,
-        [field]: value,
-      }));
-    },
-    [],
-  );
-
-  const handleIsPartnerChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setIsPartner(event.target.checked);
-    },
-    [],
-  );
-
   const resetForm = useCallback(() => {
     setPostalCode("");
     setCommuneData(null);
     setWebsiteUrl("");
-    setIsPartner(false);
     setVerificationState("idle");
     setVerificationMessage(null);
-    setManager({ ...INITIAL_MANAGER_STATE });
   }, []);
 
   const handleSubmit = useCallback(
@@ -133,14 +103,6 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
         return;
       }
 
-      if (!manager.email || !manager.password || !manager.firstName || !manager.lastName) {
-        setFormStatus({
-          type: "error",
-          message: "Merci de compléter les informations du manager.",
-        });
-        return;
-      }
-
       setIsSubmitting(true);
 
       try {
@@ -152,15 +114,6 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
           body: JSON.stringify({
             ...communeData,
             websiteUrl: websiteUrl.trim(),
-            isPartner,
-            hasPremiumAccess,
-            manager: {
-              email: manager.email,
-              password: manager.password,
-              firstName: manager.firstName,
-              lastName: manager.lastName,
-              phone: manager.phone,
-            },
           }),
         });
 
@@ -186,7 +139,7 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
         onCommuneCreated?.();
         resetForm();
       } catch (error) {
-        console.error("Commune creation failed", error);
+        console.error("CRM commune creation failed", error);
         setFormStatus({
           type: "error",
           message: "Une erreur est survenue. Veuillez réessayer.",
@@ -195,7 +148,7 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
         setIsSubmitting(false);
       }
     },
-    [communeData, manager, onCommuneCreated, resetForm, websiteUrl, isPartner, hasPremiumAccess],
+    [communeData, onCommuneCreated, resetForm, websiteUrl],
   );
 
   const bboxDisplayValue = useMemo(() => {
@@ -209,7 +162,7 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
   return (
     <form className="fr-flow" onSubmit={handleSubmit}>
       <p className="fr-text--sm">
-        Identifiez la commune via son code postal puis créez le compte manager associé.
+        Identifiez la commune via son code postal puis créez la commune (non visible sur la plateforme).
       </p>
 
       {formStatus && (
@@ -315,34 +268,6 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
         </div>
 
         <div className="fr-mt-2w">
-          <div className="fr-checkbox-group">
-            <input
-              type="checkbox"
-              id="is-partner-checkbox"
-              checked={isPartner}
-              onChange={handleIsPartnerChange}
-            />
-            <label className="fr-label" htmlFor="is-partner-checkbox">
-              Commune partenaire
-            </label>
-          </div>
-        </div>
-
-        <div className="fr-mt-2w">
-          <div className="fr-checkbox-group">
-            <input
-              type="checkbox"
-              id="has-premium-access-checkbox"
-              checked={hasPremiumAccess}
-              onChange={(e) => setHasPremiumAccess(e.target.checked)}
-            />
-            <label className="fr-label" htmlFor="has-premium-access-checkbox">
-              Accès premium
-            </label>
-          </div>
-        </div>
-
-        <div className="fr-mt-2w">
           <Input
             label="Emprise géographique (bbox)"
             disabled
@@ -351,75 +276,6 @@ export function AdminCommuneCreateForm({ onCommuneCreated }: AdminCommuneCreateF
               readOnly: true,
             }}
           />
-        </div>
-      </section>
-
-      <section aria-labelledby="manager-info" className="fr-flow fr-mt-4w">
-        <h2 id="manager-info" className="fr-h5">
-          Manager de la commune
-        </h2>
-
-        <Input
-          label="Email"
-          nativeInputProps={{
-            type: "email",
-            value: manager.email,
-            onChange: (event) => handleManagerChange("email", event.target.value),
-            required: true,
-            autoComplete: "email",
-          }}
-        />
-
-        <div className="fr-grid-row fr-grid-row--gutters">
-          <div className="fr-col-12 fr-col-md-6">
-            <Input
-              label="Mot de passe"
-              nativeInputProps={{
-                type: "password",
-                value: manager.password,
-                onChange: (event) => handleManagerChange("password", event.target.value),
-                required: true,
-                minLength: 8,
-                autoComplete: "new-password",
-              }}
-            />
-          </div>
-          <div className="fr-col-12 fr-col-md-6">
-            <Input
-              label="Téléphone (facultatif)"
-              nativeInputProps={{
-                type: "tel",
-                value: manager.phone,
-                onChange: (event) => handleManagerChange("phone", event.target.value),
-                autoComplete: "tel",
-              }}
-            />
-          </div>
-        </div>
-
-        <div className="fr-grid-row fr-grid-row--gutters">
-          <div className="fr-col-12 fr-col-md-6">
-            <Input
-              label="Prénom"
-              nativeInputProps={{
-                value: manager.firstName,
-                onChange: (event) => handleManagerChange("firstName", event.target.value),
-                required: true,
-                autoComplete: "given-name",
-              }}
-            />
-          </div>
-          <div className="fr-col-12 fr-col-md-6">
-            <Input
-              label="Nom"
-              nativeInputProps={{
-                value: manager.lastName,
-                onChange: (event) => handleManagerChange("lastName", event.target.value),
-                required: true,
-                autoComplete: "family-name",
-              }}
-            />
-          </div>
         </div>
       </section>
 
