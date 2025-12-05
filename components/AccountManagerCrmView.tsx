@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { CrmCommuneList } from "./CrmCommuneList";
 import { CrmCommuneCreateForm } from "./CrmCommuneCreateForm";
+import { DiscordBanner } from "./DiscordBanner";
 
 type AccountManagerKpiStats = {
   communesEnGestion: number;
@@ -136,6 +137,8 @@ export function AccountManagerCrmView() {
           </div>
         </div>
       </header>
+
+      <DiscordBanner />
 
       {kpiStats && (
         <section

@@ -19,6 +19,7 @@ import {
 import { CrmCommuneList } from "./CrmCommuneList";
 import { CrmCommuneCreateForm } from "./CrmCommuneCreateForm";
 import { FranceRegionsMap } from "./FranceRegionsMap";
+import { DiscordBanner } from "./DiscordBanner";
 
 type RegionStats = {
   regionCode: string;
@@ -243,6 +244,8 @@ export function AdminCrmDashboard() {
           </div>
         </div>
       </header>
+
+      <DiscordBanner />
 
       {isLoading ? (
         <div className="fr-callout">
