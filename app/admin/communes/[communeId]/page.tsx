@@ -5,6 +5,7 @@ import {
   parseSessionCookie,
 } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
 import { CrmCommuneDetail } from "@/components/CrmCommuneDetail";
 
 export default async function CrmCommuneDetailPage({
@@ -127,18 +128,22 @@ export default async function CrmCommuneDetailPage({
     email: string;
     firstName: string | null;
     lastName: string | null;
+    role: Role;
   }> = [];
 
   if (role === "ADMIN") {
     const managers = await prisma.user.findMany({
       where: {
-        role: "ACCOUNT_MANAGER",
+        role: {
+          in: ["ACCOUNT_MANAGER", "ADMIN"],
+        },
       },
       select: {
         id: true,
         email: true,
         firstName: true,
         lastName: true,
+        role: true,
       },
       orderBy: {
         createdAt: "desc",

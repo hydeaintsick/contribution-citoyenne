@@ -67,6 +67,7 @@ type CrmCommuneDetailProps = {
     email: string;
     firstName: string | null;
     lastName: string | null;
+    role?: string;
   }>;
 };
 
@@ -831,12 +832,12 @@ export function CrmCommuneDetail({
                 </h1>
                 <div className="fr-flow">
                   <p className="fr-text--sm">
-                    Sélectionnez le chargé de compte à qui transférer cette commune.
+                    Sélectionnez le chargé de compte ou l'admin à qui transférer cette commune.
                   </p>
 
                   <div className="fr-select-group">
                     <label className="fr-label" htmlFor="account-manager-select">
-                      Chargé de compte
+                      Chargé de compte ou Admin
                     </label>
                     <select
                       id="account-manager-select"
@@ -845,13 +846,17 @@ export function CrmCommuneDetail({
                       onChange={(e) => setSelectedAccountManagerId(e.target.value)}
                     >
                       <option value="">Sélectionner...</option>
-                      {accountManagers.map((manager) => (
-                        <option key={manager.id} value={manager.id}>
-                          {[manager.firstName, manager.lastName]
-                            .filter(Boolean)
-                            .join(" ") || manager.email}
-                        </option>
-                      ))}
+                      {accountManagers.map((manager) => {
+                        const name = [manager.firstName, manager.lastName]
+                          .filter(Boolean)
+                          .join(" ") || manager.email;
+                        const roleLabel = manager.role === "ADMIN" ? " (Admin)" : "";
+                        return (
+                          <option key={manager.id} value={manager.id}>
+                            {name}{roleLabel}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 

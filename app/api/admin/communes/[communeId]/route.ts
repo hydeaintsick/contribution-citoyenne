@@ -50,6 +50,12 @@ const updateSchema = z
     isPartner: z.boolean().optional(),
     hasPremiumAccess: z.boolean().optional(),
     manager: managerSchema,
+    accountManagerId: z
+      .string()
+      .trim()
+      .min(1, "Identifiant du chargé de compte manquant.")
+      .optional()
+      .nullable(),
   })
   .refine(
     (value) =>
@@ -57,7 +63,8 @@ const updateSchema = z
       typeof value.isVisible !== "undefined" ||
       typeof value.isPartner !== "undefined" ||
       typeof value.hasPremiumAccess !== "undefined" ||
-      typeof value.manager !== "undefined",
+      typeof value.manager !== "undefined" ||
+      typeof value.accountManagerId !== "undefined",
     { message: "Aucune modification demandée." }
   );
 
@@ -231,7 +238,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const { websiteUrl, isVisible, isPartner, hasPremiumAccess, manager } =
+  const { websiteUrl, isVisible, isPartner, hasPremiumAccess, manager, accountManagerId } =
     parseResult.data;
 
   try {
@@ -290,7 +297,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         };
       }
 
-      // Seuls les ADMIN peuvent modifier isVisible, isPartner et hasPremiumAccess
+      // Seuls les ADMIN peuvent modifier isVisible, isPartner, hasPremiumAccess et accountManagerId
       if (session.user.role === "ADMIN") {
         if (typeof isVisible !== "undefined" && isVisible !== commune.isVisible) {
           updates.isVisible = isVisible;
@@ -315,6 +322,57 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             auditDetails.hasPremiumAccess = {
               before: currentValue,
               after: hasPremiumAccess,
+            };
+          }
+        }
+
+        // Gestion du transfert vers un account manager ou admin
+        if (typeof accountManagerId !== "undefined") {
+          const newAccountManagerId = accountManagerId || null;
+          if (newAccountManagerId !== commune.accountManagerId) {
+            // Vérifier que l'utilisateur cible existe et est ADMIN ou ACCOUNT_MANAGER
+            if (newAccountManagerId) {
+              const targetUser = await tx.user.findUnique({
+                where: { id: newAccountManagerId },
+                select: {
+                  id: true,
+                  role: true,
+                  email: true,
+                },
+              });
+
+              if (!targetUser) {
+                throw new Error("ACCOUNT_MANAGER_NOT_FOUND");
+              }
+
+              if (
+                targetUser.role !== "ACCOUNT_MANAGER" &&
+                targetUser.role !== "ADMIN"
+              ) {
+                throw new Error("ACCOUNT_MANAGER_INVALID_ROLE");
+              }
+            }
+
+            const oldAccountManager = commune.accountManagerId
+              ? await tx.user.findUnique({
+                  where: { id: commune.accountManagerId },
+                  select: { email: true },
+                })
+              : null;
+
+            const newAccountManager = newAccountManagerId
+              ? await tx.user.findUnique({
+                  where: { id: newAccountManagerId },
+                  select: { email: true },
+                })
+              : null;
+
+            updates.accountManagerId = newAccountManagerId;
+            auditDetails.accountManagerId = {
+              before: commune.accountManagerId,
+              after: newAccountManagerId,
+              beforeEmail: oldAccountManager?.email ?? null,
+              afterEmail: newAccountManager?.email ?? null,
             };
           }
         }
@@ -432,6 +490,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         return NextResponse.json(
           { error: "Un compte utilise déjà cet email." },
           { status: 409 }
+        );
+      }
+      if (error.message === "ACCOUNT_MANAGER_NOT_FOUND") {
+        return NextResponse.json(
+          { error: "Chargé de compte ou admin introuvable." },
+          { status: 404 }
+        );
+      }
+      if (error.message === "ACCOUNT_MANAGER_INVALID_ROLE") {
+        return NextResponse.json(
+          { error: "L'utilisateur cible doit être un chargé de compte ou un admin." },
+          { status: 400 }
         );
       }
     }

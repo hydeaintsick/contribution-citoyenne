@@ -16,6 +16,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import type { TooltipProps } from "recharts";
 import { CrmCommuneList } from "./CrmCommuneList";
 import { CrmCommuneCreateForm } from "./CrmCommuneCreateForm";
 import { FranceRegionsMap } from "./FranceRegionsMap";
@@ -129,6 +130,57 @@ const COLORS = [
   "#F0E9FF",
 ];
 
+/**
+ * Génère une abréviation de type "première lettre prénom + première lettre nom + dernière lettre nom"
+ * Exemple: "Sébastien IMBERT" -> "SIE" (S + I + T)
+ */
+function generateAbbreviation(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/);
+  
+  if (parts.length < 2) {
+    // Si pas de prénom/nom séparés, prendre les 3 premières lettres en majuscules
+    return fullName.substring(0, 3).toUpperCase().padEnd(3, "X");
+  }
+  
+  const firstName = parts[0];
+  const lastName = parts[parts.length - 1];
+  
+  const firstLetterFirstName = firstName.charAt(0).toUpperCase();
+  const firstLetterLastName = lastName.charAt(0).toUpperCase();
+  const lastLetterLastName = lastName.charAt(lastName.length - 1).toUpperCase();
+  
+  return `${firstLetterFirstName}${firstLetterLastName}${lastLetterLastName}`;
+}
+
+/**
+ * Tooltip personnalisé pour le PieChart qui affiche le nom complet au survol
+ */
+function PieTooltip({
+  active,
+  payload,
+}: TooltipProps<any, any> & {
+  payload?: Array<{ payload: { name: string; value: number; abbreviation: string } }>;
+}) {
+  if (!active || !payload || !payload[0]) {
+    return null;
+  }
+
+  const data = payload[0].payload;
+  const fullName = data.name;
+  const value = data.value;
+
+  return (
+    <div className="fr-notice fr-notice--info fr-notice--sm">
+      <div className="fr-notice__body">
+        <p className="fr-notice__title">{fullName}</p>
+        <p className="fr-text--sm">
+          Communes : <strong>{value}</strong>
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function AdminCrmDashboard() {
   const router = useRouter();
   const [communes, setCommunes] = useState<CrmCommune[]>([]);
@@ -220,6 +272,7 @@ export function AdminCrmDashboard() {
 
   const pieData = accountManagers.map((am) => ({
     name: am.accountManagerName,
+    abbreviation: generateAbbreviation(am.accountManagerName),
     value: am.communeCount,
   }));
 
@@ -305,8 +358,8 @@ export function AdminCrmDashboard() {
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={({ name, percent }: any) =>
-                              `${name}: ${(percent * 100).toFixed(0)}%`
+                            label={({ abbreviation, percent }: any) =>
+                              `${abbreviation}: ${(percent * 100).toFixed(0)}%`
                             }
                             outerRadius={80}
                             fill="#8884d8"
@@ -319,8 +372,14 @@ export function AdminCrmDashboard() {
                               />
                             ))}
                           </Pie>
-                          <Tooltip />
-                          <Legend />
+                          <Tooltip content={<PieTooltip />} />
+                          <Legend 
+                            formatter={(value: any, entry: any) => {
+                              // Trouver l'abréviation correspondante
+                              const data = pieData.find((d) => d.name === value);
+                              return data ? data.abbreviation : value;
+                            }}
+                          />
                         </PieChart>
                       </ResponsiveContainer>
                     )}
