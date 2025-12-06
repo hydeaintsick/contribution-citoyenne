@@ -489,15 +489,15 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
           },
         },
         {
-          text: "Contact",
-          linkProps: {
-            href: "/#contact",
-          },
-        },
-        {
           text: "Notre mission",
           linkProps: {
             href: "/qui-sommes-nous",
+          },
+        },
+        {
+          text: "Contact",
+          linkProps: {
+            href: "/#contact",
           },
         },
       ]);
@@ -867,7 +867,7 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
         serviceTitle="Contribcit"
         serviceTagline={
           <>
-            La parole aux citoyens des territoires
+            Simplifiez la participation citoyenne
             <br />
             <Badge
               as="span"
@@ -882,6 +882,13 @@ export function HeaderClient({ initialSessionUser }: HeaderClientProps) {
               }}
             >
               Version bêta
+            </Badge>
+            <Badge as="span" small severity="success" style={{
+                display: "inline-block",
+                marginTop: "0.25rem",
+                marginLeft: "0.5rem",
+              }}>
+              Conforme RGPD
             </Badge>
           </>
         }
