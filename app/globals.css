@@ -29,6 +29,16 @@ body {
   color: var(--foreground);
 }
 
+.hero-img {
+  max-width: 300px;
+  margin: 0 auto;
+}
+@media screen and (min-width: 992px) {
+  .hero-img {
+    max-width: 400px;
+  }
+}
+
 .contribcit-alert-button.fr-btn {
   background-color: var(--background-action-high-error);
   color: var(--text-inverted-error);
